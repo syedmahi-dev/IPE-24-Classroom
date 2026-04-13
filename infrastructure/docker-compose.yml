@@ -1,0 +1,161 @@
+version: '3.9'
+
+services:
+  # ── DATABASE ──────────────────────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ipe24-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ipe24_db
+      POSTGRES_USER: ipe24
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ipe24-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ipe24 -d ipe24_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: ipe24-redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - ipe24-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── AI / TRANSCRIBER ──────────────────────────────────────────────────────
+  transcriber:
+    build:
+      context: ../services/transcriber
+      dockerfile: Dockerfile
+    container_name: ipe24-transcriber
+    restart: always
+    networks:
+      - ipe24-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── MAIN WEB APP ─────────────────────────────────────────────────────────
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+    container_name: ipe24-web
+    restart: always
+    env_file: ../apps/web/.env
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      transcriber:
+        condition: service_healthy
+    networks:
+      - ipe24-net
+    command: >
+      sh -c "npx prisma migrate deploy && node server.js"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── WHATSAPP BOT ─────────────────────────────────────────────────────────
+  whatsapp-bot:
+    build:
+      context: ../apps/bot
+      dockerfile: Dockerfile
+    container_name: ipe24-whatsapp
+    restart: always
+    env_file: ../apps/bot/.env
+    ports:
+      - "127.0.0.1:3002:3002"
+    volumes:
+      - whatsapp_auth:/app/auth_info
+    networks:
+      - ipe24-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── DISCORD BOT ──────────────────────────────────────────────────────────
+  discord-bot:
+    build:
+      context: ../services/discord-bot
+      dockerfile: Dockerfile
+    container_name: ipe24-discord
+    restart: always
+    env_file: ../services/discord-bot/.env
+    ports:
+      - "127.0.0.1:3003:3003"
+    networks:
+      - ipe24-net
+
+  # ── TELEGRAM BOT ─────────────────────────────────────────────────────────
+  telegram-bot:
+    build:
+      context: ../services/telegram-bot
+      dockerfile: Dockerfile
+    container_name: ipe24-telegram
+    restart: always
+    env_file: ../services/telegram-bot/.env
+    networks:
+      - ipe24-net
+
+  # ── AUTOMATION ───────────────────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:1.48.0
+    container_name: ipe24-n8n
+    restart: always
+    ports:
+      - "127.0.0.1:5678:5678"
+    env_file: .env.n8n
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - ipe24-net
+    depends_on:
+      - web
+
+  # ── MONITORING ───────────────────────────────────────────────────────────
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: ipe24-uptime
+    restart: always
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - uptime_data:/app/data
+    networks:
+      - ipe24-net
+
+networks:
+  ipe24-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  whatsapp_auth:
+  n8n_data:
+  uptime_data:

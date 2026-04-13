@@ -1,0 +1,298 @@
+// Temporary SQLite schema for local development
+// This is a quick workaround - switch back to schema.prisma with PostgreSQL for production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  admin
+  super_admin
+}
+
+enum AnnouncementType {
+  general
+  exam
+  file_update
+  routine_update
+  urgent
+  event
+}
+
+enum FileCategory {
+  lecture_notes
+  assignment
+  past_paper
+  syllabus
+  other
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  avatarUrl     String?
+  role          Role      @default(student)
+  studentId     String?   @unique
+  phone         String?
+  bio           String?
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  announcements  Announcement[]
+  fileUploads    FileUpload[]
+  votes          PollVote[]
+  chatLogs       ChatLog[]
+  auditActions   AuditLog[]
+  studyGroups    StudyGroupMember[]
+  notifications  Notification[]
+  pushTokens     PushToken[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  creditHours Float
+  teacherName String?
+  semester    Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  fileUploads   FileUpload[]
+  exams         Exam[]
+  announcements AnnouncementCourse[]
+
+  @@map("courses")
+}
+
+model Announcement {
+  id                 String           @id @default(cuid())
+  title              String
+  body               String
+  type               AnnouncementType @default(general)
+  isPublished        Boolean          @default(false)
+  publishedAt        DateTime?
+  publishedToWa      Boolean          @default(false)
+  publishedToDiscord Boolean          @default(false)
+  authorId           String
+  author             User             @relation(fields: [authorId], references: [id])
+  courses            AnnouncementCourse[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@map("announcements")
+}
+
+model AnnouncementCourse {
+  announcementId String
+  courseId       String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  course         Course       @relation(fields: [courseId], references: [id])
+
+  @@id([announcementId, courseId])
+  @@map("announcement_courses")
+}
+
+model FileUpload {
+  id           String       @id @default(cuid())
+  name         String
+  driveId      String       @unique
+  driveUrl     String
+  downloadUrl  String?
+  mimeType     String
+  sizeBytes    Int
+  category     FileCategory @default(other)
+  courseId     String?
+  course       Course?      @relation(fields: [courseId], references: [id])
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime     @default(now())
+
+  @@map("file_uploads")
+}
+
+model Exam {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id])
+  examDate    DateTime
+  duration    Int?
+  room        String?
+  syllabus    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("exams")
+}
+
+model Poll {
+  id          String    @id @default(cuid())
+  question    String
+  options     String   // JSON as string for SQLite
+  isAnonymous Boolean   @default(true)
+  isClosed    Boolean   @default(false)
+  closesAt    DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  votes PollVote[]
+
+  @@map("polls")
+}
+
+model PollVote {
+  id          String   @id @default(cuid())
+  pollId      String
+  poll        Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  optionIndex Int
+  createdAt   DateTime @default(now())
+
+  @@unique([pollId, userId])
+  @@map("poll_votes")
+}
+
+model KnowledgeDocument {
+  id         String   @id @default(cuid())
+  title      String
+  sourceType String
+  courseCode String?
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  chunks KnowledgeChunk[]
+
+  @@map("knowledge_documents")
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(cuid())
+  documentId String
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex Int
+  content    String
+  createdAt  DateTime          @default(now())
+
+  @@map("knowledge_chunks")
+}
+
+model ChatLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  question  String
+  answer    String
+  thumbsUp  Boolean?
+  createdAt DateTime @default(now())
+
+  @@map("chat_logs")
+}
+
+model StudyGroup {
+  id          String   @id @default(cuid())
+  title       String
+  courseCode  String?
+  description String?
+  maxMembers  Int      @default(5)
+  meetTime    String?
+  location    String?
+  isOpen      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  members StudyGroupMember[]
+
+  @@map("study_groups")
+}
+
+model StudyGroupMember {
+  groupId  String     @default(cuid())
+  userId   String
+  group    StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id])
+  isLeader Boolean    @default(false)
+  joinedAt DateTime   @default(now())
+
+  @@id([groupId, userId])
+  @@map("study_group_members")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("push_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  action     String
+  targetType String
+  targetId   String
+  metadata   String? // JSON as string for SQLite
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+}

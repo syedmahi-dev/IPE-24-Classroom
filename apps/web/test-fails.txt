@@ -1,0 +1,620 @@
+﻿
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/IPE-24 Classroom/apps/web[39m
+
+[90mstdout[2m | src/components/layout/__tests__/Sidebar.test.tsx[2m > [22m[2mSidebar[2m > [22m[2mrenders admin navigation when role is admin
+[22m[39m[36m<body>[39m
+  [36m<div>[39m
+    [36m<aside[39m
+      [33mclass[39m=[32m"w-64 bg-white border-r border-gray-100 hidden md:flex flex-col"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"h-16 flex items-center px-6 border-b border-gray-100"[39m
+      [36m>[39m
+        [36m<h2[39m
+          [33mclass[39m=[32m"text-lg font-bold text-gray-900"[39m
+        [36m>[39m
+          [0mIPE-24[0m
+        [36m</h2>[39m
+      [36m</div>[39m
+      [36m<nav[39m
+        [33mclass[39m=[32m"flex-1 overflow-y-auto py-4 px-3 space-y-1"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[39m
+          [33mdata-testid[39m=[32m"nav-Dashboard"[39m
+          [33mhref[39m=[32m"/dashboard"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33mclass[39m=[32m"lucide lucide-layout-dashboard mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<rect[39m
+              [33mheight[39m=[32m"9"[39m
+              [33mrx[39m=[32m"1"[39m
+              [33mwidth[39m=[32m"7"[39m
+              [33mx[39m=[32m"3"[39m
+              [33my[39m=[32m"3"[39m
+            [36m/>[39m
+            [36m<rect[39m
+              [33mheight[39m=[32m"5"[39m
+              [33mrx[39m=[32m"1"[39m
+              [33mwidth[39m=[32m"7"[39m
+              [33mx[39m=[32m"14"[39m
+              [33my[39m=[32m"3"[39m
+            [36m/>[39m
+            [36m<rect[39m
+              [33mheight[39m=[32m"9"[39m
+              [33mrx[39m=[32m"1"[39m
+              [33mwidth[39m=[32m"7"[39m
+              [33mx[39m=[32m"14"[39m
+              [33my[39m=[32m"12"[39m
+            [36m/>[39m
+            [36m<rect[39m
+              [33mheight[39m=[32m"5"[39m
+              [33mrx[39m=[32m"1"[39m
+              [33mwidth[39m=[32m"7"[39m
+              [33mx[39m=[32m"3"[39m
+              [33my[39m=[32m"16"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mDashboard[0m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[39m
+          [33mdata-testid[39m=[32m"nav-Announcements"[39m
+          [33mhref[39m=[32m"/announcements"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33mclass[39m=[32m"lucide lucide-megaphone mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m3 11 18-5v12L3 14v-3z"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M11.6 16.8a3 3 0 1 1-5.8-1.6"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mAnnouncements[0m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[39m
+          [33mdata-testid[39m=[32m"nav-Class-Routine"[39m
+          [33mhref[39m=[32m"/routine"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33mclass[39m=[32m"lucide lucide-calendar mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M8 2v4"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M16 2v4"[39m
+            [36m/>[39m
+            [36m<rect[39m
+              [33mheight[39m=[32m"18"[39m
+              [33mrx[39m=[32m"2"[39m
+              [33mwidth[39m=[32m"18"[39m
+              [33mx[39m=[32m"3"[39m
+              [33my[39m=[32m"4"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M3 10h18"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mClass Routine[0m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[39m
+          [33mdata-testid[39m=[32m"nav-Resources"[39m
+          [33mhref[39m=[32m"/resources"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33mclass[39m=[32m"lucide lucide-folder-open mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0mResources[0m
+        [36m</a>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"flex items-center px-3 py-2 text-sm font-...
+
+ [31mΓ¥»[39m src/components/layout/__tests__/Sidebar.test.tsx [2m([22m[2m3 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[90m 75[2mms[22m[39m
+[31m   [31m├ù[31m Sidebar[2m > [22mrenders admin navigation when role is admin[90m 26[2mms[22m[31m[39m
+[31m     ΓåÆ Found multiple elements by: [data-testid="nav-Announcements"]
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<a[31m
+  [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+  [33mdata-testid[31m=[32m"nav-Announcements"[31m
+  [33mhref[31m=[32m"/announcements"[31m
+[36m>[31m
+  [36m<svg[31m
+    [33mclass[31m=[32m"lucide lucide-megaphone mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+    [33mfill[31m=[32m"none"[31m
+    [33mheight[31m=[32m"24"[31m
+    [33mstroke[31m=[32m"currentColor"[31m
+    [33mstroke-linecap[31m=[32m"round"[31m
+    [33mstroke-linejoin[31m=[32m"round"[31m
+    [33mstroke-width[31m=[32m"2"[31m
+    [33mviewBox[31m=[32m"0 0 24 24"[31m
+    [33mwidth[31m=[32m"24"[31m
+    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+  [36m>[31m
+    [36m<path[31m
+      [33md[31m=[32m"m3 11 18-5v12L3 14v-3z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M11.6 16.8a3 3 0 1 1-5.8-1.6"[31m
+    [36m/>[31m
+  [36m</svg>[31m
+  [0mAnnouncements[0m
+[36m</a>[31m
+
+Ignored nodes: comments, script, style
+[36m<a[31m
+  [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+  [33mdata-testid[31m=[32m"nav-Announcements"[31m
+  [33mhref[31m=[32m"/admin/announcements"[31m
+[36m>[31m
+  [36m<svg[31m
+    [33mclass[31m=[32m"lucide lucide-megaphone mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+    [33mfill[31m=[32m"none"[31m
+    [33mheight[31m=[32m"24"[31m
+    [33mstroke[31m=[32m"currentColor"[31m
+    [33mstroke-linecap[31m=[32m"round"[31m
+    [33mstroke-linejoin[31m=[32m"round"[31m
+    [33mstroke-width[31m=[32m"2"[31m
+    [33mviewBox[31m=[32m"0 0 24 24"[31m
+    [33mwidth[31m=[32m"24"[31m
+    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+  [36m>[31m
+    [36m<path[31m
+      [33md[31m=[32m"m3 11 18-5v12L3 14v-3z"[31m
+    [36m/>[31m
+    [36m<path[31m
+      [33md[31m=[32m"M11.6 16.8a3 3 0 1 1-5.8-1.6"[31m
+    [36m/>[31m
+  [36m</svg>[31m
+  [0mAnnouncements[0m
+[36m</a>[31m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<aside[31m
+      [33mclass[31m=[32m"w-64 bg-white border-r border-gray-100 hidden md:flex flex-col"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"h-16 flex items-center px-6 border-b border-gray-100"[31m
+      [36m>[31m
+        [36m<h2[31m
+          [33mclass[31m=[32m"text-lg font-bold text-gray-900"[31m
+        [36m>[31m
+          [0mIPE-24[0m
+        [36m</h2>[31m
+      [36m</div>[31m
+      [36m<nav[31m
+        [33mclass[31m=[32m"flex-1 overflow-y-auto py-4 px-3 space-y-1"[31m
+      [36m>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Dashboard"[31m
+          [33mhref[31m=[32m"/dashboard"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-layout-dashboard mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"9"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"3"[31m
+              [33my[31m=[32m"3"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"5"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"14"[31m
+              [33my[31m=[32m"3"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"9"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"14"[31m
+              [33my[31m=[32m"12"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"5"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"3"[31m
+              [33my[31m=[32m"16"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mDashboard[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Announcements"[31m
+          [33mhref[31m=[32m"/announcements"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-megaphone mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"m3 11 18-5v12L3 14v-3z"[31m
+            [36m/>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M11.6 16.8a3 3 0 1 1-5.8-1.6"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mAnnouncements[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Class-Routine"[31m
+          [33mhref[31m=[32m"/routine"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-calendar mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M8 2v4"[31m
+            [36m/>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M16 2v4"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"18"[31m
+              [33mrx[31m=[32m"2"[31m
+              [33mwidth[31m=[32m"18"[31m
+              [33mx[31m=[32m"3"[31m
+              [33my[31m=[32m"4"[31m
+            [36m/>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M3 10h18"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mClass Routine[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Resources"[31m
+          [33mhref[31m=[32m"/resources"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-folder-open mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mResources[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-...[39m
+[31m   [31m├ù[31m Sidebar[2m > [22mrenders super_admin navigation with full access[90m 15[2mms[22m[31m[39m
+[31m     ΓåÆ Found multiple elements by: [data-testid="nav-Overview"]
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<a[31m
+  [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+  [33mdata-testid[31m=[32m"nav-Overview"[31m
+  [33mhref[31m=[32m"/admin"[31m
+[36m>[31m
+  [36m<svg[31m
+    [33mclass[31m=[32m"lucide lucide-chart-no-axes-column mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+    [33mfill[31m=[32m"none"[31m
+    [33mheight[31m=[32m"24"[31m
+    [33mstroke[31m=[32m"currentColor"[31m
+    [33mstroke-linecap[31m=[32m"round"[31m
+    [33mstroke-linejoin[31m=[32m"round"[31m
+    [33mstroke-width[31m=[32m"2"[31m
+    [33mviewBox[31m=[32m"0 0 24 24"[31m
+    [33mwidth[31m=[32m"24"[31m
+    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+  [36m>[31m
+    [36m<line[31m
+      [33mx1[31m=[32m"18"[31m
+      [33mx2[31m=[32m"18"[31m
+      [33my1[31m=[32m"20"[31m
+      [33my2[31m=[32m"10"[31m
+    [36m/>[31m
+    [36m<line[31m
+      [33mx1[31m=[32m"12"[31m
+      [33mx2[31m=[32m"12"[31m
+      [33my1[31m=[32m"20"[31m
+      [33my2[31m=[32m"4"[31m
+    [36m/>[31m
+    [36m<line[31m
+      [33mx1[31m=[32m"6"[31m
+      [33mx2[31m=[32m"6"[31m
+      [33my1[31m=[32m"20"[31m
+      [33my2[31m=[32m"14"[31m
+    [36m/>[31m
+  [36m</svg>[31m
+  [0mOverview[0m
+[36m</a>[31m
+
+Ignored nodes: comments, script, style
+[36m<a[31m
+  [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+  [33mdata-testid[31m=[32m"nav-Overview"[31m
+  [33mhref[31m=[32m"/admin"[31m
+[36m>[31m
+  [36m<svg[31m
+    [33mclass[31m=[32m"lucide lucide-chart-no-axes-column mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+    [33mfill[31m=[32m"none"[31m
+    [33mheight[31m=[32m"24"[31m
+    [33mstroke[31m=[32m"currentColor"[31m
+    [33mstroke-linecap[31m=[32m"round"[31m
+    [33mstroke-linejoin[31m=[32m"round"[31m
+    [33mstroke-width[31m=[32m"2"[31m
+    [33mviewBox[31m=[32m"0 0 24 24"[31m
+    [33mwidth[31m=[32m"24"[31m
+    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+  [36m>[31m
+    [36m<line[31m
+      [33mx1[31m=[32m"18"[31m
+      [33mx2[31m=[32m"18"[31m
+      [33my1[31m=[32m"20"[31m
+      [33my2[31m=[32m"10"[31m
+    [36m/>[31m
+    [36m<line[31m
+      [33mx1[31m=[32m"12"[31m
+      [33mx2[31m=[32m"12"[31m
+      [33my1[31m=[32m"20"[31m
+      [33my2[31m=[32m"4"[31m
+    [36m/>[31m
+    [36m<line[31m
+      [33mx1[31m=[32m"6"[31m
+      [33mx2[31m=[32m"6"[31m
+      [33my1[31m=[32m"20"[31m
+      [33my2[31m=[32m"14"[31m
+    [36m/>[31m
+  [36m</svg>[31m
+  [0mOverview[0m
+[36m</a>[31m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<aside[31m
+      [33mclass[31m=[32m"w-64 bg-white border-r border-gray-100 hidden md:flex flex-col"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"h-16 flex items-center px-6 border-b border-gray-100"[31m
+      [36m>[31m
+        [36m<h2[31m
+          [33mclass[31m=[32m"text-lg font-bold text-gray-900"[31m
+        [36m>[31m
+          [0mIPE-24[0m
+        [36m</h2>[31m
+      [36m</div>[31m
+      [36m<nav[31m
+        [33mclass[31m=[32m"flex-1 overflow-y-auto py-4 px-3 space-y-1"[31m
+      [36m>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Dashboard"[31m
+          [33mhref[31m=[32m"/dashboard"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-layout-dashboard mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"9"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"3"[31m
+              [33my[31m=[32m"3"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"5"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"14"[31m
+              [33my[31m=[32m"3"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"9"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"14"[31m
+              [33my[31m=[32m"12"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"5"[31m
+              [33mrx[31m=[32m"1"[31m
+              [33mwidth[31m=[32m"7"[31m
+              [33mx[31m=[32m"3"[31m
+              [33my[31m=[32m"16"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mDashboard[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Announcements"[31m
+          [33mhref[31m=[32m"/announcements"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-megaphone mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"m3 11 18-5v12L3 14v-3z"[31m
+            [36m/>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M11.6 16.8a3 3 0 1 1-5.8-1.6"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mAnnouncements[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Class-Routine"[31m
+          [33mhref[31m=[32m"/routine"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-calendar mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M8 2v4"[31m
+            [36m/>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M16 2v4"[31m
+            [36m/>[31m
+            [36m<rect[31m
+              [33mheight[31m=[32m"18"[31m
+              [33mrx[31m=[32m"2"[31m
+              [33mwidth[31m=[32m"18"[31m
+              [33mx[31m=[32m"3"[31m
+              [33my[31m=[32m"4"[31m
+            [36m/>[31m
+            [36m<path[31m
+              [33md[31m=[32m"M3 10h18"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mClass Routine[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-600 hover:text-brand-600 hover:bg-brand-50 group"[31m
+          [33mdata-testid[31m=[32m"nav-Resources"[31m
+          [33mhref[31m=[32m"/resources"[31m
+        [36m>[31m
+          [36m<svg[31m
+            [33mclass[31m=[32m"lucide lucide-folder-open mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-current"[31m
+            [33mfill[31m=[32m"none"[31m
+            [33mheight[31m=[32m"24"[31m
+            [33mstroke[31m=[32m"currentColor"[31m
+            [33mstroke-linecap[31m=[32m"round"[31m
+            [33mstroke-linejoin[31m=[32m"round"[31m
+            [33mstroke-width[31m=[32m"2"[31m
+            [33mviewBox[31m=[32m"0 0 24 24"[31m
+            [33mwidth[31m=[32m"24"[31m
+            [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+          [36m>[31m
+            [36m<path[31m
+              [33md[31m=[32m"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"[31m
+            [36m/>[31m
+          [36m</svg>[31m
+          [0mResources[0m
+        [36m</a>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"flex items-center px-3 py-2 text-sm font-...[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 08:37:24
+[2m   Duration [22m 2.52s[2m (transform 52ms, setup 157ms, collect 309ms, tests 75ms, environment 1.28s, prepare 408ms)[22m
+
