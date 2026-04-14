@@ -49,3 +49,38 @@ playwright-report/
 # Misc
 *.tgz
 *.log
+
+# AI Frameworks
+.agent/
+.agents/
+.gemini/
+.claude/
+.cursor/
+.windsurf/
+.roo/
+.trae/
+.codebuddy/
+.codex/
+.continue/
+.opencode/
+.qoder/
+.kiro/
+.cursorrules
+.windsurfrules
+
+# Project Artifacts
+Artifacts/
+*.json.json
+*.apps.googleusercontent.com.json
+*.json
+!package.json
+!tsconfig.json
+!composer.json
+!package-lock.json
+!next.config.mjs
+!skills-lock.json
+!deno.json
+!deno.jsonc
+
+# Supabase CLI temp
+supabase/.temp/

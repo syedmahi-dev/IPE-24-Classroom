@@ -1,15 +1,16 @@
-import { auth } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export default auth((req: NextRequest) => {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const session = (req as any).auth
+  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET })
 
   // Public routes — no auth required
   if (
-    pathname.startsWith('/auth') ||
+    pathname === '/' ||
     pathname === '/login' ||
+    pathname.startsWith('/auth') ||
     pathname.startsWith('/api/v1/health') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/_next') ||
@@ -29,19 +30,8 @@ export default auth((req: NextRequest) => {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  // Block non-admin users from /admin/* pages
-  if (pathname.startsWith('/admin')) {
-    if (!session?.user?.role || !['admin', 'super_admin'].includes(session.user.role)) {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
-  }
-
-  // Block non-super_admin from /admin/users and /admin/settings
-  if (pathname.startsWith('/admin/users') || pathname.startsWith('/admin/settings')) {
-    if (session?.user?.role !== 'super_admin') {
-      return NextResponse.redirect(new URL('/admin', req.url))
-    }
-  }
+  // Note: Role checks for /admin/* are handled securely in AdminLayout to prevent stale JWT issues
+  // which lets the server fetch the latest role from the database.
 
   // Internal routes — require secret header
   if (pathname.startsWith('/api/v1/internal/')) {
@@ -55,8 +45,8 @@ export default auth((req: NextRequest) => {
   }
 
   return NextResponse.next()
-}) as any
+}
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/|iut-logo.svg).*)'],
 }

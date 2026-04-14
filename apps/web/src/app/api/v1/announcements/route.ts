@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         skip,
         take: limit,
         include: {
-          author: { select: { name: true, avatarUrl: true } },
+          author: { select: { name: true, avatarUrl: true, role: true } },
           courses: { include: { course: true } },
         },
       }),
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
           : undefined,
       },
       include: {
-        author: { select: { name: true, avatarUrl: true } },
+        author: { select: { name: true, avatarUrl: true, role: true } },
         courses: { include: { course: true } },
       },
     })

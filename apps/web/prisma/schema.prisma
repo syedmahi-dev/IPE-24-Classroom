@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,7 +19,14 @@ model User {
   studentId     String?   @unique
   phone         String?
   bio           String?
+  nickname      String?
+  bloodGroup    String?
+  gender        String?
+  dob           String?
   lastLogin     DateTime?
+  passwordHash  String?
+  twoFactorSecret String?
+  twoFactorEnabled Boolean  @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -272,4 +279,17 @@ model AuditLog {
   createdAt  DateTime @default(now())
 
   @@map("audit_logs")
+}
+
+model ClassRoutine {
+  id          String   @id @default(cuid())
+  courseCode  String
+  dayOfWeek   String
+  startTime   String
+  endTime     String
+  room        String
+  teacher     String?
+  createdAt   DateTime @default(now())
+
+  @@map("class_routine")
 }

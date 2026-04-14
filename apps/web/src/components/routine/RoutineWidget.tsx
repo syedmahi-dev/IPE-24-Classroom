@@ -10,7 +10,7 @@ export function RoutineWidget({ data }: { data: any }) {
       
       {(!data || data.length === 0) ? (
         <div className="py-8 text-center text-sm font-medium text-slate-500 bg-slate-50/50 rounded-xl border border-slate-100/50">
-          No classes scheduled for today. Time to relax! ☕
+          No classes scheduled for today. Time to relax!
         </div>
       ) : (
         <div className="space-y-4">

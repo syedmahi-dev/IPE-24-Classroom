@@ -11,12 +11,14 @@ export const STUDENT_NAV = [
 ]
 
 export const ADMIN_NAV = [
-  { href: '/admin',                 label: 'Overview',        icon: 'BarChart2' },
+  { href: '/admin',                 label: 'Dashboard',       icon: 'LayoutDashboard' },
   { href: '/admin/announcements',   label: 'Announcements',   icon: 'Megaphone' },
   { href: '/admin/files',           label: 'Files',           icon: 'Upload' },
   { href: '/admin/exams',           label: 'Exams',           icon: 'BookOpen' },
   { href: '/admin/polls',           label: 'Polls',           icon: 'Vote' },
   { href: '/admin/knowledge',       label: 'AI Knowledge',    icon: 'Brain' },
   { href: '/admin/users',           label: 'Users',           icon: 'Users', superAdminOnly: true },
-  { href: '/admin/audit-log',       label: 'Audit Log',       icon: 'ScrollText' },
+  { href: '/admin/audit',           label: 'Audit Log',       icon: 'ScrollText', superAdminOnly: true },
+  { href: '/admin/settings',        label: 'System Settings', icon: 'Settings', superAdminOnly: true },
+  { href: '/admin/telegram',        label: 'Telegram Bot',    icon: 'MessageCircle', superAdminOnly: true },
 ]

@@ -2,12 +2,13 @@ import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
+import bcrypt from 'bcryptjs'
+
+
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  // Using JWT strategy (stateless) - no adapter needed
-  // For database sessions, use: adapter: PrismaAdapter(prisma) with strategy: 'database'
   providers: [
-    // Google OAuth (production)
+    // Google OAuth (Students & Backup Admin)
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || 'dev-id',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dev-secret',
@@ -18,104 +19,123 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
     }),
-    // Credentials provider (development/testing only)
-    ...(process.env.NODE_ENV === 'development'
-      ? [
-          Credentials({
-            id: 'credentials',
-            name: 'Test Credentials',
-            credentials: {
-              email: { label: 'Email', type: 'email', placeholder: 'student@iut-dhaka.edu' },
-            },
-            async authorize(credentials) {
-              console.log('[Auth] Credentials authorize called with:', credentials?.email)
-              
-              if (!credentials?.email) {
-                console.log('[Auth] No email provided')
-                return null
-              }
+    // Secure Credentials provider (Admins & CRs)
+    Credentials({
+      id: 'credentials',
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+        otp: { label: '2FA Code', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
 
-              const email = credentials.email as string
-              console.log('[Auth] Attempting to login with email:', email)
+        const email = (credentials.email as string).toLowerCase()
+        const password = credentials.password as string
+        const otp = credentials.otp as string | undefined
 
-              try {
-                // For development testing, accept all emails
-                // In production, remove Credentials provider entirely
-                let user = await prisma.user.findUnique({ where: { email } })
-                console.log('[Auth] User lookup result:', user?.email)
+        try {
+          // Find user in DB
+          const user = await prisma.user.findUnique({ where: { email } })
+          
+          if (!user || !user.passwordHash) {
+            console.log(`[Auth] User not found or no password set for: ${email}`)
+            return null
+          }
 
-                if (!user) {
-                  console.log('[Auth] User not found, creating new user')
-                  user = await prisma.user.create({
-                    data: {
-                      email,
-                      name: email.includes('admin') ? 'Admin User' : 'Test Student',
-                      role: email.includes('admin') ? 'super_admin' : 'student',
-                      studentId: email.includes('admin') ? 'IPE-24-CR' : 'IPE-24-001',
-                      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-                    },
-                  })
-                  console.log('[Auth] User created:', user.id)
-                }
+          // Check if user is Admin/CR
+          if (user.role === 'student' && process.env.NODE_ENV === 'production') {
+            console.warn(`[Auth] Student attempted credential login: ${email}`)
+            throw new Error('Please login with Google')
+          }
 
-                console.log('[Auth] Returning user:', user.id, user.email)
-                return { 
-                  id: user.id, 
-                  email: user.email, 
-                  name: user.name,
-                } as any
-              } catch (error) {
-                console.error('[Auth] Error in authorize:', error)
-                return null
-              }
-            },
-          }),
-        ]
-      : []),
+          // Verify password
+          const isValid = await bcrypt.compare(password, user.passwordHash)
+          if (!isValid) {
+            console.log(`[Auth] Invalid password for: ${email}`)
+            return null
+          }
+
+          // Verify 2FA if enabled
+          if (user.twoFactorEnabled && user.twoFactorSecret) {
+            if (!otp) {
+              // Special marker for client to show OTP input
+              throw new Error('2FA_REQUIRED')
+            }
+
+            // Dynamic import to avoid webpack CJS/ESM interop issues
+            const otplibModule = await import('otplib')
+            const auth2fa = otplibModule.authenticator || (otplibModule as any).default?.authenticator
+            const isOtpValid = auth2fa.verify({
+              token: otp,
+              secret: user.twoFactorSecret,
+            })
+
+            if (!isOtpValid) {
+              console.log(`[Auth] Invalid OTP for: ${email}`)
+              throw new Error('INVALID_OTP')
+            }
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            studentId: user.studentId,
+          } as any
+        } catch (error: any) {
+          console.error('[Auth] Error in authorize:', error.message)
+          throw error // Propagate specific errors
+        }
+      },
+    }),
   ],
 
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // Refresh session daily
   },
 
   callbacks: {
     async signIn({ profile, account, user, credentials }) {
-      console.log('[Auth] signIn callback:', { hasCredentials: !!credentials, hasProfile: !!profile, userId: user?.id })
-      
-      // For Credentials provider (development only), skip domain check
-      // Credentials provider already created/fetched the user in authorize()
-      if (credentials) {
-        console.log('[Auth] Credentials provider - allowing login')
+      // For Credentials provider, authorize() already did the heavy lifting
+      if (account?.provider === 'credentials') {
         return true
       }
 
-      // For Google OAuth, apply domain check
-      const email = profile?.email ?? user?.email ?? ''
-      console.log('[Auth] Google OAuth email:', email)
-
-      // CRITICAL: Domain restriction — only @iut-dhaka.edu emails (Google OAuth only)
-      if (email && !email.toLowerCase().endsWith(`@${process.env.ALLOWED_DOMAIN}`)) {
-        console.warn(`[Auth] Login attempt from non-IUT email: ${email}`)
-        return `/auth/error?reason=domain`
+      // For Google OAuth
+      const email = (profile?.email ?? user?.email ?? '').toLowerCase()
+      
+      // Domain restriction (Student restriction)
+      if (email && !email.endsWith(`@${process.env.ALLOWED_DOMAIN}`)) {
+        // Allow super admin email even if on different domain
+        if (email !== process.env.SUPER_ADMIN_EMAIL?.toLowerCase()) {
+          return `/auth/error?reason=domain`
+        }
       }
 
-      // Upsert user (create on first login, update lastLogin on subsequent)
+      // Sync user data
       if (profile?.email) {
-        console.log('[Auth] Upserting Google OAuth user:', profile.email)
+        const adminEmail = (process.env.SUPER_ADMIN_EMAIL || 'cr@iut-dhaka.edu').toLowerCase()
+        const isDefaultSuperAdmin = profile.email.toLowerCase() === adminEmail
+        
         await prisma.user.upsert({
-          where: { email: profile.email },
+          where: { email: profile.email.toLowerCase() },
           create: {
-            email: profile.email,
-            name: profile?.name ?? 'Student',
+            email: profile.email.toLowerCase(),
+            name: profile?.name ?? 'Anonymous',
             avatarUrl: (profile as any)?.picture ?? null,
-            role: 'student',
+            role: isDefaultSuperAdmin ? 'super_admin' : 'student',
           },
           update: {
             name: profile?.name ?? undefined,
             avatarUrl: (profile as any)?.picture ?? undefined,
             lastLogin: new Date(),
+            ...(isDefaultSuperAdmin ? { role: 'super_admin' } : {})
           },
         })
       }
@@ -123,30 +143,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true
     },
 
-    async session({ session, token }) {
-      console.log('[Auth] Session callback - token.sub:', token?.sub)
-      
-      // Add user info from token to session (NO DATABASE QUERIES - edge runtime)
-      if (session.user && token?.sub) {
-        session.user.id = token.sub as string
-        session.user.role = (token?.role as any) || 'student'
-        session.user.studentId = (token?.studentId as string) || null
-        console.log('[Auth] Session set from token:', session.user.email, session.user.role)
-      }
-      return session
-    },
-
-    async jwt({ token, user }) {
-      console.log('[Auth] JWT callback - user:', user?.id, 'token.sub:', token?.sub)
-      
-      // Add user info to token on initial login (runs in server context, can use Prisma)
-      if (user) {
-        token.sub = user.id
-        token.role = user.role
-        token.studentId = user.studentId
-        console.log('[Auth] JWT token populated - id:', token.sub, 'role:', token.role)
+    async jwt({ token, user, account, profile }) {
+      if (account?.provider === 'google' && profile?.email) {
+        // Fetch DB user to get the Real Prisma ID and Role on initial OAuth sign-in
+        const dbUser = await prisma.user.findUnique({
+          where: { email: profile.email.toLowerCase() }
+        })
+        if (dbUser) {
+          token.id = dbUser.id
+          token.role = dbUser.role as any
+          token.studentId = dbUser.studentId
+        }
+      } else if (user) {
+        // For Credentials Provider, user object is already fully populated by authorize()
+        token.id = user.id
+        token.role = (user as any).role
+        token.studentId = (user as any).studentId
       }
       return token
+    },
+
+    async session({ session, token }) {
+      if (session.user && token) {
+        session.user.id = token.id as string
+        session.user.role = token.role as any
+        session.user.studentId = token.studentId as string
+      }
+      return session
     },
   },
 

@@ -2,10 +2,20 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
+import { prisma } from '@/lib/prisma'
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session: any = await auth()
   if (!session) redirect('/login')
+
+  // Prevent stale JWT role issue by syncing with database state
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true }
+  })
+  if (dbUser && dbUser.role !== session.user.role) {
+    session.user.role = dbUser.role
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-transparent">

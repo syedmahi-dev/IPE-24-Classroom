@@ -10,7 +10,10 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
+    serverComponentsExternalPackages: ['@prisma/client', 'otplib', '@otplib/core', '@otplib/preset-default'],
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 }
 

@@ -72,21 +72,28 @@
   * {
     border-color: theme('colors.slate.200');
   }
+  .dark * {
+    border-color: theme('colors.slate.800');
+  }
   body {
     background-color: white;
     color: theme('colors.slate.900');
+  }
+  .dark body {
+    background-color: theme('colors.slate.950');
+    color: theme('colors.slate.100');
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-glass;
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/40 dark:border-white/10 shadow-glass;
   }
   .glass-dark {
     @apply bg-slate-900/70 backdrop-blur-md border border-white/10 shadow-glass;
   }
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600 dark:from-brand-500 dark:to-indigo-400;
   }
   .bg-mesh {
     background-color: #f8fafc;
@@ -94,5 +101,12 @@
       radial-gradient(at 0% 0%, hsla(168,100%,94%,1) 0, transparent 50%), 
       radial-gradient(at 100% 0%, hsla(210,100%,96%,1) 0, transparent 50%),
       radial-gradient(at 100% 100%, hsla(240,100%,98%,1) 0, transparent 50%);
+  }
+  .dark .bg-mesh {
+    background-color: #0f172a;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(168,100%,10%,0.2) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, hsla(210,100%,10%,0.2) 0, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(240,100%,10%,0.2) 0, transparent 50%);
   }
 }

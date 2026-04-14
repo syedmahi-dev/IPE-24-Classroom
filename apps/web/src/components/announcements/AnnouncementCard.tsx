@@ -2,12 +2,12 @@
 import { formatDistanceToNow } from 'date-fns'
 
 const TYPE_STYLES = {
-  general: 'bg-blue-50/80 text-blue-700 border-blue-200/50 shadow-sm shadow-blue-500/10',
-  exam: 'bg-rose-50/80 text-rose-700 border-rose-200/50 shadow-sm shadow-rose-500/10',
-  file_update: 'bg-teal-50/80 text-teal-700 border-teal-200/50 shadow-sm shadow-teal-500/10',
-  routine_update: 'bg-amber-50/80 text-amber-700 border-amber-200/50 shadow-sm shadow-amber-500/10',
-  urgent: 'bg-red-500 text-white border-red-600 shadow-md shadow-red-500/20 font-bold tracking-wide',
-  event: 'bg-violet-50/80 text-violet-700 border-violet-200/50 shadow-sm shadow-violet-500/10',
+  general: 'bg-blue-50/80 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200/50 dark:border-blue-900/50 shadow-sm shadow-blue-500/10',
+  exam: 'bg-rose-50/80 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-200/50 dark:border-rose-900/50 shadow-sm shadow-rose-500/10',
+  file_update: 'bg-teal-50/80 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border-teal-200/50 dark:border-teal-900/50 shadow-sm shadow-teal-500/10',
+  routine_update: 'bg-amber-50/80 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/50 shadow-sm shadow-amber-500/10',
+  urgent: 'bg-red-500 dark:bg-red-600 text-white border-red-600 dark:border-red-500 shadow-md shadow-red-500/20 font-bold tracking-wide',
+  event: 'bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 border-violet-200/50 dark:border-violet-900/50 shadow-sm shadow-violet-500/10',
 } as const
 
 const TYPE_LABELS = {
@@ -15,7 +15,7 @@ const TYPE_LABELS = {
   exam: 'Exam',
   file_update: 'File Update',
   routine_update: 'Routine Update',
-  urgent: '🚨 URGENT',
+  urgent: 'URGENT',
   event: 'Event',
 }
 
@@ -26,7 +26,7 @@ interface Props {
     body: string
     type: keyof typeof TYPE_STYLES
     publishedAt: Date | null
-    author: { name: string }
+    author: { name: string; role?: string }
   }
 }
 
@@ -43,22 +43,32 @@ export function AnnouncementCard({ announcement }: Props) {
             <span className={`text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-xl border font-semibold ${TYPE_STYLES[announcement.type]}`}>
               {TYPE_LABELS[announcement.type]}
             </span>
-            <span className="text-xs font-medium text-slate-400">
+            <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
               {announcement.publishedAt
                 ? formatDistanceToNow(new Date(announcement.publishedAt), { addSuffix: true })
                 : 'Draft'}
             </span>
           </div>
-          <h3 className="font-bold text-lg text-slate-800 group-hover:text-brand-600 transition-colors truncate">{announcement.title}</h3>
+          <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">{announcement.title}</h3>
           <div 
-             className="text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed"
+             className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2 leading-relaxed"
              dangerouslySetInnerHTML={{ __html: sanitizeHtml(announcement.body) }}
           />
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100/50">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600">
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100/50 dark:border-slate-800/50">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
               {announcement.author.name.charAt(0)}
             </div>
-            <p className="text-xs font-medium text-slate-500">{announcement.author.name}</p>
+            <div className="flex flex-col">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                {announcement.author.name}
+                {announcement.author.role === 'super_admin' && (
+                  <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Super Admin</span>
+                )}
+                {announcement.author.role === 'admin' && (
+                  <span className="text-[9px] font-bold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded uppercase tracking-wider">CR</span>
+                )}
+              </p>
+            </div>
           </div>
         </div>
       </div>

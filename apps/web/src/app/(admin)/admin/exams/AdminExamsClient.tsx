@@ -1,0 +1,273 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
+import { CalendarDays, Plus, Pencil, Trash2, Clock } from 'lucide-react'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminDataTable, Column } from '@/components/admin/AdminDataTable'
+import { AdminModal } from '@/components/admin/AdminModal'
+import { AdminFormField } from '@/components/admin/AdminFormField'
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+
+type ExamRecord = {
+  id: string
+  title: string
+  description: string | null
+  courseId: string
+  course: { id: string; code: string; name: string }
+  examDate: string
+  duration: number | null
+  room: string | null
+  syllabus: string | null
+  isActive: boolean
+  createdAt: string
+}
+
+type Course = { id: string; code: string; name: string }
+
+export function AdminExamsClient({ courses }: { courses: Course[] }) {
+  const [data, setData] = useState<ExamRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editItem, setEditItem] = useState<ExamRecord | null>(null)
+  const [deleteItem, setDeleteItem] = useState<ExamRecord | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  // Form state
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [courseId, setCourseId] = useState('')
+  const [examDate, setExamDate] = useState('')
+  const [duration, setDuration] = useState('')
+  const [room, setRoom] = useState('')
+  const [syllabus, setSyllabus] = useState('')
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({ page: page.toString(), limit: '15' })
+      const res = await fetch(`/api/v1/admin/exams?${params}`)
+      const result = await res.json()
+      if (result.success) {
+        setData(result.data)
+        setTotalPages(result.meta.totalPages)
+        setTotal(result.meta.total)
+      }
+    } catch { toast.error('Failed to load exams') }
+    finally { setLoading(false) }
+  }, [page])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  const openCreate = () => {
+    setEditItem(null)
+    setTitle(''); setDescription(''); setCourseId(courses[0]?.id || '')
+    setExamDate(''); setDuration(''); setRoom(''); setSyllabus('')
+    setModalOpen(true)
+  }
+
+  const openEdit = (item: ExamRecord) => {
+    setEditItem(item)
+    setTitle(item.title)
+    setDescription(item.description || '')
+    setCourseId(item.courseId)
+    setExamDate(new Date(item.examDate).toISOString().slice(0, 16))
+    setDuration(item.duration?.toString() || '')
+    setRoom(item.room || '')
+    setSyllabus(item.syllabus || '')
+    setModalOpen(true)
+  }
+
+  const handleSubmit = async () => {
+    if (!title.trim()) { toast.error('Title is required'); return }
+    if (!courseId) { toast.error('Course is required'); return }
+    if (!examDate) { toast.error('Date is required'); return }
+
+    setSubmitting(true)
+    try {
+      const url = editItem ? `/api/v1/admin/exams/${editItem.id}` : '/api/v1/admin/exams'
+      const method = editItem ? 'PATCH' : 'POST'
+
+      const payload: any = {
+        title: title.trim(),
+        courseId,
+        examDate: new Date(examDate).toISOString(),
+      }
+      if (description.trim()) payload.description = description.trim()
+      if (duration) payload.duration = parseInt(duration)
+      if (room.trim()) payload.room = room.trim()
+      if (syllabus.trim()) payload.syllabus = syllabus.trim()
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await res.json()
+      if (!result.success) throw new Error(result.error?.message)
+
+      toast.success(editItem ? 'Exam updated' : 'Exam created')
+      setModalOpen(false)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || 'Operation failed')
+    } finally { setSubmitting(false) }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteItem) return
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/v1/admin/exams/${deleteItem.id}`, { method: 'DELETE' })
+      const result = await res.json()
+      if (!result.success) throw new Error(result.error?.message)
+
+      toast.success('Exam deleted')
+      setDeleteItem(null)
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || 'Delete failed')
+    } finally { setSubmitting(false) }
+  }
+
+  const columns: Column<ExamRecord>[] = [
+    {
+      key: 'title',
+      label: 'Exam',
+      render: (item) => (
+        <div className="max-w-xs">
+          <p className="font-bold text-slate-800">{item.title}</p>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">{item.course.code} — {item.course.name}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'examDate',
+      label: 'Date & Time',
+      render: (item) => {
+        const d = new Date(item.examDate)
+        const isPast = d < new Date()
+        return (
+          <div className={`text-sm font-semibold ${isPast ? 'text-slate-400' : 'text-slate-700'}`}>
+            <p>{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+            <p className="text-xs font-medium">{d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+        )
+      },
+    },
+    {
+      key: 'duration',
+      label: 'Duration',
+      hideOnMobile: true,
+      render: (item) => item.duration
+        ? <span className="flex items-center gap-1 text-sm font-semibold text-slate-600"><Clock className="w-3.5 h-3.5" />{item.duration}m</span>
+        : <span className="text-xs text-slate-400">—</span>,
+    },
+    {
+      key: 'room',
+      label: 'Room',
+      hideOnMobile: true,
+      render: (item) => item.room
+        ? <span className="text-sm font-semibold text-slate-600">{item.room}</span>
+        : <span className="text-xs text-slate-400">TBA</span>,
+    },
+    {
+      key: 'isActive',
+      label: 'Status',
+      render: (item) => {
+        const isPast = new Date(item.examDate) < new Date()
+        return (
+          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+            isPast ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700'
+          }`}>
+            {isPast ? 'Completed' : 'Upcoming'}
+          </span>
+        )
+      },
+    },
+  ]
+
+  return (
+    <div className="space-y-8 max-w-7xl mx-auto animate-fade-in">
+      <AdminPageHeader
+        icon={CalendarDays}
+        title="Exams"
+        subtitle="Schedule and manage exam dates, rooms, and syllabi"
+        actionLabel="Add Exam"
+        actionIcon={Plus}
+        onAction={openCreate}
+        badge={`${total} exams`}
+      />
+
+      <AdminDataTable
+        columns={columns}
+        data={data}
+        loading={loading}
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        onPageChange={setPage}
+        emptyTitle="No exams scheduled"
+        emptyMessage="Add an exam entry to get started."
+        getId={(item) => item.id}
+        actions={(item) => (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); openEdit(item) }}
+              className="p-2 rounded-lg hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
+              className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      />
+
+      <AdminModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editItem ? 'Edit Exam' : 'Add Exam'}
+        description={editItem ? 'Update exam details' : 'Schedule a new exam'}
+        onSubmit={handleSubmit}
+        submitLabel={editItem ? 'Update' : 'Create'}
+        submitLoading={submitting}
+      >
+        <div className="space-y-5">
+          <AdminFormField type="text" label="Title" value={title} onChange={setTitle} placeholder="e.g. Mid-Term Exam" required />
+          <AdminFormField
+            type="select"
+            label="Course"
+            value={courseId}
+            onChange={setCourseId}
+            options={courses.map((c) => ({ value: c.id, label: `${c.code} — ${c.name}` }))}
+            required
+          />
+          <AdminFormField type="datetime" label="Date & Time" value={examDate} onChange={setExamDate} required />
+          <div className="grid grid-cols-2 gap-4">
+            <AdminFormField type="number" label="Duration (min)" value={duration} onChange={setDuration} placeholder="90" />
+            <AdminFormField type="text" label="Room" value={room} onChange={setRoom} placeholder="Room 301" />
+          </div>
+          <AdminFormField type="textarea" label="Syllabus" value={syllabus} onChange={setSyllabus} placeholder="Topics covered..." rows={3} />
+          <AdminFormField type="textarea" label="Description" value={description} onChange={setDescription} placeholder="Additional notes..." rows={2} />
+        </div>
+      </AdminModal>
+
+      <ConfirmDialog
+        open={!!deleteItem}
+        onClose={() => setDeleteItem(null)}
+        onConfirm={handleDelete}
+        message={`Delete exam "${deleteItem?.title}"? This cannot be undone.`}
+        loading={submitting}
+      />
+    </div>
+  )
+}

@@ -14,7 +14,7 @@ export async function logAudit(
         action,
         targetType,
         targetId,
-        metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
+        metadata: metadata ? JSON.stringify(metadata) : undefined,
         createdAt: new Date(),
       },
     })

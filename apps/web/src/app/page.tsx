@@ -1,0 +1,402 @@
+'use client'
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { ArrowRight, Bot, Calendar, Bell, FileText, Users, Zap, ChevronDown, Github, Mail, Shield } from 'lucide-react'
+
+export default function LandingPage() {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50 selection:bg-indigo-500/30 overflow-hidden">
+      
+      {/* Background Decorative Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-transparent to-slate-900/40 pointer-events-none"></div>
+      </div>
+
+      {/* Navigation */}
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-md shadow-lg' 
+          : 'bg-transparent'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between relative z-10">
+          {/* Logo */}
+          <div className="flex items-center gap-3 group">
+            <div className="relative w-10 h-10 bg-white/5 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/10 shadow-2xl overflow-hidden group-hover:border-indigo-500/50 transition-all duration-300">
+              <Image
+                src="/iut-logo.svg"
+                alt="IUT Logo"
+                width={32}
+                height={32}
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-lg tracking-tight text-slate-50">IPE-24</span>
+              <span className="text-xs text-slate-400 -mt-1 font-medium tracking-widest uppercase">Classroom</span>
+            </div>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-8">
+            <a 
+              href="#features" 
+              className="text-slate-400 hover:text-slate-200 transition-colors duration-200 text-sm font-medium"
+            >
+              Features
+            </a>
+            <a 
+              href="#capabilities" 
+              className="text-slate-400 hover:text-slate-200 transition-colors duration-200 text-sm font-medium"
+            >
+              What's Inside
+            </a>
+            <a 
+              href="#contact" 
+              className="text-slate-400 hover:text-slate-200 transition-colors duration-200 text-sm font-medium"
+            >
+              Contact
+            </a>
+          </nav>
+
+          {/* Sign In Button */}
+          <Link href="/login">
+            <button className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm transition-colors duration-200 shadow-lg hover:shadow-xl">
+              Sign In
+            </button>
+          </Link>
+        </div>
+      </header>
+
+      <main className="relative z-10">
+        
+        {/* Hero Section */}
+        <section className="min-h-screen flex items-center pt-16 pb-24 px-4 md:px-6">
+          <div className="max-w-5xl mx-auto w-full">
+            
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm font-semibold mb-8 backdrop-blur-sm">
+              <Zap className="w-4 h-4" />
+              <span>v2.0 Now Live — Semester Portal v2024</span>
+            </div>
+
+            {/* Hero Heading */}
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 leading-tight">
+              The Central Hub<br />
+              for <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-cyan-400 to-indigo-400 animate-gradient">
+                IUT IPE-24
+              </span>
+            </h1>
+
+            {/* Hero Subheading */}
+            <p className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl leading-relaxed font-medium">
+              Seamlessly manage courses, announcements, and resources. Designed for students, by students. Replace fragmented WhatsApp threads and scattered PDFs with one unified portal.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-start gap-4 mb-16">
+              <Link href="/login">
+                <button className="group relative px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:from-indigo-700 active:to-indigo-800 text-white font-bold text-base transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 w-full sm:w-auto justify-center">
+                  Access Portal
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
+              <a href="#features" className="group relative px-8 py-4 rounded-xl border-2 border-slate-700 hover:border-slate-600 bg-slate-950/50 hover:bg-slate-900 active:bg-slate-900 text-slate-100 font-bold text-base transition-all duration-200 flex items-center gap-2 w-full sm:w-auto justify-center backdrop-blur-sm">
+                Learn More
+                <ChevronDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
+              </a>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 text-sm">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Shield className="w-5 h-5 text-green-400" />
+                <span>Restricted to @iut-dhaka.edu accounts</span>
+              </div>
+              <div className="hidden sm:block w-1 h-1 bg-slate-700 rounded-full"></div>
+              <div className="flex items-center gap-2 text-slate-400">
+                <Zap className="w-5 h-5 text-amber-400" />
+                <span>Zero setup required — sign in to get started</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-24 px-4 md:px-6">
+          <div className="max-w-7xl mx-auto">
+            
+            {/* Section Header */}
+            <div className="text-center mb-16 max-w-3xl mx-auto">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">
+                Everything You Need in One Place
+              </h2>
+              <p className="text-lg text-slate-400">
+                Designed specifically for IPE-24 batch to streamline communication, keep everyone informed, and make finding information effortless.
+              </p>
+            </div>
+
+            {/* Feature Grid - Bento Layout */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              
+              {/* Feature 1: AI Virtual CR - Large Card */}
+              <div className="group lg:col-span-1 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-blue-600/20 text-blue-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Bot className="w-7 h-7" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">AI Virtual CR</h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Ask questions about the syllabus, exam schedules, and university rules 24/7. Powered by a custom-trained RAG model.
+                </p>
+                <div className="text-sm text-indigo-400 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Learn more <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* Feature 2: Live Class Routine */}
+              <div className="group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl">
+                <div className="w-14 h-14 bg-gradient-to-br from-green-500/20 to-emerald-600/20 text-green-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Calendar className="w-7 h-7" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">Live Class Routine</h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Never miss a class. Real-time routine updates, including room changes and cancellations, synced to your calendar.
+                </p>
+                <div className="text-sm text-indigo-400 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Learn more <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* Feature 3: Unified Broadcasts */}
+              <div className="group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl">
+                <div className="w-14 h-14 bg-gradient-to-br from-amber-500/20 to-orange-600/20 text-amber-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Bell className="w-7 h-7" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">Unified Broadcasts</h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Get instant notifications for important announcements across Discord, Telegram, and Push Notifications.
+                </p>
+                <div className="text-sm text-indigo-400 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Learn more <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* Feature 4: Course Resource Library - Wide Card */}
+              <div className="group lg:col-span-2 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-violet-600/20 text-purple-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <FileText className="w-7 h-7" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">Course Resource Library</h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  A centralized repository for all lecture slides, notes, and previous year's questions for the IPE-24 batch.
+                </p>
+                <div className="text-sm text-indigo-400 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Learn more <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* Feature 5: Polls & Study Groups */}
+              <div className="group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl">
+                <div className="w-14 h-14 bg-gradient-to-br from-pink-500/20 to-rose-600/20 text-pink-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Users className="w-7 h-7" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">Interactive Polls</h3>
+                <p className="text-slate-400 leading-relaxed mb-4">
+                  Participate in decisions about class schedules, study groups, and batch activities through collaborative polls.
+                </p>
+                <div className="text-sm text-indigo-400 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Learn more <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Capabilities Section */}
+        <section id="capabilities" className="py-24 px-4 md:px-6 bg-gradient-to-b from-transparent to-indigo-950/10">
+          <div className="max-w-5xl mx-auto">
+            
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">
+                Seamlessly Integrated
+              </h2>
+              <p className="text-lg text-slate-400">
+                One source of truth, multiple platforms. Your announcements go everywhere.
+              </p>
+            </div>
+
+            {/* Integration Grid */}
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-indigo-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Real-Time Sync</h3>
+                </div>
+                <p className="text-slate-400 leading-relaxed">
+                  Announcements, routine changes, and exam notifications sync across all platforms instantly. Your batch never misses a beat.
+                </p>
+              </div>
+
+              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-cyan-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Privacy First</h3>
+                </div>
+                <p className="text-slate-400 leading-relaxed">
+                  Only authenticated @iut-dhaka.edu accounts. Your data is encrypted and never shared. We respect your privacy.
+                </p>
+              </div>
+
+              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <Bot className="w-6 h-6 text-green-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">AI-Powered Search</h3>
+                </div>
+                <p className="text-slate-400 leading-relaxed">
+                  Ask questions in natural language. Our RAG-based AI understands context and finds exactly what you need in seconds.
+                </p>
+              </div>
+
+              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-amber-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Super Fast</h3>
+                </div>
+                <p className="text-slate-400 leading-relaxed">
+                  Built with Next.js 14 and optimized for speed. Dashboard loads in under 1 second on any connection.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="py-20 px-4 md:px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2">
+                  500+
+                </div>
+                <p className="text-slate-400 font-medium">Active Users</p>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2">
+                  99.9%
+                </div>
+                <p className="text-slate-400 font-medium">Uptime SLA</p>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2">
+                  24/7
+                </div>
+                <p className="text-slate-400 font-medium">AI Support</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24 px-4 md:px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">
+              Ready to Access Your Classroom?
+            </h2>
+            <p className="text-lg text-slate-400 mb-12">
+              Join your fellow IPE-24 classmates who are already using the unified portal to stay connected and informed.
+            </p>
+            <Link href="/login">
+              <button className="group relative px-10 py-5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:from-indigo-700 active:to-indigo-800 text-white font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto">
+                Sign In to Portal
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer id="contact" className="border-t border-slate-800/50 py-12 px-4 md:px-6 bg-gradient-to-b from-transparent to-slate-900/20">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-12 mb-12">
+              
+              {/* Branding */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="relative w-8 h-8 bg-white/5 backdrop-blur-xl rounded flex items-center justify-center border border-white/10 shadow-lg overflow-hidden">
+                    <Image
+                      src="/iut-logo.svg"
+                      alt="IUT Logo"
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                  <span className="font-bold text-slate-50 tracking-tight">IPE-24 Classroom</span>
+                </div>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  The unified platform for the International Program of Excellence batch at Islamic University of Technology.
+                </p>
+              </div>
+
+              {/* Quick Links */}
+              <div>
+                <h4 className="font-bold text-slate-50 mb-4 text-sm uppercase tracking-wide">Quick Links</h4>
+                <ul className="space-y-3">
+                  <li><a href="/login" className="text-slate-400 hover:text-slate-200 transition-colors text-sm">Sign In</a></li>
+                  <li><a href="#features" className="text-slate-400 hover:text-slate-200 transition-colors text-sm">Features</a></li>
+                  <li><a href="/docs" className="text-slate-400 hover:text-slate-200 transition-colors text-sm">Documentation</a></li>
+                </ul>
+              </div>
+
+              {/* Support */}
+              <div>
+                <h4 className="font-bold text-slate-50 mb-4 text-sm uppercase tracking-wide">Support</h4>
+                <div className="space-y-3">
+                  <a href="mailto:support@ipe24.iut.edu" className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors text-sm">
+                    <Mail className="w-4 h-4" />
+                    support@ipe24.iut.edu
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="border-t border-slate-800/50 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-slate-500 text-sm">
+                © {new Date().getFullYear()} IPE-24 • Islamic University of Technology.
+              </p>
+              <div className="text-slate-600 text-sm flex items-center gap-4">
+                <span>Restricted Access</span>
+                <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
+                <span>Authorized Students Only</span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </main>
+
+      {/* Scroll-to-top button could go here */}
+    </div>
+  )
+}
