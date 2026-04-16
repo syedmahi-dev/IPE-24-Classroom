@@ -1,148 +1,12 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { initMessaging } from '@/lib/firebaseClient'
-import { getToken, deleteToken, onMessage } from 'firebase/messaging'
+import { useState } from 'react'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { BellRing, BellOff, X, Loader2 } from 'lucide-react'
 
-type PushState = 'loading' | 'unsupported' | 'prompt' | 'enabled' | 'disabled' | 'denied'
-
 export default function PushNotificationManager() {
-  const [pushState, setPushState] = useState<PushState>('loading')
-  const [isToggling, setIsToggling] = useState(false)
+  const { pushState, isToggling, handleToggle, handleEnable } = usePushNotifications()
   const [dismissed, setDismissed] = useState(false)
-
-  const sendConfigToSW = useCallback(async () => {
-    const registration = await navigator.serviceWorker.ready
-    if (registration?.active) {
-      registration.active.postMessage({
-        type: 'INIT_FIREBASE',
-        firebaseConfig: {
-          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        }
-      })
-    }
-  }, [])
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('Notification' in window) || !('serviceWorker' in navigator)) {
-      setPushState('unsupported')
-      return
-    }
-
-    initMessaging().then(async (messaging) => {
-      if (!messaging) {
-        setPushState('unsupported')
-        return
-      }
-
-      await sendConfigToSW()
-
-      const perm = Notification.permission
-      if (perm === 'denied') {
-        setPushState('denied')
-      } else if (perm === 'default') {
-        setPushState('prompt')
-      } else if (perm === 'granted') {
-        // Check if user has a token registered (i.e. actively subscribed)
-        try {
-          const currentToken = await getToken(messaging, {
-            vapidKey: process.env.NEXT_PUBLIC_FCM_VAPID_KEY
-          })
-          if (currentToken) {
-            setPushState('enabled')
-            // Register in case it's not yet in the DB
-            await registerToken(currentToken)
-          } else {
-            setPushState('disabled')
-          }
-        } catch {
-          setPushState('disabled')
-        }
-      }
-
-      // Handle foreground messages
-      onMessage(messaging, (payload) => {
-        console.log('Foreground message received:', payload)
-      })
-    })
-  }, [sendConfigToSW])
-
-  const registerToken = async (token: string) => {
-    await fetch('/api/v1/push/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    })
-  }
-
-  const unregisterTokens = async () => {
-    await fetch('/api/v1/push/register', { method: 'DELETE' })
-  }
-
-  const handleEnable = async () => {
-    setIsToggling(true)
-    try {
-      // Request permission if not yet granted
-      if (Notification.permission === 'default') {
-        const result = await Notification.requestPermission()
-        if (result === 'denied') {
-          setPushState('denied')
-          setIsToggling(false)
-          return
-        }
-        if (result !== 'granted') {
-          setIsToggling(false)
-          return
-        }
-      }
-
-      const messaging = await initMessaging()
-      if (!messaging) {
-        setIsToggling(false)
-        return
-      }
-
-      await sendConfigToSW()
-
-      const currentToken = await getToken(messaging, {
-        vapidKey: process.env.NEXT_PUBLIC_FCM_VAPID_KEY
-      })
-
-      if (currentToken) {
-        await registerToken(currentToken)
-        setPushState('enabled')
-      }
-    } catch (error) {
-      console.error('Error enabling push notifications:', error)
-    } finally {
-      setIsToggling(false)
-    }
-  }
-
-  const handleDisable = async () => {
-    setIsToggling(true)
-    try {
-      const messaging = await initMessaging()
-      if (messaging) {
-        await deleteToken(messaging)
-      }
-      await unregisterTokens()
-      setPushState('disabled')
-    } catch (error) {
-      console.error('Error disabling push notifications:', error)
-      // Still mark as disabled on the UI even if FCM deleteToken fails
-      await unregisterTokens()
-      setPushState('disabled')
-    } finally {
-      setIsToggling(false)
-    }
-  }
 
   // Don't render anything while loading or if unsupported
   if (pushState === 'loading' || pushState === 'unsupported') return null
@@ -171,7 +35,7 @@ export default function PushNotificationManager() {
         </div>
 
         <button
-          onClick={isEnabled ? handleDisable : handleEnable}
+          onClick={handleToggle}
           disabled={isToggling}
           aria-label={isEnabled ? 'Disable push notifications' : 'Enable push notifications'}
           className={`relative z-10 w-14 h-8 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 shrink-0 ${

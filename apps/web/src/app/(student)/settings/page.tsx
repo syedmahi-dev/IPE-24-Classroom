@@ -11,12 +11,14 @@ import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
 import { SecuritySettings } from './components/SecuritySettings'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 
 export default function SettingsPage() {
   const { data: session, status } = useSession()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [saving, setSaving] = useState(false)
+  const { pushState, isToggling, handleToggle } = usePushNotifications()
 
   // Mock settings state
   const [notifications, setNotifications] = useState({
@@ -173,14 +175,27 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h4 className="text-slate-800 dark:text-slate-200 font-bold">Push Notifications</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Get instant alerts for assignments and polls</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      {pushState === 'denied'
+                        ? 'Blocked by browser — click the lock icon in your address bar to allow'
+                        : pushState === 'unsupported'
+                          ? 'Not supported in this browser'
+                          : 'Get instant alerts for assignments and polls'}
+                    </p>
                   </div>
                 </div>
                 <button 
-                  onClick={() => setNotifications({ ...notifications, push: !notifications.push })}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${notifications.push ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                  onClick={handleToggle}
+                  disabled={isToggling || pushState === 'denied' || pushState === 'unsupported' || pushState === 'loading'}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${
+                    pushState === 'enabled' ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'
+                  } ${isToggling || pushState === 'denied' || pushState === 'unsupported' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${notifications.push ? 'translate-x-6' : 'translate-x-0'}`} />
+                  <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform flex items-center justify-center ${
+                    pushState === 'enabled' ? 'translate-x-6' : 'translate-x-0'
+                  }`}>
+                    {isToggling && <Loader2 className="w-2.5 h-2.5 text-slate-400 animate-spin" />}
+                  </div>
                 </button>
               </div>
             </div>
