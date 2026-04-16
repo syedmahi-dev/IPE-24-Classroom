@@ -1,8 +1,11 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
+import { rateLimit } from '@/lib/rate-limit'
+import { stripHtml } from '@/lib/sanitize'
 import { NextRequest } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { buildChatHistory } from '@/lib/prompt-builder'
 import { z } from 'zod'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
@@ -55,30 +58,26 @@ export async function POST(req: NextRequest) {
     const session = await auth()
     if (!session?.user) return ERRORS.UNAUTHORIZED()
 
+    // Rate limit: 10 AI requests per minute per user
+    const rl = await rateLimit(`chat:${session.user.id}`, 10, 60)
+    if (!rl.success) return ERRORS.RATE_LIMITED()
+
     const body = await req.json()
     const parsed = chatSchema.safeParse(body)
     if (!parsed.success) return ERRORS.VALIDATION('Invalid chat payload')
 
     const { message, history } = parsed.data
-
-    const systemInstruction = `You are the IPE-24 Classroom Assistant, designed to help students of the IUT Industrial & Production Engineering department (Batch 2024). Be professional, helpful, and concise. Help with course queries, routine, and study tips.`
+    const chatHistory = buildChatHistory(history)
 
     const chat = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: systemInstruction }] },
-        { role: 'model', parts: [{ text: 'Understood. I am ready to assist the IPE-24 students.' }] },
-        ...history.map((h: any) => ({
-          role: h.role,
-          parts: [{ text: h.content }]
-        }))
-      ],
+      history: chatHistory,
     })
 
     const result = await chat.sendMessage(message)
     const text = result.response.text()
 
     const logged = await prisma.chatLog.create({
-      data: { userId: session.user.id, question: message, answer: text }
+      data: { userId: session.user.id, question: stripHtml(message), answer: text }
     })
 
     return ok({ text, logId: logged.id })

@@ -5,6 +5,7 @@ import { LogOut, User, Settings, Moon, Sun } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function ProfileDropdown({ user }: { user: any }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -31,20 +32,23 @@ export function ProfileDropdown({ user }: { user: any }) {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         title="User Profile" 
-        className="flex items-center gap-3 p-1.5 pr-4 rounded-[1.25rem] bg-white/60 hover:bg-white shadow-sm border border-white/60 hover:border-brand-200 transition-all hover:scale-105 active:scale-95 group"
+        className="flex items-center gap-3 p-1.5 pr-4 rounded-[1.25rem] bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 shadow-sm border border-white/60 dark:border-slate-700/50 hover:border-brand-200 dark:hover:border-brand-800/50 transition-all hover:scale-105 active:scale-95 group cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none"
       >
         <div className="relative">
-          <img
-            className="h-10 w-10 rounded-[1rem] bg-slate-100 object-cover shadow-sm group-hover:shadow-md transition-shadow"
-            src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "Student"}&backgroundColor=f0fdfa&textColor=0d9488`}
+          <Image
+            className="h-10 w-10 rounded-[1rem] bg-slate-100 dark:bg-slate-700 object-cover shadow-sm group-hover:shadow-md transition-shadow"
+            src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || 'Student')}&backgroundColor=f0fdfa&textColor=0d9488`}
             alt="User Avatar"
+            width={40}
+            height={40}
+            unoptimized
           />
-          <div className="absolute -bottom-1 -right-1 p-[2px] bg-white rounded-full">
+          <div className="absolute -bottom-1 -right-1 p-[2px] bg-white dark:bg-slate-800 rounded-full">
              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
           </div>
         </div>
         <div className="hidden sm:flex flex-col items-start">
-          <span className="text-sm font-black text-slate-800 leading-tight">{user?.name?.split(' ')[0] || 'User'}</span>
+          <span className="text-sm font-black text-slate-800 dark:text-slate-100 leading-tight">{user?.name?.split(' ')[0] || 'User'}</span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             {user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Class Rep' : 'Student'}
           </span>
@@ -61,16 +65,16 @@ export function ProfileDropdown({ user }: { user: any }) {
           <Link 
             href="/profile" 
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <User className="w-4 h-4" />
             My Profile
           </Link>
           
           <Link 
-            href={(user?.role === 'admin' || user?.role === 'super_admin') ? "/admin/settings" : "/settings"} 
+            href="/settings"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <Settings className="w-4 h-4" />
             Settings
@@ -95,7 +99,7 @@ export function ProfileDropdown({ user }: { user: any }) {
           
           <button 
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             Sign Out

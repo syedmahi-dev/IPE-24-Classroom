@@ -1,15 +1,40 @@
-import { Inter } from 'next/font/google'
-import { SessionProvider } from 'next-auth/react'
-import { Toaster } from '@/components/ui/sonner'
+import { Metadata } from 'next'
+import { Inter, Outfit } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
+import { SessionProvider } from 'next-auth/react'
+import { Toaster } from 'sonner'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+export const metadata: Metadata = {
+  title: {
+    default: 'IPE-24 Classroom',
+    template: '%s | IPE-24 Classroom'
+  },
+  description: 'Centralized Academic Management Portal for IPE-24 Batch',
+  icons: {
+    icon: '/iut-logo.svg',
+    shortcut: '/iut-logo.svg',
+    apple: '/iut-logo.svg',
+  }
+}
+
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+})
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased bg-mesh min-h-screen text-slate-800 dark:text-slate-200 selection:bg-brand-500 selection:text-white`}>
+      <body className={`${inter.variable} ${outfit.variable} font-sans antialiased bg-mesh min-h-screen text-slate-800 dark:text-slate-200 selection:bg-brand-500 selection:text-white`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

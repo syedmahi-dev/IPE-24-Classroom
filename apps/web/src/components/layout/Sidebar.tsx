@@ -3,10 +3,10 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { STUDENT_NAV, ADMIN_NAV } from "@/config/navigation"
-import { LayoutDashboard, Calendar, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText } from "lucide-react"
+import { LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive } from "lucide-react"
 
 const ICONS = {
-  LayoutDashboard, Calendar, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText
+  LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive
 } as any
 
 import Image from 'next/image'
@@ -21,23 +21,24 @@ export function Sidebar({ role }: { role: string }) {
       <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
 
       <div className="h-24 flex items-center px-8 border-b border-white/40 relative z-10">
-        <div className="flex items-center gap-4">
-          <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden shadow-xl shadow-brand-500/20 dark:shadow-brand-500/10 transform hover:scale-105 transition-all duration-300 bg-white dark:bg-slate-800 p-1">
+        <Link href="/dashboard" className="flex items-center gap-4 group cursor-pointer">
+          <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden shadow-xl shadow-brand-500/20 dark:shadow-brand-500/10 transform group-hover:scale-105 transition-all duration-300 bg-white dark:bg-slate-800 p-1">
             <Image 
               src="/iut-logo.svg"
               unoptimized 
               alt="IUT Logo" 
               fill
               className="object-contain"
+              priority={true}
             />
           </div>
           <div>
-            <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 tracking-tight leading-tight">
+            <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 tracking-tight leading-tight group-hover:text-brand-500 transition-colors">
               IPE-24
             </h2>
             <div className="text-[10px] font-bold text-brand-600 uppercase tracking-widest">Classroom</div>
           </div>
-        </div>
+        </Link>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-8 px-5 space-y-2 relative z-10 scrollbar-hide">
@@ -51,12 +52,15 @@ export function Sidebar({ role }: { role: string }) {
             <Link
               key={link.href}
               href={isLocked ? '#' : link.href}
-              className={`flex items-center px-4 py-3.5 text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden ${
+              data-testid={`nav-${link.label.replace(/\s+/g, '-')}`}
+              aria-disabled={isLocked}
+              tabIndex={isLocked ? -1 : 0}
+              className={`flex items-center px-4 py-3.5 text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none ${
                 isLocked 
                   ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50 bg-slate-50/50 dark:bg-slate-900/30 grayscale' 
                   : isActive
                     ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 shadow-sm border border-brand-100 dark:border-brand-900 hover:shadow-md'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:shadow-sm border border-transparent hover:border-white/40 dark:hover:border-white/10'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:shadow-sm border border-transparent hover:border-white/40 dark:hover:border-white/10 cursor-pointer'
               }`}
             >
               {isActive && !isLocked && (

@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
+import { sanitizeHtml } from '@/lib/sanitize'
 import { z } from 'zod'
 
 const querySchema = z.object({
@@ -93,11 +94,15 @@ export async function POST(req: Request) {
 
     const { title, body: content, type, courseIds } = parsed.data
 
+    // Sanitize rich text to prevent stored XSS
+    const safeTitle = title.replace(/<[^>]*>/g, '').trim()
+    const safeBody = sanitizeHtml(content)
+
     // Create announcement
     const announcement = await prisma.announcement.create({
       data: {
-        title,
-        body: content,
+        title: safeTitle,
+        body: safeBody,
         type,
         authorId: session.user.id,
         isPublished: true,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Calendar, Clock, AlertTriangle, CheckCircle, Search, Loader2, AlertCircle } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
 
@@ -11,7 +11,7 @@ export default function ExamsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  const fetchExams = async () => {
+  const fetchExams = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -26,11 +26,11 @@ export default function ExamsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page])
 
   useEffect(() => {
     fetchExams()
-  }, [page])
+  }, [fetchExams])
 
   const upcomingIds = exams.filter((e: any) => new Date(e.examDate) > new Date()).map((e: any) => e.id)
   const nearestExam = exams.find((e: any) => upcomingIds.includes(e.id))

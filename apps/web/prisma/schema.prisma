@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -51,6 +52,7 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -69,6 +71,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -104,6 +107,8 @@ model Announcement {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
+  @@index([authorId])
+  @@index([isPublished, publishedAt])
   @@map("announcements")
 }
 
@@ -130,8 +135,12 @@ model FileUpload {
   course       Course?      @relation(fields: [courseId], references: [id])
   uploadedById String
   uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  connectedDriveId String?
+  connectedDrive ConnectedDrive? @relation(fields: [connectedDriveId], references: [id])
   createdAt    DateTime     @default(now())
 
+  @@index([courseId])
+  @@index([uploadedById])
   @@map("file_uploads")
 }
 
@@ -146,9 +155,13 @@ model Exam {
   room        String?
   syllabus    String?
   isActive    Boolean  @default(true)
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([courseId])
+  @@index([examDate])
+  @@index([isActive, examDate])
   @@map("exams")
 }
 
@@ -177,6 +190,8 @@ model PollVote {
   createdAt   DateTime @default(now())
 
   @@unique([pollId, userId])
+  @@index([pollId])
+  @@index([userId])
   @@map("poll_votes")
 }
 
@@ -202,6 +217,7 @@ model KnowledgeChunk {
   content    String
   createdAt  DateTime          @default(now())
 
+  @@index([documentId])
   @@map("knowledge_chunks")
 }
 
@@ -214,6 +230,8 @@ model ChatLog {
   thumbsUp  Boolean?
   createdAt DateTime @default(now())
 
+  @@index([userId])
+  @@index([createdAt])
   @@map("chat_logs")
 }
 
@@ -226,6 +244,8 @@ model StudyGroup {
   meetTime    String?
   location    String?
   isOpen      Boolean  @default(true)
+  targetGroup String   @default("ALL") // ALL, ODD, EVEN — lab group filter
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
 
   members StudyGroupMember[]
@@ -255,6 +275,7 @@ model Notification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  @@index([userId, isRead])
   @@map("notifications")
 }
 
@@ -275,21 +296,72 @@ model AuditLog {
   action     String
   targetType String
   targetId   String
-  metadata   String? // JSON as string for SQLite
+  metadata   String?
   createdAt  DateTime @default(now())
 
+  @@index([actorId])
+  @@index([createdAt])
   @@map("audit_logs")
 }
 
-model ClassRoutine {
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_configs")
+}
+
+model BaseRoutine {
   id          String   @id @default(cuid())
   courseCode  String
-  dayOfWeek   String
-  startTime   String
-  endTime     String
+  courseName  String?
+  dayOfWeek   String                    // "Monday", "Tuesday", etc.
+  startTime   String                    // "08:00"
+  endTime     String                    // "09:30"
   room        String
   teacher     String?
+  targetGroup String   @default("ALL")  // "ALL", "ODD", "EVEN"
+  isLab       Boolean  @default(false)
+  semester    String?                   // e.g. "Spring 2026"
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
 
-  @@map("class_routine")
+  overrides RoutineOverride[]
+
+  @@map("base_routines")
+}
+
+model RoutineOverride {
+  id             String       @id @default(cuid())
+  date           DateTime                           // The specific date
+  type           String                             // CANCELLED, MAKEUP, ROOM_CHANGE, TIME_CHANGE
+  baseRoutineId  String?
+  baseRoutine    BaseRoutine? @relation(fields: [baseRoutineId], references: [id], onDelete: SetNull)
+  courseCode     String?
+  courseName     String?
+  startTime      String?
+  endTime        String?
+  room           String?
+  teacher        String?
+  targetGroup    String       @default("ALL")
+  reason         String?
+  createdById    String
+  archivedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@map("routine_overrides")
+}
+
+model ConnectedDrive {
+  id           String       @id @default(cuid())
+  label        String       // Optional user-friendly name
+  email        String       // Google account email
+  refreshToken String
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  fileUploads  FileUpload[]
+
+  @@map("connected_drives")
 }

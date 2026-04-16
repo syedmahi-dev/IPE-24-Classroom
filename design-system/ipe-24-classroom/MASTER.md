@@ -7,8 +7,8 @@
 ---
 
 **Project:** IPE-24 Classroom
-**Generated:** 2026-04-14 03:59:50
-**Category:** Smart Home/IoT Dashboard
+**Generated:** 2026-04-15 10:56:47
+**Category:** Analytics Dashboard
 
 ---
 
@@ -153,28 +153,28 @@
 
 ## Style Guidelines
 
-**Style:** Dark Mode (OLED)
+**Style:** Data-Dense Dashboard
 
-**Keywords:** Dark theme, low light, high contrast, deep black, midnight blue, eye-friendly, OLED, night mode, power efficient
+**Keywords:** Multiple charts/widgets, data tables, KPI cards, minimal padding, grid layout, space-efficient, maximum data visibility
 
-**Best For:** Night-mode apps, coding platforms, entertainment, eye-strain prevention, OLED devices, low-light
+**Best For:** Business intelligence dashboards, financial analytics, enterprise reporting, operational dashboards, data warehousing
 
-**Key Effects:** Minimal glow (text-shadow: 0 0 10px), dark-to-light transitions, low white emission, high readability, visible focus
+**Key Effects:** Hover tooltips, chart zoom on click, row highlighting on hover, smooth filter animations, data loading spinners
 
 ### Page Pattern
 
-**Pattern Name:** Comparison Table + CTA
+**Pattern Name:** Event/Conference Landing
 
-- **Conversion Strategy:** Use comparison to show unique value. Highlight your product row. Include 'free trial' in pricing row.
-- **CTA Placement:** Table: Right column. CTA: Below table
-- **Section Order:** 1. Hero, 2. Problem intro, 3. Comparison table (product vs competitors), 4. Pricing (optional), 5. CTA
+- **Conversion Strategy:** Early bird pricing with deadline. Social proof (past attendees). Speaker credibility. Multi-ticket discounts.
+- **CTA Placement:** Register CTA sticky + After speakers + Bottom
+- **Section Order:** 1. Hero (date/location/countdown), 2. Speakers grid, 3. Agenda/schedule, 4. Sponsors, 5. Register CTA
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Slow updates
-- ❌ No automation
+- ❌ Ornate design
+- ❌ No filtering
 
 ### Additional Forbidden Patterns
 

@@ -75,7 +75,14 @@ describe('GET /api/v1/announcements', () => {
 
     const json = await res.json()
     expect(json.success).toBe(true)
-    expect(json.data).toEqual(mockAnnouncements)
+    // Compare dates as strings since JSON serialization converts Date to string
+    expect({
+      ...json.data[0],
+      publishedAt: new Date(json.data[0].publishedAt).toISOString(),
+    }).toEqual({
+      ...mockAnnouncements[0],
+      publishedAt: mockAnnouncements[0].publishedAt.toISOString(),
+    })
     expect(json.meta.page).toBe(1)
     expect(json.meta.total).toBe(1)
   })

@@ -30,7 +30,7 @@ export function AdminPageHeader({
         </div>
         <div className="flex-1 text-center md:text-left">
           <div className="flex items-center gap-3 justify-center md:justify-start">
-            <h1 className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">{title}</h1>
+            <h1 data-testid="admin-header-title" className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">{title}</h1>
             {badge && (
               <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
                 {badge}
@@ -42,6 +42,7 @@ export function AdminPageHeader({
         {actionLabel && onAction && (
           <button
             onClick={onAction}
+            data-testid="admin-header-action"
             className="flex items-center gap-2.5 px-7 py-4 bg-gradient-to-r from-admin-purple to-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-admin-purple/25 hover:shadow-2xl hover:shadow-admin-purple/40 hover:-translate-y-0.5 active:scale-95 transition-all duration-300 whitespace-nowrap"
           >
             {ActionIcon && <ActionIcon className="w-5 h-5" />}

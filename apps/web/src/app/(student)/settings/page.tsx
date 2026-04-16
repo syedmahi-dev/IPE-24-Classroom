@@ -10,6 +10,8 @@ import { useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
+import { SecuritySettings } from './components/SecuritySettings'
+
 export default function SettingsPage() {
   const { data: session, status } = useSession()
   const { theme, setTheme } = useTheme()
@@ -212,11 +214,10 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              <div className="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6">
-                 <button className="flex items-center gap-3 px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors w-full sm:w-auto">
-                    <Key className="w-4 h-4 text-slate-500" />
-                    Change Password
-                 </button>
+              <div className="mt-6">
+                {(role === 'admin' || role === 'super_admin') && (
+                  <SecuritySettings role={role} />
+                )}
               </div>
             </div>
           </section>

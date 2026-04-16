@@ -31,7 +31,7 @@ jobs:
 
       - name: Test
         working-directory: apps/web
-        run: npm test || true
+        run: npm test
 
   deploy:
     needs: test

@@ -92,6 +92,7 @@ export function AdminModal({
               </button>
               <button
                 onClick={onSubmit}
+                data-testid="admin-modal-submit"
                 disabled={submitLoading || submitDisabled}
                 className={`px-6 py-3 text-sm font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${
                   destructive

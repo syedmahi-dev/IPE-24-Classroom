@@ -50,9 +50,9 @@ export default async function AdminPage() {
       
       {/* Background Ambience tailored to role */}
       {isSuper ? (
-        <div className="absolute top-0 right-10 -z-10 w-[600px] h-[600px] bg-amber-500/10 dark:bg-amber-500/5 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-pulse duration-10000" />
+        <div className="absolute top-0 right-10 -z-10 w-[600px] h-[600px] bg-amber-500/10 dark:bg-amber-500/5 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-float" />
       ) : (
-        <div className="absolute top-0 right-10 -z-10 w-[600px] h-[600px] bg-indigo-500/20 dark:bg-indigo-600/10 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-pulse duration-10000" />
+        <div className="absolute top-0 right-10 -z-10 w-[600px] h-[600px] bg-indigo-500/20 dark:bg-indigo-600/10 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-float" />
       )}
 
       {/* Header */}

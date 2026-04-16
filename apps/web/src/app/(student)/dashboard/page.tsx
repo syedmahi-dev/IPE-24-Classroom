@@ -1,17 +1,21 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { fetchRoutine } from '@/lib/google-sheets'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+}
 import { AnnouncementCard } from '@/components/announcements/AnnouncementCard'
 import { RoutineWidget } from '@/components/routine/RoutineWidget'
 import { ExamCountdown } from '@/components/exams/ExamCountdown'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
-import { Hand, Megaphone, PartyPopper, Sparkles, BookOpen, Clock, CalendarDays } from 'lucide-react'
+import { Hand, Megaphone, PartyPopper, Sparkles, Clock } from 'lucide-react'
 
 export default async function DashboardPage() {
   const session: any = await auth()
 
   // Parallel data fetching on server
-  const [announcements, exams, routine] = await Promise.all([
+  const [announcements, exams] = await Promise.all([
     prisma.announcement.findMany({
       where: { isPublished: true },
       orderBy: { publishedAt: 'desc' },
@@ -24,7 +28,6 @@ export default async function DashboardPage() {
       take: 3,
       include: { course: true },
     }),
-    fetchRoutine(),
   ])
 
   const userRole = session?.user?.role
@@ -34,7 +37,7 @@ export default async function DashboardPage() {
     <div className="space-y-12 max-w-7xl mx-auto pb-20 mt-4 relative">
       
       {/* Background Ambience */}
-      <div className="absolute top-0 right-10 -z-10 w-[500px] h-[500px] bg-brand-500/20 dark:bg-brand-600/10 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-pulse duration-10000" />
+      <div className="absolute top-0 right-10 -z-10 w-[500px] h-[500px] bg-brand-500/20 dark:bg-brand-600/10 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-float" />
       <div className="absolute top-40 left-10 -z-10 w-[400px] h-[400px] bg-purple-500/20 dark:bg-purple-600/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none" />
 
       {/* Hero Section */}
@@ -107,7 +110,7 @@ export default async function DashboardPage() {
           
           <div className="glass rounded-[2rem] border border-white/60 dark:border-slate-800/80 shadow-xl overflow-hidden relative group">
              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -z-10 group-hover:bg-brand-500/20 transition-colors duration-500" />
-             <RoutineWidget data={routine} />
+             <RoutineWidget />
           </div>
           
           <div className="space-y-5">

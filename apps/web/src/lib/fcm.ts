@@ -25,7 +25,7 @@ export async function broadcastPushNotification(title: string, body: string, lin
 
   for (const chunk of chunks) {
     try {
-      await admin.messaging().sendMulticast({
+      await admin.messaging().sendEachForMulticast({
         tokens: chunk,
         notification: { title, body },
         webpush: link ? { fcmOptions: { link } } : undefined,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Vote, ChevronRight, CheckCircle2, Loader2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -12,7 +12,7 @@ export default function PollsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [votingId, setVotingId] = useState<string | null>(null)
 
-  const fetchPolls = async () => {
+  const fetchPolls = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch(`/api/v1/polls?page=${page}&limit=10`)
@@ -25,11 +25,11 @@ export default function PollsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page])
 
   useEffect(() => {
     fetchPolls()
-  }, [page])
+  }, [fetchPolls])
 
   const handleVote = async (pollId: string, optionIndex: number) => {
     try {

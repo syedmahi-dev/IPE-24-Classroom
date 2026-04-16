@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { AnnouncementCard } from '@/components/announcements/AnnouncementCard'
 import { Megaphone, Search, Filter, Loader2, AlertCircle } from 'lucide-react'
 
@@ -15,7 +15,7 @@ export default function AnnouncementsPage() {
   const [selectedType, setSelectedType] = useState<AnnouncementType | 'all'>('all')
   const [search, setSearch] = useState('')
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -39,11 +39,11 @@ export default function AnnouncementsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, selectedType])
 
   useEffect(() => {
     fetchAnnouncements()
-  }, [page, selectedType])
+  }, [fetchAnnouncements])
 
   const typeOptions: Array<{ value: AnnouncementType | 'all'; label: string; colorClass: string }> = [
     { value: 'all', label: 'All Updates', colorClass: 'hover:text-slate-800' },

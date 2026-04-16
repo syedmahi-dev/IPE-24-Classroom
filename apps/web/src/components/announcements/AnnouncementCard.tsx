@@ -77,16 +77,13 @@ export function AnnouncementCard({ announcement }: Props) {
 }
 
 // SECURITY: sanitize HTML from TipTap before rendering
+import DOMPurify from 'isomorphic-dompurify'
+
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ['p', 'b', 'i', 'ul', 'ol', 'li', 'a', 'br', 'strong', 'em', 'h3', 'h4'],
+  ALLOWED_ATTR: ['href'],
+}
+
 function sanitizeHtml(html: string): string {
-  // Use DOMPurify on client, or strip tags on server
-  // Install: npm install isomorphic-dompurify
-  if (typeof window === 'undefined') {
-    return html.replace(/<script[^>]*>.*?<\/script>/gi, '')
-               .replace(/on\w+="[^"]*"/gi, '')
-  }
-  const DOMPurify = require('isomorphic-dompurify')
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p','b','i','ul','ol','li','a','br','strong','em','h3','h4'],
-    ALLOWED_ATTR: ['href'],
-  })
+  return DOMPurify.sanitize(html, SANITIZE_CONFIG)
 }

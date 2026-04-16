@@ -84,3 +84,7 @@ Artifacts/
 
 # Supabase CLI temp
 supabase/.temp/
+
+# Deployment Cleanup
+apps/web/test-report.txt
+scratch/

@@ -11,7 +11,21 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        role: true,
+        studentId: true,
+        phone: true,
+        bio: true,
+        nickname: true,
+        bloodGroup: true,
+        gender: true,
+        dob: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: { announcements: true, fileUploads: true, votes: true, studyGroups: true, }
         }
@@ -49,6 +63,20 @@ export async function PATCH(req: NextRequest) {
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: parsed.data,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        role: true,
+        studentId: true,
+        phone: true,
+        bio: true,
+        nickname: true,
+        bloodGroup: true,
+        gender: true,
+        dob: true,
+      }
     })
 
     return ok(updatedUser)

@@ -4,6 +4,7 @@ import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
 import { uploadToDrive } from '@/lib/google-drive'
 import { z } from 'zod'
+import { NextResponse } from 'next/server'
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -73,16 +74,27 @@ export async function POST(req: Request) {
     const name = formData.get('name') as string || ''
     const courseId = formData.get('courseId') as string || ''
     const category = formData.get('category') as string || 'other'
+    const connectedDriveId = formData.get('connectedDriveId') as string || ''
 
     if (!file) return ERRORS.VALIDATION('File is required')
     if (!name.trim()) return ERRORS.VALIDATION('File name is required')
 
+    let targetDriveToken: string | undefined = undefined;
+    if (connectedDriveId) {
+      const drive = await prisma.connectedDrive.findUnique({ where: { id: connectedDriveId } });
+      if (drive) targetDriveToken = drive.refreshToken;
+    }
+
     // Read file into buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
+    
+    const sizeBytes = buffer.length;
+    const THRESHOLD = 300 * 1024 * 1024;
+    const makePublic = sizeBytes > THRESHOLD;
 
-    // Upload to Google Drive
-    const driveResult = await uploadToDrive(buffer, file.name, file.type)
+    // Upload to Google Drive (with optional override token & visibility flag)
+    const driveResult = await uploadToDrive(buffer, file.name, file.type, targetDriveToken, makePublic)
 
     // Create database record
     const fileRecord = await prisma.fileUpload.create({
@@ -92,10 +104,11 @@ export async function POST(req: Request) {
         driveUrl: driveResult.webViewLink,
         downloadUrl: driveResult.webContentLink || null,
         mimeType: file.type,
-        sizeBytes: buffer.length,
+        sizeBytes: sizeBytes,
         category,
         courseId: courseId || null,
         uploadedById: session.user.id,
+        connectedDriveId: connectedDriveId || null,
       },
       include: {
         course: { select: { id: true, code: true, name: true } },
@@ -103,14 +116,24 @@ export async function POST(req: Request) {
       },
     })
 
+
     await logAudit(session.user.id, 'CREATE', 'file', fileRecord.id, {
       name: fileRecord.name,
       driveId: driveResult.id,
     })
 
     return ok(fileRecord)
-  } catch (error) {
-    console.error('[Admin Files] POST error:', error)
-    return ERRORS.INTERNAL()
+  } catch (error: any) {
+    console.error('API ERROR [POST /api/v1/admin/files]:', error);
+    
+    // Check if it's a Drive API error
+    if (error.response?.data?.error) {
+       console.error('GOOGLE DRIVE ERROR DETAIL:', JSON.stringify(error.response.data.error, null, 2));
+    }
+
+    return NextResponse.json(
+      { error: error.message || 'Something went wrong while uploading the file' },
+      { status: 500 }
+    );
   }
 }

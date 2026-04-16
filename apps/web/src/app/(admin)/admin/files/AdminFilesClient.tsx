@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { FolderOpen, Upload, Trash2, ExternalLink, FileText, FileSpreadsheet, FileImage, File } from 'lucide-react'
+import { FolderOpen, Upload, Trash2, ExternalLink, FileText, FileSpreadsheet, FileImage, File, FolderPlus } from 'lucide-react'
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { AdminDataTable, Column } from '@/components/admin/AdminDataTable'
 import { AdminModal } from '@/components/admin/AdminModal'
@@ -25,6 +25,7 @@ type FileRecord = {
 }
 
 type Course = { id: string; code: string; name: string }
+type ConnectedDrive = { id: string; label: string; email: string }
 
 const CATEGORY_OPTIONS = [
   { value: 'lecture_notes', label: 'Lecture Notes' },
@@ -55,7 +56,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export function AdminFilesClient({ courses }: { courses: Course[] }) {
+export function AdminFilesClient({ courses, connectedDrives }: { courses: Course[], connectedDrives: ConnectedDrive[] }) {
   const [data, setData] = useState<FileRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -72,6 +73,7 @@ export function AdminFilesClient({ courses }: { courses: Course[] }) {
   const [fileName, setFileName] = useState('')
   const [courseId, setCourseId] = useState('')
   const [category, setCategory] = useState('other')
+  const [connectedDriveId, setConnectedDriveId] = useState(connectedDrives.length > 0 ? connectedDrives[0].id : '')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const fetchData = useCallback(async () => {
@@ -115,6 +117,7 @@ export function AdminFilesClient({ courses }: { courses: Course[] }) {
       formData.append('name', fileName.trim())
       formData.append('category', category)
       if (courseId) formData.append('courseId', courseId)
+      if (connectedDriveId) formData.append('connectedDriveId', connectedDriveId)
 
       const res = await fetch('/api/v1/admin/files', { method: 'POST', body: formData })
       const result = await res.json()
@@ -160,11 +163,11 @@ export function AdminFilesClient({ courses }: { courses: Course[] }) {
     },
     {
       key: 'course',
-      label: 'Course',
+      label: 'Folder',
       hideOnMobile: true,
       render: (item) => item.course
-        ? <span className="text-xs font-bold text-slate-600">{item.course.code}</span>
-        : <span className="text-xs text-slate-400">—</span>,
+        ? <span className="text-xs font-bold text-indigo-600">{item.course.code}</span>
+        : <span className="text-xs font-bold text-slate-500">{CATEGORY_OPTIONS.find(c => c.value === item.category)?.label || item.category}</span>,
     },
     {
       key: 'category',
@@ -222,12 +225,13 @@ export function AdminFilesClient({ courses }: { courses: Course[] }) {
         actions={(item) => (
           <>
             <a
-              href={item.driveUrl}
+              // Use secure proxy route instead of direct drive URL, except files >300MB bypass proxy
+              href={`/api/v1/files/${item.id}/download`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-500 transition-all"
-              title="Open in Drive"
+              title="Download Secure Proxy"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -286,6 +290,30 @@ export function AdminFilesClient({ courses }: { courses: Course[] }) {
             options={[{ value: '', label: 'No specific course' }, ...courses.map((c) => ({ value: c.id, label: `${c.code} — ${c.name}` }))]}
           />
           <AdminFormField type="select" label="Category" value={category} onChange={setCategory} options={CATEGORY_OPTIONS} />
+
+          {/* Folder placement hint */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-100">
+            <FolderPlus className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-indigo-700 leading-relaxed">
+              <span className="font-bold">Folder:</span>{' '}
+              {courseId
+                ? <>This file will appear in the <span className="font-black">{courses.find(c => c.id === courseId)?.code}</span> course folder.</>
+                : <>No course selected — file will be placed in the <span className="font-black">{CATEGORY_OPTIONS.find(c => c.value === category)?.label || 'Other'}</span> folder.</>
+              }
+              {' '}Folders are auto-created on first upload.
+            </div>
+          </div>
+          
+          <AdminFormField
+            type="select"
+            label="Upload To Drive"
+            value={connectedDriveId}
+            onChange={setConnectedDriveId}
+            options={[
+              ...connectedDrives.map((d) => ({ value: d.id, label: `${d.label} (${d.email})` })),
+              { value: '', label: 'Default Environment Drive' }
+            ]}
+          />
         </div>
       </AdminModal>
 

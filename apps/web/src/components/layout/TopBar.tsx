@@ -1,13 +1,14 @@
+import Link from "next/link"
 import { Menu, Search, Bell, Sparkles } from "lucide-react"
 import { ProfileDropdown } from "./ProfileDropdown"
-export function TopBar({ user }: { user: any }) {
+export function TopBar({ user, unreadCount = 0 }: { user: any, unreadCount?: number }) {
   return (
-    <header className="h-24 glass mt-6 mx-4 md:mx-8 rounded-[2.5rem] flex items-center justify-between px-8 z-30 relative sticky top-6 shadow-2xl shadow-brand-900/5">
+    <header className="h-24 glass mt-6 mx-4 md:mx-8 rounded-[2.5rem] flex items-center justify-between px-8 z-30 sticky top-6 shadow-2xl shadow-brand-900/5">
       {/* Ambient background blur inside the topbar */}
       <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2.5rem] pointer-events-none" />
 
       <div className="flex items-center flex-1 gap-6 relative z-10">
-        <button title="Open Menu" aria-label="Open Menu" className="md:hidden p-3 -ml-3 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-2xl transition-all shadow-sm active:scale-95">
+        <button title="Open Menu" aria-label="Open Menu" className="md:hidden p-3 -ml-3 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-2xl transition-all shadow-sm active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none">
           <Menu className="h-6 w-6" />
         </button>
         <div className="hidden sm:flex max-w-lg w-full relative group">
@@ -42,17 +43,24 @@ export function TopBar({ user }: { user: any }) {
                 : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-orange-500/20'
             }`}>
               <Sparkles className="w-3.5 h-3.5" />
-              {user?.role === 'super_admin' ? 'Super Admin' : 'CR Panel'}
+              <span data-testid="topbar-role-badge">
+                {user?.role === 'super_admin' ? 'Super Admin' : 'CR Panel'}
+              </span>
             </span>
           </div>
         )}
         
         <div className="h-10 w-px bg-slate-200/50 dark:bg-slate-700/50 mx-2 hidden sm:block"></div>
         
-        <button className="relative p-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 border border-white/60 dark:border-white/10 shadow-sm transition-all hover:scale-105 active:scale-95 group">
+        <Link href="/notifications" aria-label="Notifications" className="relative p-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 border border-white/60 dark:border-white/10 shadow-sm transition-all hover:scale-105 active:scale-95 group cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none">
            <Bell className="w-5 h-5 group-hover:animate-[wiggle_1s_ease-in-out_infinite]" />
-           <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800" />
-        </button>
+           {unreadCount > 0 && (
+             <span className="absolute top-[11px] right-[11px] flex h-2.5 w-2.5">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border-2 border-white dark:border-slate-800 shadow-sm"></span>
+             </span>
+           )}
+        </Link>
 
         <ProfileDropdown user={user} />
       </div>

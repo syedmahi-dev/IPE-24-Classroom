@@ -4,9 +4,8 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET })
 
-  // Public routes — no auth required
+  // Public routes — skip JWT decode entirely for speed
   if (
     pathname === '/' ||
     pathname === '/login' ||
@@ -18,6 +17,8 @@ export async function middleware(req: NextRequest) {
   ) {
     return NextResponse.next()
   }
+
+  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET })
 
   // Block unauthenticated users
   if (!session) {
@@ -48,5 +49,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/|iut-logo.svg).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/|iut-logo\.svg|.*\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$).*)'],
 }

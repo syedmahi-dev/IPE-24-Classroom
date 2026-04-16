@@ -157,7 +157,7 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
               <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                  <p className="text-3xl font-black text-slate-800 mt-1 tracking-tight">{stat.value}</p>
+                  <p data-testid="stat-value" className="text-3xl font-black text-slate-800 mt-1 tracking-tight">{stat.value}</p>
                 </div>
                 <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white shadow-lg`}>
                   <Icon className="w-6 h-6" />

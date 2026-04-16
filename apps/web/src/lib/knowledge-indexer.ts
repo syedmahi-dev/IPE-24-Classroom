@@ -4,9 +4,22 @@ import { getEmbedding } from './embeddings'
 const CHUNK_SIZE = 500
 const CHUNK_OVERLAP = 80
 
-function chunkText(text: string): string[] {
+export function chunkText(text: string): string[] {
   // Prefer splitting at sentence boundaries
-  const sentences = text.match(/[^.!?\n]+[.!?\n]+/g) ?? [text]
+  let sentences: string[] = text.match(/[^.!?\n]+[.!?\n]+/g) ?? [text]
+  
+  // If no sentences found (no punctuation), force split by size
+  if (sentences.length === 1 && sentences[0].length > CHUNK_SIZE) {
+    const forced = []
+    let temp = sentences[0]
+    while (temp.length > 0) {
+      forced.push(temp.slice(0, CHUNK_SIZE))
+      temp = temp.slice(CHUNK_SIZE - CHUNK_OVERLAP)
+      if (temp.length <= CHUNK_OVERLAP) break
+    }
+    sentences = forced
+  }
+
   const chunks: string[] = []
   let current = ''
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { User, Mail, Phone, Book, Settings, Save, Shield, Loader2, Sparkles, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { signOut } from 'next-auth/react'
@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const [gender, setGender] = useState('')
   const [dob, setDob] = useState('')
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const res = await fetch('/api/v1/profile')
       
@@ -42,13 +42,14 @@ export default function ProfilePage() {
     } catch (err) {
       toast.error('Failed to load profile')
     } finally {
-      if (loading) setLoading(false)
+      setLoading(false)
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     fetchProfile()
-  }, [])
+  }, [fetchProfile])
 
   const handleSave = async () => {
     setSaving(true)

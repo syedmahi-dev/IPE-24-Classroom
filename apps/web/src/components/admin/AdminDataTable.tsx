@@ -59,11 +59,16 @@ export function AdminDataTable<T>({
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder={searchPlaceholder}
+                data-testid="admin-table-search-input"
                 className="w-full pl-14 pr-6 py-3.5 bg-white/50 border border-white rounded-[1.5rem] shadow-sm focus:bg-white focus:ring-4 focus:ring-admin-purple/10 focus:border-admin-purple/30 outline-none text-slate-700 font-bold text-sm transition-all placeholder:font-medium placeholder:text-slate-400"
               />
             </div>
           )}
-          {filterBar}
+          {filterBar && (
+            <div data-testid="admin-table-filter-bar">
+              {filterBar}
+            </div>
+          )}
         </div>
       )}
 

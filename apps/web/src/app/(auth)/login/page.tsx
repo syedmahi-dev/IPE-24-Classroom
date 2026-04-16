@@ -132,7 +132,7 @@ function LoginContent() {
             <div className="flex gap-2 bg-slate-950/50 rounded-lg p-1">
               <button
                 onClick={() => setActiveTab('google')}
-                className={`flex-1 px-4 py-2.5 rounded-md font-bold text-sm transition-all duration-300 ${
+                className={`flex-1 px-4 py-2.5 rounded-md font-bold text-sm transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none ${
                   activeTab === 'google'
                     ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg'
                     : 'text-slate-500 hover:text-slate-300'
@@ -142,7 +142,7 @@ function LoginContent() {
               </button>
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`flex-1 px-4 py-2.5 rounded-md font-bold text-sm transition-all duration-300 ${
+                className={`flex-1 px-4 py-2.5 rounded-md font-bold text-sm transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none ${
                   activeTab === 'admin'
                     ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg'
                     : 'text-slate-500 hover:text-slate-300'
@@ -173,7 +173,7 @@ function LoginContent() {
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={isGoogleLoading || isAdminLoading}
-                  className="group relative w-full h-14 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition-all duration-300 flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] disabled:opacity-50"
+                  className="group relative w-full h-14 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition-all duration-300 flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] disabled:opacity-50 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none"
                 >
                   {isGoogleLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -206,7 +206,7 @@ function LoginContent() {
                         {...form.register('email')}
                         type="email"
                         placeholder="admin@iut-dhaka.edu"
-                        className="w-full pl-12 pr-4 h-12 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all outline-none"
+                        className="w-full pl-12 pr-4 h-12 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                       />
                     </div>
                   </div>
@@ -219,12 +219,12 @@ function LoginContent() {
                         {...form.register('password')}
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
-                        className="w-full pl-12 pr-12 h-12 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all outline-none"
+                        className="w-full pl-12 pr-12 h-12 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-3.5 text-slate-600 hover:text-slate-400 transition-colors"
+                        className="absolute right-4 top-3.5 text-slate-600 hover:text-slate-400 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none rounded"
                       >
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
@@ -252,7 +252,7 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={isAdminLoading}
-                  className="w-full h-14 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-indigo-600/20 active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 mt-4"
+                  className="w-full h-14 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-indigo-600/20 active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 mt-4 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none"
                 >
                   {isAdminLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -283,11 +283,12 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Background decorative elements - Improved animations */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      {/* Background decorative elements — smooth float */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-float"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }}></div>
       
-      {/* Diagonal gradient overlay */}
+      {/* Dot-grid pattern + gradient overlay */}
+      <div className="absolute inset-0 bg-dot-grid pointer-events-none"></div>
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-transparent to-slate-900/40 pointer-events-none"></div>
 
       <Suspense fallback={<div className="animate-pulse w-16 h-16 rounded-2xl bg-slate-800"></div>}>
