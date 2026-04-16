@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Sidebar } from "./Sidebar"
 import { TopBar } from "./TopBar"
 import { MobileBottomNav } from "./MobileBottomNav"
+import PushNotificationManager from "@/components/PushNotificationManager"
 
 export function DashboardShell({ 
   children, 
@@ -24,6 +25,7 @@ export function DashboardShell({
       <div className="flex flex-col flex-1 overflow-hidden relative">
         <TopBar user={user} unreadCount={unreadCount} onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 overflow-y-auto px-3 md:px-8 py-4 md:py-8 pb-20 md:pb-8 animate-fade-in z-10 relative scroll-touch">
+          <PushNotificationManager />
           {children}
         </main>
       </div>

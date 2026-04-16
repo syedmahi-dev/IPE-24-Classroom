@@ -4,6 +4,7 @@ import { Inter, Outfit } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SessionProvider } from 'next-auth/react'
 import { Toaster } from 'sonner'
+import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <React.Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
               {children}
               <Toaster richColors position="top-right" />
+              <ServiceWorkerRegistrar />
             </React.Suspense>
           </SessionProvider>
         </ThemeProvider>
