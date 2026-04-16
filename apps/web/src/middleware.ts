@@ -1,11 +1,10 @@
-import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Public routes — skip JWT decode entirely for speed
+  // Public routes — skip auth check entirely for speed
   if (
     pathname === '/' ||
     pathname === '/login' ||
@@ -18,10 +17,16 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET })
+  // Check for session cookie — NextAuth v5 uses 'authjs.session-token'
+  // On HTTPS (production), it's '__Secure-authjs.session-token'
+  const hasSession =
+    req.cookies.has('authjs.session-token') ||
+    req.cookies.has('__Secure-authjs.session-token') ||
+    req.cookies.has('next-auth.session-token') ||
+    req.cookies.has('__Secure-next-auth.session-token')
 
   // Block unauthenticated users
-  if (!session) {
+  if (!hasSession) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { success: false, data: null, error: { code: 'UNAUTHORIZED', message: 'Login required' } },
@@ -30,9 +35,6 @@ export async function middleware(req: NextRequest) {
     }
     return NextResponse.redirect(new URL('/login', req.url))
   }
-
-  // Note: Role checks for /admin/* are handled securely in AdminLayout to prevent stale JWT issues
-  // which lets the server fetch the latest role from the database.
 
   // Internal routes — require secret header
   if (pathname.startsWith('/api/v1/internal/')) {
@@ -49,5 +51,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/|iut-logo\.svg|.*\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/|iut-logo\\.svg|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$).*)'],
 }
