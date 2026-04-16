@@ -1,3 +1,4 @@
+import React from 'react'
 import { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -62,8 +63,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           disableTransitionOnChange
         >
           <SessionProvider>
-            {children}
-            <Toaster richColors position="top-right" />
+            <React.Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+              {children}
+              <Toaster richColors position="top-right" />
+            </React.Suspense>
           </SessionProvider>
         </ThemeProvider>
       </body>

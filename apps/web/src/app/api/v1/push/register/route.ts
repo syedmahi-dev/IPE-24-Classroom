@@ -29,3 +29,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await auth()
+    const user = session?.user
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Delete all push tokens for this user
+    const deleted = await prisma.pushToken.deleteMany({
+      where: { userId: user.id },
+    })
+
+    return NextResponse.json({ success: true, deleted: deleted.count })
+  } catch (error) {
+    console.error('[PUSH_UNREGISTER_ERROR]', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

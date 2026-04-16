@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
+import { broadcastPushNotification } from '@/lib/fcm'
 import { uploadToDrive } from '@/lib/google-drive'
 import { z } from 'zod'
 import { NextResponse } from 'next/server'
@@ -122,6 +123,13 @@ export async function POST(req: Request) {
       name: fileRecord.name,
       driveId: driveResult.id,
     })
+
+    // Send push notification (non-blocking)
+    broadcastPushNotification(
+      'New File Uploaded',
+      name.trim(),
+      '/resources'
+    ).catch((err) => console.error('[Push] Broadcast failed:', err))
 
     return ok(fileRecord)
   } catch (error: any) {

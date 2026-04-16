@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
-import { BookOpen, Plus, Trash2 } from 'lucide-react'
+import { BookOpen, Plus, Trash2, FileText, Link as LinkIcon } from 'lucide-react'
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { AdminDataTable, Column } from '@/components/admin/AdminDataTable'
 import { AdminModal } from '@/components/admin/AdminModal'
@@ -119,7 +119,7 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
     } finally { setSubmitting(false) }
   }
 
-  const columns: Column<KnowledgeDoc>[] = [
+  const columns: Column<KnowledgeDoc>[] = useMemo(() => [
     {
       key: 'title',
       label: 'Document',
@@ -165,7 +165,7 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
         </span>
       ),
     },
-  ]
+  ], [])
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto animate-fade-in">
