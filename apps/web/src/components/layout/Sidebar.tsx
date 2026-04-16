@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 import { STUDENT_NAV, ADMIN_NAV } from "@/config/navigation"
-import { LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive } from "lucide-react"
+import { LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive, X } from "lucide-react"
 
 const ICONS = {
   LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive
@@ -11,15 +12,20 @@ const ICONS = {
 
 import Image from 'next/image'
 
-export function Sidebar({ role }: { role: string }) {
+export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mobileOpen?: boolean; onMobileClose?: () => void }) {
   const pathname = usePathname()
   const links = role === "admin" || role === "super_admin" ? ADMIN_NAV : STUDENT_NAV
 
-  return (
-    <aside className="w-72 glass border-r border-white/40 dark:border-white/10 hidden md:flex flex-col relative z-30 m-6 rounded-[2.5rem] overflow-hidden self-stretch shadow-2xl shadow-brand-900/5 bg-slate-50 dark:bg-slate-900/50">
-      {/* Mesh Gradient Background */}
-      <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    if (mobileOpen && onMobileClose) {
+      onMobileClose()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
+  const sidebarContent = (
+    <>
       <div className="h-24 flex items-center px-8 border-b border-white/40 relative z-10">
         <Link href="/dashboard" className="flex items-center gap-4 group cursor-pointer">
           <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden shadow-xl shadow-brand-500/20 dark:shadow-brand-500/10 transform group-hover:scale-105 transition-all duration-300 bg-white dark:bg-slate-800 p-1">
@@ -39,6 +45,16 @@ export function Sidebar({ role }: { role: string }) {
             <div className="text-[10px] font-bold text-brand-600 uppercase tracking-widest">Classroom</div>
           </div>
         </Link>
+        {/* Close button for mobile */}
+        {onMobileClose && (
+          <button 
+            onClick={onMobileClose}
+            className="ml-auto md:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto py-8 px-5 space-y-2 relative z-10 scrollbar-hide">
@@ -85,6 +101,33 @@ export function Sidebar({ role }: { role: string }) {
          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Developed By Hunterlog2</span>
          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" title="System Online" />
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="w-72 glass border-r border-white/40 dark:border-white/10 hidden md:flex flex-col relative z-30 m-6 rounded-[2.5rem] overflow-hidden self-stretch shadow-2xl shadow-brand-900/5 bg-slate-50 dark:bg-slate-900/50">
+        {/* Mesh Gradient Background */}
+        <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+            onClick={onMobileClose}
+          />
+          {/* Drawer */}
+          <aside className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl animate-slide-in-left">
+            <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
+            {sidebarContent}
+          </aside>
+        </>
+      )}
+    </>
   )
 }

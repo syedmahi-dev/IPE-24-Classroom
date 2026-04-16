@@ -1,14 +1,14 @@
 import Link from "next/link"
 import { Menu, Search, Bell, Sparkles } from "lucide-react"
 import { ProfileDropdown } from "./ProfileDropdown"
-export function TopBar({ user, unreadCount = 0 }: { user: any, unreadCount?: number }) {
+export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unreadCount?: number, onMenuClick?: () => void }) {
   return (
     <header className="h-24 glass mt-6 mx-4 md:mx-8 rounded-[2.5rem] flex items-center justify-between px-8 z-30 sticky top-6 shadow-2xl shadow-brand-900/5">
       {/* Ambient background blur inside the topbar */}
       <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2.5rem] pointer-events-none" />
 
       <div className="flex items-center flex-1 gap-6 relative z-10">
-        <button title="Open Menu" aria-label="Open Menu" className="md:hidden p-3 -ml-3 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-2xl transition-all shadow-sm active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none">
+        <button onClick={onMenuClick} title="Open Menu" aria-label="Open Menu" className="md:hidden p-3 -ml-3 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-2xl transition-all shadow-sm active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none">
           <Menu className="h-6 w-6" />
         </button>
         <div className="hidden sm:flex max-w-lg w-full relative group">
