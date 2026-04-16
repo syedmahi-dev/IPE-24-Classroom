@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import { Metadata } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
