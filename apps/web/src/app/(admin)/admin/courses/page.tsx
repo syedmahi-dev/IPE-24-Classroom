@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AdminCoursesClient } from './AdminCoursesClient'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { BarChart3, Users, Megaphone, FolderOpen, ClipboardList, Vote, ScrollText, Settings, Shield, Sparkles } from 'lucide-react'
