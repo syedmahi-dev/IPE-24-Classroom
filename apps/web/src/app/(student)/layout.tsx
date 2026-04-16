@@ -1,4 +1,5 @@
 import { auth } from '@/lib/auth'
+export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
