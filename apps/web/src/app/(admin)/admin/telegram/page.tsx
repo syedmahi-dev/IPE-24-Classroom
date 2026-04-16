@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { MessageCircle } from 'lucide-react'
 
 export default function TelegramPlaceholderPage() {
