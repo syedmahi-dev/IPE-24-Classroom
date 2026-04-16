@@ -130,3 +130,48 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ─── Mobile: Safe area insets for notched/curved devices ─── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ─── Mobile: Hide scrollbar but keep scrollable ─── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Mobile: Prevent text size adjustment on orientation change ─── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ─── Mobile: Smooth momentum scrolling on iOS ─── */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Mobile: Bottom nav spacer ─── */
+.has-bottom-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ─── Mobile: Tap highlight removal ─── */
+@media (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

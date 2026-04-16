@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   const roleDisplay = userRole === 'super_admin' ? 'Super Admin' : userRole === 'admin' ? 'Class Representative' : 'Student'
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto pb-20 mt-4 relative">
+    <div className="space-y-6 md:space-y-12 max-w-7xl mx-auto pb-6 md:pb-20 mt-2 md:mt-4 relative">
       
       {/* Background Ambience */}
       <div className="absolute top-0 right-10 -z-10 w-[500px] h-[500px] bg-brand-500/20 dark:bg-brand-600/10 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-float" />
@@ -45,13 +45,13 @@ export default async function DashboardPage() {
       <div className="relative group rounded-[2.5rem] overflow-visible">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 rounded-[2.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000 -z-10" />
         
-        <div className="relative glass bg-white/70 dark:bg-slate-900/70 p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 z-10 border border-white/80 dark:border-white/10 shadow-2xl shadow-indigo-500/10 rounded-[2.5rem] overflow-hidden">
+        <div className="relative glass bg-white/70 dark:bg-slate-900/70 p-6 md:p-14 flex flex-col md:flex-row items-center justify-between gap-5 md:gap-8 z-10 border border-white/80 dark:border-white/10 shadow-xl md:shadow-2xl shadow-indigo-500/10 rounded-2xl md:rounded-[2.5rem] overflow-hidden">
           
           <div className="absolute top-0 right-0 w-full h-full bg-[url('/noise.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
           
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-20 text-center md:text-left">
-            <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-brand-500/40 transform -rotate-6 hover:rotate-0 hover:scale-110 transition-all duration-500 flex-shrink-0 cursor-pointer">
-              <Hand className="w-11 h-11 text-white animate-wave origin-bottom-right" />
+            <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-[2rem] bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white shadow-xl md:shadow-2xl shadow-brand-500/40 transform -rotate-6 hover:rotate-0 hover:scale-110 transition-all duration-500 flex-shrink-0 cursor-pointer">
+              <Hand className="w-8 h-8 md:w-11 md:h-11 text-white animate-wave origin-bottom-right" />
             </div>
             <div>
               <div className="flex items-center justify-center md:justify-start gap-3 mb-3">
@@ -61,13 +61,13 @@ export default async function DashboardPage() {
                 </span>
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-full">IPE-24</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight mb-2">
+              <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight mb-1 md:mb-2">
                 Good {getTimeOfDay()}, <br className="hidden md:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-purple-600 leading-tight">
                   {session?.user?.name?.split(' ')[0]}
                 </span>
               </h1>
-              <p className="text-lg font-medium text-slate-500 dark:text-slate-400">
+              <p className="text-sm md:text-lg font-medium text-slate-500 dark:text-slate-400">
                 Ready to conquer your academic goals today?
               </p>
             </div>
@@ -78,7 +78,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 pt-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-8 relative z-10 pt-2 md:pt-4">
         
         {/* Main Content Area */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-8 animate-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>

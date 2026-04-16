@@ -102,22 +102,22 @@ export default function StudyGroupsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      <div className="relative group overflow-hidden rounded-[2.5rem]">
+    <div className="max-w-6xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+      <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
-        <div className="relative glass p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 z-10 text-center md:text-left">
-          <div className="space-y-3 flex-1">
-             <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-xl shadow-amber-500/40 text-center mx-auto md:mx-0 mb-6 transform hover:scale-110 transition-transform">
-                <Users className="w-8 h-8" />
+        <div className="relative glass p-5 md:p-14 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 z-10 text-center md:text-left">
+          <div className="space-y-2 md:space-y-3 flex-1">
+             <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-3xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-xl shadow-amber-500/40 text-center mx-auto md:mx-0 mb-2 md:mb-6 transform hover:scale-110 transition-transform">
+                <Users className="w-6 h-6 md:w-8 md:h-8" />
              </div>
-             <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Study Groups</h1>
-             <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-xl mx-auto md:mx-0 leading-relaxed">
-               Collaborate, prepare for exams, and solve assignments together. Groups are organized by lab divisions — you can join any group.
+             <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Study Groups</h1>
+             <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg max-w-xl mx-auto md:mx-0 leading-relaxed">
+               Collaborate, prepare for exams, and solve assignments together.
              </p>
           </div>
           <button 
             onClick={() => setCreateModalOpen(true)}
-            className="px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-lg shadow-amber-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer"
+            className="px-5 md:px-6 py-3 md:py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl md:rounded-2xl font-bold shadow-lg shadow-amber-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer text-sm md:text-base min-h-[44px]"
           >
             <Plus className="w-5 h-5" />
             Create Group

@@ -51,15 +51,15 @@ export default function PollsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
-      <div className="relative group overflow-hidden rounded-[2.5rem]">
+    <div className="max-w-4xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+      <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
-        <div className="relative glass p-10 md:p-14 flex flex-col items-center justify-center text-center z-10">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-xl shadow-purple-500/40 mb-6">
-             <Vote className="w-8 h-8" />
+        <div className="relative glass p-5 md:p-14 flex flex-col items-center justify-center text-center z-10">
+          <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-xl shadow-purple-500/40 mb-3 md:mb-6">
+             <Vote className="w-6 h-6 md:w-8 md:h-8" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Class Voice</h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium text-lg mt-3 max-w-xl">
+          <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Class Voice</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg mt-2 md:mt-3 max-w-xl">
             Vote on CR decisions, assignments, and class schedules anonymously.
           </p>
         </div>
@@ -75,9 +75,9 @@ export default function PollsPage() {
       {error && <div className="p-6 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-[2rem] font-bold text-center">{error}</div>}
 
       {!loading && !error && (
-        <div className="space-y-6 relative z-10">
+        <div className="space-y-4 md:space-y-6 relative z-10">
           {polls.map((poll: any) => (
-            <div key={poll.id} className="glass rounded-[2rem] p-8 md:p-10 hover:shadow-xl hover:shadow-purple-900/5 dark:hover:shadow-purple-900/20 transition-all">
+            <div key={poll.id} className="glass rounded-2xl md:rounded-[2rem] p-5 md:p-10 hover:shadow-xl hover:shadow-purple-900/5 dark:hover:shadow-purple-900/20 transition-all">
               <div className="flex items-center gap-3 mb-6">
                  <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
                    poll.isClosed ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
@@ -91,7 +91,7 @@ export default function PollsPage() {
                  )}
               </div>
               
-              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-8 leading-snug">{poll.question}</h3>
+              <h3 className="text-lg md:text-2xl font-black text-slate-800 dark:text-slate-100 mb-5 md:mb-8 leading-snug">{poll.question}</h3>
               
               <div className="space-y-4">
                 {poll.options.map((option: string, idx: number) => {

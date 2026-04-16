@@ -160,19 +160,19 @@ export default function ResourcesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
       {/* Hero Section */}
-      <div className="relative group overflow-hidden rounded-[2.5rem]">
+      <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-700" />
-        <div className="relative glass p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 z-10">
-          <div className="text-center md:text-left space-y-3 flex-1 flex items-center md:items-start flex-col">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shadow-xl shadow-blue-500/40 transform -rotate-3 mb-6">
-              <Database className="w-8 h-8" />
+        <div className="relative glass p-5 md:p-14 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 z-10">
+          <div className="text-center md:text-left space-y-2 md:space-y-3 flex-1 flex items-center md:items-start flex-col">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shadow-xl shadow-blue-500/40 transform -rotate-3 mb-2 md:mb-6">
+              <Database className="w-6 h-6 md:w-8 md:h-8" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+            <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
               Resource Library
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-xl leading-relaxed text-center md:text-left">
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg max-w-xl leading-relaxed text-center md:text-left">
               Access lecture notes, assignments, and past papers — organized by course.
             </p>
           </div>
@@ -181,10 +181,10 @@ export default function ResourcesPage() {
 
       {/* Breadcrumb */}
       {activeFolder && (
-        <div className="glass p-4 rounded-[2rem] shadow-sm flex items-center gap-3">
+        <div className="glass p-3 md:p-4 rounded-2xl md:rounded-[2rem] shadow-sm flex items-center gap-2 md:gap-3">
           <button
             onClick={goBack}
-            className="flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-slate-800/60 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-bold text-sm"
+            className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white/60 dark:bg-slate-800/60 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-bold text-xs md:text-sm min-h-[44px]"
           >
             <ArrowLeft className="w-4 h-4" />
             All Folders

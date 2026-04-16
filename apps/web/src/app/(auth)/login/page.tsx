@@ -80,20 +80,20 @@ function LoginContent() {
 
   return (
     <>
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 px-4 md:px-0">
         {/* Header Section - Enhanced Branding */}
-        <div className="text-center space-y-4 mb-10">
+        <div className="text-center space-y-3 md:space-y-4 mb-6 md:mb-10">
           {/* Logo with enhanced visual hierarchy */}
           <div className="flex justify-center">
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-3xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
-              <div className="relative w-24 h-24 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden border border-white/20">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-2xl md:rounded-3xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+              <div className="relative w-18 h-18 md:w-24 md:h-24 bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden border border-white/20">
                 <Image
                   src="/iut-logo.svg"
                   alt="IUT Logo"
-                  width={80}
-                  height={80}
-                  className="object-contain transform group-hover:scale-110 transition-transform duration-300"
+                  width={64}
+                  height={64}
+                  className="object-contain transform group-hover:scale-110 transition-transform duration-300 md:w-20 md:h-20"
                   unoptimized
                 />
               </div>
@@ -101,8 +101,8 @@ function LoginContent() {
           </div>
 
           {/* Typography improvements - Better hierarchy */}
-          <div className="space-y-3">
-            <h1 className="text-4xl font-bold text-slate-50 leading-tight">
+          <div className="space-y-2 md:space-y-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 leading-tight">
               IPE-24 Portal
             </h1>
             <p className="text-slate-400 text-base md:text-lg">
@@ -153,7 +153,7 @@ function LoginContent() {
             </div>
           </div>
 
-          <div className="p-8">
+          <div className="p-5 md:p-8">
             {activeTab === 'google' ? (
               <div className="space-y-6">
                 <div>
@@ -173,7 +173,7 @@ function LoginContent() {
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={isGoogleLoading || isAdminLoading}
-                  className="group relative w-full h-14 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition-all duration-300 flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] disabled:opacity-50 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none"
+                  className="group relative w-full h-12 md:h-14 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition-all duration-300 flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] disabled:opacity-50 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none"
                 >
                   {isGoogleLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -252,7 +252,7 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={isAdminLoading}
-                  className="w-full h-14 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-indigo-600/20 active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 mt-4 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none"
+                  className="w-full h-12 md:h-14 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-indigo-600/20 active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 mt-4 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none"
                 >
                   {isAdminLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

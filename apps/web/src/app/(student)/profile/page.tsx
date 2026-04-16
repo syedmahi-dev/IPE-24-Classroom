@@ -89,14 +89,14 @@ export default function ProfilePage() {
   ]
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
-      <div className="relative group overflow-hidden rounded-[3rem]">
+    <div className="max-w-5xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+      <div className="relative group overflow-hidden rounded-2xl md:rounded-[3rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-900 blur-3xl opacity-90 transition-opacity" />
         <div className="absolute inset-0 bg-mesh opacity-20" />
-        <div className="relative glass border-none bg-transparent p-10 md:p-14 flex flex-col md:flex-row items-center gap-10 z-10 text-white shadow-2xl">
+        <div className="relative glass border-none bg-transparent p-5 md:p-14 flex flex-col md:flex-row items-center gap-5 md:gap-10 z-10 text-white shadow-xl md:shadow-2xl">
           
           <div className="relative group/avatar cursor-pointer">
-            <div className="w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-2xl">
+            <div className="w-20 h-20 md:w-32 md:h-32 rounded-2xl md:rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-2xl">
                <img 
                  src={profile.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name}&backgroundColor=0f172a&textColor=ffffff`} 
                  alt="Avatar" 

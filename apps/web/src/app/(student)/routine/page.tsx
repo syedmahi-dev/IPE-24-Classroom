@@ -74,16 +74,16 @@ export default function RoutinePage() {
   const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
       {/* Header */}
-      <div className="relative group overflow-hidden rounded-[2.5rem]">
+      <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-500 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
-        <div className="relative glass p-10 md:p-14 flex flex-col items-center justify-center text-center z-10">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/40 mb-6 group-hover:scale-110 transition-transform duration-500">
-             <Calendar className="w-8 h-8" />
+        <div className="relative glass p-5 md:p-14 flex flex-col items-center justify-center text-center z-10">
+          <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/40 mb-3 md:mb-6 group-hover:scale-110 transition-transform duration-500">
+             <Calendar className="w-6 h-6 md:w-8 md:h-8" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Class Routine</h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium text-lg mt-3 max-w-xl">
+          <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Class Routine</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg mt-2 md:mt-3 max-w-xl">
             Your personalized weekly schedule with live updates.
           </p>
 
@@ -113,13 +113,13 @@ export default function RoutinePage() {
       {error && <div className="text-center p-6 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-[2rem] font-bold">{error}</div>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
           {days.map(dayLabel => {
             const dayClasses = routines.filter((r) => r.dayOfWeek === dayLabel)
             const isToday = currentDay === dayLabel
 
             return (
-              <div key={dayLabel} className={`glass rounded-[2rem] overflow-hidden flex flex-col ${isToday ? 'ring-2 ring-emerald-500 shadow-xl shadow-emerald-900/10 dark:shadow-emerald-900/40 scale-105 z-10' : ''}`}>
+              <div key={dayLabel} className={`glass rounded-2xl md:rounded-[2rem] overflow-hidden flex flex-col ${isToday ? 'ring-2 ring-emerald-500 shadow-xl shadow-emerald-900/10 dark:shadow-emerald-900/40 sm:scale-105 z-10' : ''}`}>
                 <div className={`p-4 text-center font-black uppercase text-sm tracking-widest ${isToday ? 'bg-emerald-500 text-white' : 'bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700/50 text-slate-600 dark:text-slate-300'}`}>
                   {dayLabel} {isToday && <Sparkles className="inline w-4 h-4 ml-1 mb-1" />}
                 </div>

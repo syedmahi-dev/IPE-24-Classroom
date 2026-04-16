@@ -1,9 +1,21 @@
-import { Metadata } from 'next'
+import { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SessionProvider } from 'next-auth/react'
 import { Toaster } from 'sonner'
 import './globals.css'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
+}
 
 export const metadata: Metadata = {
   title: {
@@ -15,7 +27,15 @@ export const metadata: Metadata = {
     icon: '/iut-logo.svg',
     shortcut: '/iut-logo.svg',
     apple: '/iut-logo.svg',
-  }
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'IPE-24',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 const inter = Inter({ 

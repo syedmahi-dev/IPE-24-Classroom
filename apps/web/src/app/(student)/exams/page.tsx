@@ -36,25 +36,25 @@ export default function ExamsPage() {
   const nearestExam = exams.find((e: any) => upcomingIds.includes(e.id))
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="max-w-5xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
       {/* Hero Section */}
-      <div className="relative group overflow-hidden rounded-[2.5rem]">
+      <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-orange-600 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
-        <div className="relative glass p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 z-10">
-          <div className="text-center md:text-left space-y-3 flex-1">
-             <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white shadow-xl shadow-rose-500/40 transform rotate-3 flex-shrink-0 mx-auto md:mx-0 mb-6">
-                <AlertTriangle className="w-8 h-8" />
+        <div className="relative glass p-5 md:p-14 flex flex-col md:flex-row items-center justify-between gap-5 md:gap-8 z-10">
+          <div className="text-center md:text-left space-y-2 md:space-y-3 flex-1">
+             <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-3xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white shadow-xl shadow-rose-500/40 transform rotate-3 flex-shrink-0 mx-auto md:mx-0 mb-2 md:mb-6">
+                <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />
              </div>
-             <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Exam Tracker</h1>
-             <p className="text-slate-500 dark:text-slate-400 font-medium text-lg leading-relaxed">
+             <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Exam Tracker</h1>
+             <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg leading-relaxed">
                {nearestExam ? `Next exam is ${nearestExam.title} for ${nearestExam.course?.code}` : 'No upcoming exams scheduled right now. Relax!'}
              </p>
           </div>
 
           {nearestExam && (
-            <div className="glass p-8 rounded-[2rem] bg-white/60 dark:bg-slate-800/60 border border-white dark:border-slate-700/50 flex flex-col items-center flex-shrink-0 shadow-lg shadow-rose-900/5 dark:shadow-rose-900/20">
+            <div className="glass p-5 md:p-8 rounded-2xl md:rounded-[2rem] bg-white/60 dark:bg-slate-800/60 border border-white dark:border-slate-700/50 flex flex-col items-center flex-shrink-0 shadow-lg shadow-rose-900/5 dark:shadow-rose-900/20">
               <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Countdown</div>
-              <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-rose-600 to-orange-600">
+              <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-rose-600 to-orange-600">
                 {Math.max(0, differenceInDays(new Date(nearestExam.examDate), new Date()))}
               </div>
               <div className="text-sm font-bold text-slate-600 dark:text-slate-400 mt-1">Days Left</div>

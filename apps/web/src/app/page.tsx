@@ -31,15 +31,15 @@ export default function LandingPage() {
       </div>
 
       {/* Navigation — Floating navbar with proper edge spacing */}
-      <header className={`fixed top-4 left-4 right-4 z-50 transition-all duration-500 rounded-2xl ${
+      <header className={`fixed top-2 left-2 right-2 md:top-4 md:left-4 md:right-4 z-50 transition-all duration-500 rounded-xl md:rounded-2xl ${
         scrolled 
           ? 'border border-slate-800/50 bg-slate-950/80 backdrop-blur-xl shadow-2xl shadow-black/20' 
           : 'bg-slate-950/20 backdrop-blur-sm border border-transparent'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between relative z-10">
+        <div className="max-w-7xl mx-auto px-3 md:px-6 h-14 md:h-16 flex items-center justify-between relative z-10">
           {/* Logo */}
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative w-10 h-10 bg-white/5 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/10 shadow-2xl overflow-hidden group-hover:border-indigo-500/50 transition-all duration-300">
+            <div className="relative w-8 h-8 md:w-10 md:h-10 bg-white/5 backdrop-blur-xl rounded-lg md:rounded-xl flex items-center justify-center border border-white/10 shadow-2xl overflow-hidden group-hover:border-indigo-500/50 transition-all duration-300">
               <Image
                 src="/iut-logo.svg"
                 alt="IUT Logo"
@@ -50,8 +50,8 @@ export default function LandingPage() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg tracking-tight text-slate-50">IPE-24</span>
-              <span className="text-xs text-slate-400 -mt-1 font-medium tracking-widest uppercase">Classroom</span>
+              <span className="font-bold text-base md:text-lg tracking-tight text-slate-50">IPE-24</span>
+              <span className="text-[10px] md:text-xs text-slate-400 -mt-1 font-medium tracking-widest uppercase">Classroom</span>
             </div>
           </div>
 
@@ -95,7 +95,7 @@ export default function LandingPage() {
               </Link>
             ) : (
               <Link href="/login">
-                <button className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm transition-colors duration-200 shadow-lg hover:shadow-xl cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none">
+                <button className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm transition-colors duration-200 shadow-lg hover:shadow-xl cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none">
                   Sign In
                 </button>
               </Link>
@@ -107,17 +107,17 @@ export default function LandingPage() {
       <main className="relative z-10">
         
         {/* Hero Section — extra top padding to clear floating navbar */}
-        <section className="min-h-screen flex items-center pt-24 pb-24 px-4 md:px-6">
+        <section className="min-h-screen flex items-center pt-20 md:pt-24 pb-16 md:pb-24 px-4 md:px-6">
           <div className="max-w-5xl mx-auto w-full">
             
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm font-semibold mb-8 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs md:text-sm font-semibold mb-6 md:mb-8 backdrop-blur-sm">
               <Zap className="w-4 h-4" />
               <span>v2.0 Now Live — Semester Portal v2024</span>
             </div>
 
             {/* Hero Heading — animated gradient text */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 leading-tight">
+            <h1 className="text-3xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-4 md:mb-6 leading-tight">
               The Central Hub<br />
               for <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-cyan-400 to-indigo-400 bg-[length:200%_200%] animate-gradient">
                 IUT IPE-24
@@ -125,19 +125,19 @@ export default function LandingPage() {
             </h1>
 
             {/* Hero Subheading */}
-            <p className="text-lg md:text-xl text-slate-400 mb-12 max-w-3xl leading-relaxed font-medium">
+            <p className="text-base md:text-xl text-slate-400 mb-8 md:mb-12 max-w-3xl leading-relaxed font-medium">
               Seamlessly manage courses, announcements, and resources. Designed for students, by students. Replace fragmented WhatsApp threads and scattered PDFs with one unified portal.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-start gap-4 mb-16">
+            <div className="flex flex-col sm:flex-row items-start gap-3 md:gap-4 mb-10 md:mb-16">
               <Link href={session ? '/dashboard' : '/login'}>
-                <button className="group relative px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:from-indigo-700 active:to-indigo-800 text-white font-bold text-base transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none">
+                <button className="group relative px-6 md:px-8 py-3.5 md:py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:from-indigo-700 active:to-indigo-800 text-white font-bold text-sm md:text-base transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none">
                   {session ? 'Go to Dashboard' : 'Access Portal'}
                   {session ? <LayoutDashboard className="w-5 h-5" /> : <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                 </button>
               </Link>
-              <a href="#features" className="group relative px-8 py-4 rounded-xl border-2 border-slate-700 hover:border-slate-600 bg-slate-950/50 hover:bg-slate-900 active:bg-slate-900 text-slate-100 font-bold text-base transition-all duration-200 flex items-center gap-2 w-full sm:w-auto justify-center backdrop-blur-sm cursor-pointer focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none">
+              <a href="#features" className="group relative px-6 md:px-8 py-3.5 md:py-4 rounded-xl border-2 border-slate-700 hover:border-slate-600 bg-slate-950/50 hover:bg-slate-900 active:bg-slate-900 text-slate-100 font-bold text-sm md:text-base transition-all duration-200 flex items-center gap-2 w-full sm:w-auto justify-center backdrop-blur-sm cursor-pointer focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none">
                 Learn More
                 <ChevronDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
               </a>
@@ -159,12 +159,12 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-24 px-4 md:px-6">
+        <section id="features" className="py-12 md:py-24 px-4 md:px-6">
           <div className="max-w-7xl mx-auto">
             
             {/* Section Header */}
-            <div className="text-center mb-16 max-w-3xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">
+            <div className="text-center mb-10 md:mb-16 max-w-3xl mx-auto">
+              <h2 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 text-slate-50">
                 Everything You Need in One Place
               </h2>
               <p className="text-lg text-slate-400">
@@ -173,14 +173,14 @@ export default function LandingPage() {
             </div>
 
             {/* Feature Grid - Bento Layout */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               
               {/* Feature 1: AI Virtual CR - Large Card */}
-              <div className="group lg:col-span-1 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-blue-600/20 text-blue-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Bot className="w-7 h-7" />
+              <div className="group lg:col-span-1 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-2xl md:rounded-3xl p-6 md:p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-500/20 to-blue-600/20 text-blue-300 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Bot className="w-6 h-6 md:w-7 md:h-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">AI Virtual CR</h3>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">AI Virtual CR</h3>
                 <p className="text-slate-400 leading-relaxed mb-4">
                   Ask questions about the syllabus, exam schedules, and university rules 24/7. Powered by a custom-trained RAG model.
                 </p>
@@ -249,11 +249,11 @@ export default function LandingPage() {
         </section>
 
         {/* Capabilities Section */}
-        <section id="capabilities" className="py-24 px-4 md:px-6 bg-gradient-to-b from-transparent to-indigo-950/10">
+        <section id="capabilities" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-to-b from-transparent to-indigo-950/10">
           <div className="max-w-5xl mx-auto">
             
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">
+            <div className="text-center mb-10 md:mb-16">
+              <h2 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 text-slate-50">
                 Seamlessly Integrated
               </h2>
               <p className="text-lg text-slate-400">
@@ -262,7 +262,7 @@ export default function LandingPage() {
             </div>
 
             {/* Integration Grid */}
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-4 md:gap-8">
               <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
@@ -315,42 +315,42 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-20 px-4 md:px-6">
+        <section className="py-12 md:py-20 px-4 md:px-6">
           <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-3 gap-4 md:gap-8">
               <div className="text-center group">
-                <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2 group-hover:scale-110 transition-transform duration-300">
+                <div className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
                   500+
                 </div>
                 <p className="text-slate-400 font-medium">Active Users</p>
               </div>
               <div className="text-center group">
-                <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2 group-hover:scale-110 transition-transform duration-300">
+                <div className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
                   99.9%
                 </div>
-                <p className="text-slate-400 font-medium">Uptime SLA</p>
+                <p className="text-slate-400 font-medium text-sm md:text-base">Uptime SLA</p>
               </div>
               <div className="text-center group">
-                <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2 group-hover:scale-110 transition-transform duration-300">
+                <div className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
                   24/7
                 </div>
-                <p className="text-slate-400 font-medium">AI Support</p>
+                <p className="text-slate-400 font-medium text-sm md:text-base">AI Support</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 px-4 md:px-6">
+        <section className="py-12 md:py-24 px-4 md:px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">
+            <h2 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 text-slate-50">
               Ready to Access Your Classroom?
             </h2>
-            <p className="text-lg text-slate-400 mb-12">
+            <p className="text-base md:text-lg text-slate-400 mb-8 md:mb-12">
               Join your fellow IPE-24 classmates who are already using the unified portal to stay connected and informed.
             </p>
             <Link href="/login">
-              <button className="group relative px-10 py-5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:from-indigo-700 active:to-indigo-800 text-white font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none">
+              <button className="group relative px-8 md:px-10 py-4 md:py-5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:from-indigo-700 active:to-indigo-800 text-white font-bold text-base md:text-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none">
                 Sign In to Portal
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -424,7 +424,7 @@ export default function LandingPage() {
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         aria-label="Scroll to top"
-        className={`fixed bottom-8 right-8 z-50 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/30 flex items-center justify-center transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none ${
+        className={`fixed bottom-6 right-4 md:bottom-8 md:right-8 z-50 w-11 h-11 md:w-12 md:h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/30 flex items-center justify-center transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >
