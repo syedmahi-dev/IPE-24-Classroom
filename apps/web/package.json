@@ -29,6 +29,7 @@
     "@tiptap/react": "2.5.9",
     "@tiptap/starter-kit": "2.5.9",
     "@types/otplib": "^7.0.0",
+    "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "0.7.0",
     "clsx": "2.1.1",
