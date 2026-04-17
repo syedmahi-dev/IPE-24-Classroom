@@ -102,7 +102,7 @@ export default function StudyGroupsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
       <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
         <div className="relative glass p-5 md:p-14 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 z-10 text-center md:text-left">
@@ -130,6 +130,8 @@ export default function StudyGroupsPage() {
         {GROUP_FILTERS.map(f => (
           <button
             key={f.value}
+            type="button"
+            aria-pressed={groupFilter === f.value}
             onClick={() => { setGroupFilter(f.value); setPage(1) }}
             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
               groupFilter === f.value

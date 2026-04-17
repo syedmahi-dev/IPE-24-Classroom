@@ -76,7 +76,7 @@ describe('RoutinePage', () => {
     render(<RoutinePage />)
     
     await waitFor(() => {
-        expect(screen.getByText(/Odd Group Lab/i)).toBeInTheDocument()
+      expect(screen.getByText(/Group 2 \(Odd\)/i)).toBeInTheDocument()
     }, { timeout: 10000 })
   })
 

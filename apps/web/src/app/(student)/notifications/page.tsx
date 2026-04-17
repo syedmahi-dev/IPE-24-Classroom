@@ -24,7 +24,7 @@ export default async function NotificationsPage() {
   const readCount = notifications.length - unreadCount
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-5xl mx-auto space-y-6 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
       <div className="glass rounded-[2rem] p-8 md:p-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <Bell className="w-32 h-32" />

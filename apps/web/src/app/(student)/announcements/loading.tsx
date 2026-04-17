@@ -1,6 +1,6 @@
 export default function AnnouncementsLoading() {
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500">
+    <div className="w-full max-w-6xl mx-auto space-y-8 lg:space-y-10 pb-20 min-w-0 animate-in fade-in duration-500">
       <div className="relative rounded-[2.5rem] overflow-hidden">
         <div className="bg-slate-200 dark:bg-slate-800 h-48 w-full animate-pulse rounded-[2.5rem]" />
       </div>

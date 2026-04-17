@@ -17,12 +17,12 @@ describe('Sidebar', () => {
     render(<Sidebar role="admin" />)
     
     // Admin tools should exist
-    expect(screen.getByTestId('nav-Dashboard')).toBeInTheDocument()
+    expect(screen.getByTestId('nav-Admin-Dashboard')).toBeInTheDocument()
     expect(screen.getByTestId('nav-Announcements')).toBeInTheDocument()
-    expect(screen.getByTestId('nav-Exams')).toBeInTheDocument()
+    expect(screen.getByTestId('nav-Manage-Exams')).toBeInTheDocument()
     
     // Super-admin only tools should be rendered but locked
-    const usersLink = screen.getByTestId('nav-Users')
+    const usersLink = screen.getByTestId('nav-Users-&-Roles')
     expect(usersLink).toBeInTheDocument()
     expect(usersLink).toHaveAttribute('aria-disabled', 'true')
   })
@@ -31,10 +31,10 @@ describe('Sidebar', () => {
     render(<Sidebar role="super_admin" />)
     
     // Admin tools
-    expect(screen.getByTestId('nav-Dashboard')).toBeInTheDocument()
+    expect(screen.getByTestId('nav-Admin-Dashboard')).toBeInTheDocument()
     
     // Super-admin tools should be fully accessible
-    const usersLink = screen.getByTestId('nav-Users')
+    const usersLink = screen.getByTestId('nav-Users-&-Roles')
     expect(usersLink).toBeInTheDocument()
     expect(usersLink).not.toHaveAttribute('aria-disabled', 'true')
   })

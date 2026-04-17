@@ -70,7 +70,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] flex flex-col pb-16 md:pb-6">
+    <div className="w-full max-w-5xl mx-auto min-h-[calc(100dvh-120px)] md:min-h-[calc(100dvh-140px)] flex flex-col pb-16 md:pb-6 min-w-0">
       <div className="glass rounded-2xl md:rounded-[2rem] flex flex-col h-full overflow-hidden shadow-xl md:shadow-2xl shadow-indigo-900/5 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 to-white/20 pointer-events-none" />
         
@@ -145,6 +145,7 @@ export default function ChatPage() {
           <form onSubmit={handleSubmit} className="relative flex items-center group">
             <input
               type="text"
+              aria-label="Chat message"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about syllabus, routine, or class updates..."

@@ -76,7 +76,7 @@ export default function AnnouncementsPage() {
   ]
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
       {/* Premium Hero Section */}
       <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-600 to-indigo-600 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-700" />
@@ -98,7 +98,8 @@ export default function AnnouncementsPage() {
         <div className="relative flex-1 w-full group">
           <Search className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-500 transition-colors" />
           <input
-            type="text"
+            type="search"
+            aria-label="Search announcements"
             placeholder="Search announcements..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -110,11 +111,13 @@ export default function AnnouncementsPage() {
           {typeOptions.map((option) => (
             <button
               key={option.value}
+              type="button"
+              aria-pressed={selectedType === option.value}
               onClick={() => {
                 setSelectedType(option.value)
                 setPage(1)
               }}
-              className={`px-4 md:px-5 py-2.5 md:py-3.5 rounded-xl md:rounded-[1.25rem] text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-300 shadow-sm ${
+              className={`px-4 md:px-5 py-2.5 md:py-3.5 min-h-[44px] rounded-xl md:rounded-[1.25rem] text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-300 shadow-sm focus-ring ${
                 selectedType === option.value
                   ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 shadow-slate-800/20 dark:shadow-slate-100/20 scale-105'
                   : `bg-white/60 dark:bg-slate-900/60 border border-white dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 ${option.colorClass}`

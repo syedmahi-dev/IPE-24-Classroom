@@ -16,6 +16,8 @@ function createRequest(path: string, headers?: Record<string, string>) {
 }
 
 describe('middleware', () => {
+  const authCookie = 'authjs.session-token=mock-session'
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -78,12 +80,12 @@ describe('middleware', () => {
     })
 
     it('allows authenticated users to access protected pages', async () => {
-      const res = await middleware(createRequest('/dashboard'))
+      const res = await middleware(createRequest('/dashboard', { cookie: authCookie }))
       expect(res.status).toBe(200)
     })
 
     it('allows authenticated users to access API routes', async () => {
-      const res = await middleware(createRequest('/api/v1/announcements'))
+      const res = await middleware(createRequest('/api/v1/announcements', { cookie: authCookie }))
       expect(res.status).toBe(200)
     })
   })
@@ -99,6 +101,7 @@ describe('middleware', () => {
     it('blocks internal routes without correct secret', async () => {
       const res = await middleware(createRequest('/api/v1/internal/sync', {
         'x-internal-secret': 'wrong-secret',
+        cookie: authCookie,
       }))
       expect(res.status).toBe(401)
     })
@@ -106,12 +109,13 @@ describe('middleware', () => {
     it('allows internal routes with correct secret', async () => {
       const res = await middleware(createRequest('/api/v1/internal/sync', {
         'x-internal-secret': INTERNAL_SECRET,
+        cookie: authCookie,
       }))
       expect(res.status).toBe(200)
     })
 
     it('blocks internal routes with missing secret header', async () => {
-      const res = await middleware(createRequest('/api/v1/internal/sync'))
+      const res = await middleware(createRequest('/api/v1/internal/sync', { cookie: authCookie }))
       expect(res.status).toBe(401)
     })
   })

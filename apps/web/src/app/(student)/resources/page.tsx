@@ -163,7 +163,7 @@ export default function ResourcesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
       {/* Hero Section */}
       <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-700" />
@@ -205,7 +205,8 @@ export default function ResourcesPage() {
           <div className="relative w-full group">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500" />
             <input
-              type="text"
+              type="search"
+              aria-label="Search files in this folder"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder="Search files in this folder..."

@@ -37,7 +37,7 @@ export default async function DashboardPage() {
   const roleDisplay = userRole === 'super_admin' ? 'Super Admin' : userRole === 'admin' ? 'Class Representative' : 'Student'
 
   return (
-    <div className="space-y-6 md:space-y-12 max-w-7xl mx-auto pb-6 md:pb-20 mt-2 md:mt-4 relative">
+    <div className="w-full max-w-7xl mx-auto space-y-6 md:space-y-12 pb-6 md:pb-20 mt-2 md:mt-4 relative min-w-0">
       
       {/* Background Ambience */}
       <div className="absolute top-0 right-10 -z-10 w-[500px] h-[500px] bg-brand-500/20 dark:bg-brand-600/10 blur-[120px] rounded-full mix-blend-multiply dark:mix-blend-lighten pointer-events-none animate-float" />

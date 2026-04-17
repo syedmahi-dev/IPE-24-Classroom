@@ -26,7 +26,7 @@ export function MobileBottomNav({ role }: { role: string }) {
   const links = role === "admin" || role === "super_admin" ? ADMIN_MOBILE_NAV : MOBILE_NAV
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/60 dark:border-slate-800/60 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/60 dark:border-slate-800/60 pb-safe shadow-[0_-8px_24px_rgba(15,23,42,0.08)] dark:shadow-[0_-8px_24px_rgba(0,0,0,0.4)]">
       <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
         {links.map((link) => {
           const isActive = pathname === link.href || 
@@ -37,7 +37,8 @@ export function MobileBottomNav({ role }: { role: string }) {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-[3rem] py-1.5 px-3 rounded-2xl transition-all duration-200 press-scale ${
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex flex-col items-center justify-center gap-0.5 min-w-[3rem] min-h-[44px] py-1.5 px-3 rounded-2xl transition-all duration-200 press-scale cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:outline-none ${
                 isActive
                   ? 'text-brand-600 dark:text-brand-400'
                   : 'text-slate-400 dark:text-slate-500 active:text-slate-600 dark:active:text-slate-300'

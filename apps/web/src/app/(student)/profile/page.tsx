@@ -89,7 +89,7 @@ export default function ProfilePage() {
   ]
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
       <div className="relative group overflow-hidden rounded-2xl md:rounded-[3rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-900 blur-3xl opacity-90 transition-opacity" />
         <div className="absolute inset-0 bg-mesh opacity-20" />

@@ -51,7 +51,7 @@ export default function PollsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 md:space-y-8 pb-6 md:pb-20">
+    <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
       <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
         <div className="relative glass p-5 md:p-14 flex flex-col items-center justify-center text-center z-10">

@@ -7,16 +7,17 @@ export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unre
       {/* Ambient background blur inside the topbar */}
       <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-2xl md:rounded-[2.5rem] pointer-events-none" />
 
-      <div className="flex items-center flex-1 gap-3 md:gap-6 relative z-10">
+      <div className="flex items-center flex-1 gap-3 md:gap-6 relative z-10 min-w-0">
         <button onClick={onMenuClick} title="Open Menu" aria-label="Open Menu" className="md:hidden p-2.5 -ml-1 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-xl transition-all active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none">
           <Menu className="h-5 w-5" />
         </button>
-        <div className="hidden sm:flex max-w-lg w-full relative group">
+        <div className="hidden sm:flex w-full max-w-md md:max-w-lg lg:max-w-xl relative group">
           <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors" />
           </div>
           <input
-            type="text"
+            type="search"
+            aria-label="Search class materials"
             className="block w-full pl-14 pr-5 py-3 md:py-3.5 border border-white/60 dark:border-white/10 shadow-sm rounded-xl md:rounded-2xl bg-white/60 dark:bg-slate-900/60 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-300 dark:focus:border-brand-700 text-sm font-bold text-slate-700 dark:text-slate-200 transition-all duration-300"
             placeholder="Search class materials, announcements..."
           />

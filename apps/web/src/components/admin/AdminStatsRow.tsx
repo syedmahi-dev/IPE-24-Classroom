@@ -67,7 +67,7 @@ function StatCard({ icon, label, value, subtitle, gradientColor, trend }: StatCa
           <p className="text-3xl font-black text-slate-50 tracking-tight">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
-          <p className="text-xs font-medium text-slate-400">{subtitle}</p>
+          {subtitle && <p className="text-xs font-medium text-slate-400">{subtitle}</p>}
         </div>
       </div>
     </div>
@@ -89,7 +89,7 @@ export function AdminStatsRow({ stats, role }: { stats: any, role: string }) {
       {role === 'super_admin' && (
         <StatCard
           icon={<ShieldAlert className="w-5 h-5" />}
-          label="Admins"
+          label="ADMINS"
           value={stats.admins || 0}
           subtitle="appointed"
           gradientColor="amber"
@@ -118,8 +118,8 @@ export function AdminStatsRow({ stats, role }: { stats: any, role: string }) {
       <StatCard
         icon={<Vote className="w-5 h-5" />}
         label="Polls"
-        value={stats.polls || 0}
-        subtitle="active"
+        value={`${stats.polls || 0} active`}
+        subtitle=""
         gradientColor="red"
         trend={stats.pollsTrend ? { value: stats.pollsTrend, direction: 'up' } : undefined}
       />

@@ -80,6 +80,8 @@
   body {
     background-color: white;
     color: theme('colors.slate.900');
+    min-height: 100dvh;
+    text-rendering: optimizeLegibility;
   }
   .dark body {
     background-color: theme('colors.slate.950');

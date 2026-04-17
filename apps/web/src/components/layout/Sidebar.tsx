@@ -112,8 +112,9 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
                     href={isLocked ? '#' : link.href}
                     data-testid={`nav-${link.label.replace(/\s+/g, '-')}`}
                     aria-disabled={isLocked}
+                    aria-current={isActive ? 'page' : undefined}
                     tabIndex={isLocked ? -1 : 0}
-                    className={`flex items-center px-4 py-3.5 text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none ${
+                    className={`flex items-center px-4 py-3.5 text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none cursor-pointer ${
                       isLocked 
                         ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50 bg-slate-50/50 dark:bg-slate-900/30 grayscale' 
                         : isActive
@@ -169,7 +170,7 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
             onClick={onMobileClose}
           />
           {/* Drawer */}
-          <aside ref={mobileDrawerRef} className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl" style={{ transform: 'translateX(-100%)' }}>
+          <aside ref={mobileDrawerRef} role="dialog" aria-modal="true" className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl" style={{ transform: 'translateX(-100%)' }}>
             <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
             {sidebarContent}
           </aside>

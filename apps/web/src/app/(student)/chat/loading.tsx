@@ -1,6 +1,6 @@
 export default function ChatLoading() {
   return (
-    <div className="max-w-4xl mx-auto h-[calc(100vh-140px)] flex flex-col pb-6 animate-in fade-in duration-500">
+    <div className="w-full max-w-5xl mx-auto min-h-[calc(100dvh-140px)] flex flex-col pb-6 min-w-0 animate-in fade-in duration-500">
       <div className="glass rounded-[2rem] p-6 mb-4">
         <div className="h-8 w-48 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
       </div>
