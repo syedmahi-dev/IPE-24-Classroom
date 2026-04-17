@@ -41,20 +41,20 @@ export default function LandingPage() {
         // Hero entrance timeline
         const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } })
         heroTl
-          .from('.gsap-hero-badge', { autoAlpha: 0, y: 20, duration: 0.5 })
-          .from('.gsap-hero-heading', { autoAlpha: 0, y: 30, duration: 0.7 }, '-=0.2')
-          .from('.gsap-hero-sub', { autoAlpha: 0, y: 20, duration: 0.5 }, '-=0.3')
-          .from('.gsap-hero-cta', { autoAlpha: 0, y: 20, duration: 0.5 }, '-=0.2')
-          .from('.gsap-hero-trust', { autoAlpha: 0, y: 12, duration: 0.4 }, '-=0.2')
+          .from('.gsap-hero-badge', { opacity: 0, y: 20, duration: 0.5 })
+          .from('.gsap-hero-heading', { opacity: 0, y: 30, duration: 0.7 }, '-=0.2')
+          .from('.gsap-hero-sub', { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
+          .from('.gsap-hero-cta', { opacity: 0, y: 20, duration: 0.5 }, '-=0.2')
+          .from('.gsap-hero-trust', { opacity: 0, y: 12, duration: 0.4 }, '-=0.2')
 
         // Feature cards stagger on scroll
         gsap.from('.gsap-feature-card', {
           scrollTrigger: {
             trigger: '.gsap-features-grid',
-            start: 'top 80%',
+            start: 'top 85%',
             once: true,
           },
-          autoAlpha: 0,
+          opacity: 0,
           y: 40,
           duration: 0.6,
           stagger: 0.1,
@@ -65,10 +65,10 @@ export default function LandingPage() {
         gsap.from('.gsap-cap-card', {
           scrollTrigger: {
             trigger: '.gsap-capabilities-grid',
-            start: 'top 80%',
+            start: 'top 85%',
             once: true,
           },
-          autoAlpha: 0,
+          opacity: 0,
           y: 30,
           duration: 0.5,
           stagger: 0.08,
@@ -79,10 +79,10 @@ export default function LandingPage() {
         gsap.from('.gsap-stat', {
           scrollTrigger: {
             trigger: '.gsap-stats',
-            start: 'top 85%',
+            start: 'top 90%',
             once: true,
           },
-          autoAlpha: 0,
+          opacity: 0,
           y: 24,
           scale: 0.95,
           duration: 0.5,
@@ -94,10 +94,10 @@ export default function LandingPage() {
         gsap.from('.gsap-cta-content', {
           scrollTrigger: {
             trigger: '.gsap-cta-content',
-            start: 'top 85%',
+            start: 'top 90%',
             once: true,
           },
-          autoAlpha: 0,
+          opacity: 0,
           y: 30,
           duration: 0.6,
           ease: 'power2.out',

@@ -42,7 +42,7 @@ export function AnimateIn({
         if (reduced) return // Skip animation for reduced-motion users
 
         const fromVars: gsap.TweenVars = {
-          autoAlpha: 0,
+          opacity: 0,
           duration,
           delay,
           ease: 'power2.out',
@@ -109,7 +109,7 @@ export function StaggerChildren({
         if (reduced) return
 
         const fromVars: gsap.TweenVars = {
-          autoAlpha: 0,
+          opacity: 0,
           duration,
           delay,
           ease: 'power2.out',
@@ -157,7 +157,7 @@ export function PageTransition({
         if (reduced) return
 
         gsap.from('.gsap-page', {
-          autoAlpha: 0,
+          opacity: 0,
           y: 16,
           duration: 0.4,
           ease: 'power2.out',

@@ -36,7 +36,7 @@ export function StaggerList({
         if (reduced) return
 
         gsap.from('.gsap-stagger-item', {
-          autoAlpha: 0,
+          opacity: 0,
           y: distance,
           duration: 0.45,
           stagger,

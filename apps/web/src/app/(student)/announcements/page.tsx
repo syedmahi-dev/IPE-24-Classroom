@@ -26,7 +26,7 @@ export default function AnnouncementsPage() {
       const mm = gsap.matchMedia()
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.from(gridRef.current!.children, {
-          autoAlpha: 0,
+          opacity: 0,
           y: 20,
           duration: 0.4,
           stagger: 0.06,

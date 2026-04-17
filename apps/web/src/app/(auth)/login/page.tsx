@@ -53,10 +53,10 @@ function LoginContent() {
         if (reduced) return
 
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-        tl.from('.gsap-login-logo', { autoAlpha: 0, scale: 0.8, duration: 0.5 })
-          .from('.gsap-login-title', { autoAlpha: 0, y: 16, duration: 0.4 }, '-=0.2')
-          .from('.gsap-login-card', { autoAlpha: 0, y: 24, duration: 0.5 }, '-=0.2')
-          .from('.gsap-login-footer', { autoAlpha: 0, y: 12, duration: 0.3 }, '-=0.1')
+        tl.from('.gsap-login-logo', { opacity: 0, scale: 0.8, duration: 0.5 })
+          .from('.gsap-login-title', { opacity: 0, y: 16, duration: 0.4 }, '-=0.2')
+          .from('.gsap-login-card', { opacity: 0, y: 24, duration: 0.5 }, '-=0.2')
+          .from('.gsap-login-footer', { opacity: 0, y: 12, duration: 0.3 }, '-=0.1')
       }
     )
   }, { scope: loginRef })
