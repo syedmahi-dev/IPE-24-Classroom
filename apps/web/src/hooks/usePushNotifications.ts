@@ -9,22 +9,42 @@ export type PushState = 'loading' | 'unsupported' | 'prompt' | 'enabled' | 'disa
 // VAPID key is a public key (Web Push certificate), safe to embed as fallback
 const VAPID_KEY = process.env.NEXT_PUBLIC_FCM_VAPID_KEY || 'BIho0tjpDfyiC4z-iH0h11Q6zB4CGHVO30fUANVur20lXUsM_2Atgt0OKhayzxSapKWB6Pu0l2RjEm9ZHQxqVgw'
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function waitForServiceWorkerReady(timeoutMs = 10000): Promise<ServiceWorkerRegistration | null> {
+  if (!('serviceWorker' in navigator)) return null
+  try {
+    const ready = await Promise.race<ServiceWorkerRegistration | null>([
+      navigator.serviceWorker.ready,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+    ])
+    return ready
+  } catch {
+    return null
+  }
+}
+
 async function ensureSW(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null
   try {
-    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+    const reg = existing || await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+
+    // Ensure latest SW script is picked up if it changed.
+    reg.update().catch(() => undefined)
+
     if (reg.active) return reg
-    // Wait for the new SW to activate
-    await new Promise<void>((resolve) => {
-      const worker = reg.installing || reg.waiting
-      if (!worker) { resolve(); return }
-      const check = () => {
-        if (worker.state === 'activated') { worker.removeEventListener('statechange', check); resolve() }
-      }
-      worker.addEventListener('statechange', check)
-      setTimeout(resolve, 5000) // safety timeout
-    })
-    return reg
+
+    const readyReg = await waitForServiceWorkerReady()
+    if (readyReg?.active) return readyReg
+
+    const refreshed = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+    if (refreshed?.active) return refreshed
+
+    console.error('[Push] SW registered but not active yet')
+    return null
   } catch (err) {
     console.error('[Push] SW registration failed:', err)
     return null
@@ -32,16 +52,25 @@ async function ensureSW(): Promise<ServiceWorkerRegistration | null> {
 }
 
 async function fetchToken(messaging: Messaging, sw: ServiceWorkerRegistration): Promise<string | null> {
-  try {
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: sw,
-    })
-    return token || null
-  } catch (err) {
-    console.error('[Push] getToken failed:', err)
-    return null
+  let activeSW = sw
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: activeSW,
+      })
+      if (token) return token
+    } catch (err) {
+      console.error(`[Push] getToken failed (attempt ${attempt + 1}):`, err)
+    }
+
+    if (attempt === 0) {
+      await wait(500)
+      const readyReg = await waitForServiceWorkerReady()
+      if (readyReg) activeSW = readyReg
+    }
   }
+  return null
 }
 
 async function serverRegister(token: string): Promise<boolean> {
@@ -73,13 +102,19 @@ export function usePushNotifications() {
     if (messagingRef.current && swRef.current) {
       return { messaging: messagingRef.current, sw: swRef.current }
     }
-    const sw = await ensureSW()
-    if (!sw) return null
-    const messaging = await initMessaging()
-    if (!messaging) return null
-    swRef.current = sw
-    messagingRef.current = messaging
-    return { messaging, sw }
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const sw = await ensureSW()
+      const messaging = await initMessaging()
+      if (sw && messaging) {
+        swRef.current = sw
+        messagingRef.current = messaging
+        return { messaging, sw }
+      }
+      await wait(300)
+    }
+
+    return null
   }, [])
 
   // --- Init on mount ---
@@ -97,13 +132,13 @@ export function usePushNotifications() {
     let cancelled = false
 
     const init = async () => {
-      const ready = await getReady()
-      if (cancelled) return
-      if (!ready) { setPushState('unsupported'); return }
-
       const perm = Notification.permission
       if (perm === 'denied') { setPushState('denied'); return }
       if (perm === 'default') { setPushState('prompt'); return }
+
+      const ready = await getReady()
+      if (cancelled) return
+      if (!ready) { setPushState('disabled'); return }
 
       // Permission already granted — try to get/refresh token
       const token = await fetchToken(ready.messaging, ready.sw)
@@ -153,12 +188,12 @@ export function usePushNotifications() {
       if (Notification.permission !== 'granted') { setPushState('prompt'); return }
 
       const ready = await getReady()
-      if (!ready) { setPushState('error'); return }
+      if (!ready) { setPushState('disabled'); return }
 
       const token = await fetchToken(ready.messaging, ready.sw)
       if (!token) {
         console.error('[Push] Could not obtain FCM token after permission was granted')
-        setPushState('error')
+        setPushState('disabled')
         return
       }
 
@@ -204,7 +239,7 @@ export function usePushNotifications() {
     messagingRef.current = null
     swRef.current = null
     const ready = await getReady()
-    if (!ready) { setPushState('error'); return }
+    if (!ready) { setPushState('disabled'); return }
     if (Notification.permission === 'granted') {
       await handleEnable()
     } else if (Notification.permission === 'denied') {
