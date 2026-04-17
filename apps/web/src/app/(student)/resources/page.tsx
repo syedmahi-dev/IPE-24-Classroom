@@ -46,6 +46,8 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; gradient: stri
   other: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400', gradient: 'from-slate-400 to-slate-500' },
 }
 
+const DEFAULT_CATEGORY_COLOR = CATEGORY_COLORS.other
+
 function formatBytes(bytes: number) {
   if (!bytes) return '0 B'
   const k = 1024
@@ -81,7 +83,7 @@ export default function ResourcesPage() {
       if (!res.ok) throw new Error('Network error')
       const result = await res.json()
       if (!result.success) throw new Error(result.error?.message || 'Failed')
-      setFolders(result.data)
+      setFolders(Array.isArray(result.data) ? result.data : [])
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -112,8 +114,9 @@ export default function ResourcesPage() {
       if (!res.ok) throw new Error('Network error')
       const result = await res.json()
       if (!result.success) throw new Error(result.error?.message || 'Failed')
-      setFiles(result.data)
-      setTotalPages(result.meta.totalPages)
+      setFiles(Array.isArray(result.data) ? result.data : [])
+      const parsedTotalPages = Number(result?.meta?.totalPages)
+      setTotalPages(Number.isFinite(parsedTotalPages) && parsedTotalPages > 0 ? parsedTotalPages : 1)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -156,7 +159,7 @@ export default function ResourcesPage() {
     if (folder.type === 'course') {
       return { bg: 'bg-indigo-50 dark:bg-indigo-900/20', text: 'text-indigo-500 dark:text-indigo-400', gradient: 'from-indigo-500 to-blue-600' }
     }
-    return CATEGORY_COLORS[folder.category || 'other']
+    return CATEGORY_COLORS[folder.category || 'other'] || DEFAULT_CATEGORY_COLOR
   }
 
   return (
@@ -329,7 +332,7 @@ export default function ResourcesPage() {
                     {file.name}
                   </h3>
                   <p className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                    {file.category.replace('_', ' ')}
+                    {(file.category || 'other').replace('_', ' ')}
                   </p>
                   <div className="mt-6 w-full pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <div className="flex flex-col items-start">

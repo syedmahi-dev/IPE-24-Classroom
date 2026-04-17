@@ -5,7 +5,6 @@ import { Sidebar } from "./Sidebar"
 import { TopBar } from "./TopBar"
 import { MobileBottomNav } from "./MobileBottomNav"
 import PushNotificationManager from "@/components/PushNotificationManager"
-import { PageTransition } from "@/components/animations/GSAPAnimations"
 
 export function DashboardShell({ 
   children, 
@@ -27,9 +26,7 @@ export function DashboardShell({
         <TopBar user={user} unreadCount={unreadCount} onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 overflow-y-auto px-3 md:px-8 py-4 md:py-8 pb-20 md:pb-8 z-10 relative scroll-touch">
           <PushNotificationManager />
-          <PageTransition>
-            {children}
-          </PageTransition>
+          <div className="animate-fade-in">{children}</div>
         </main>
       </div>
       <MobileBottomNav role={role} />
