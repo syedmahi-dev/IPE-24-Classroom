@@ -14,6 +14,18 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+type TokenFetchResult = {
+  token: string | null
+  errorCode?: string
+}
+
+function mapPushStateFromTokenError(errorCode?: string): PushState {
+  if (!errorCode) return 'disabled'
+  if (errorCode === 'messaging/unsupported-browser') return 'unsupported'
+  if (errorCode === 'messaging/permission-blocked') return 'denied'
+  return 'disabled'
+}
+
 async function getPermissionState(): Promise<NotificationPermission> {
   let permission = Notification.permission
   if (
@@ -72,25 +84,28 @@ async function ensureSW(): Promise<ServiceWorkerRegistration | null> {
   }
 }
 
-async function fetchToken(messaging: Messaging, sw: ServiceWorkerRegistration): Promise<string | null> {
+async function fetchToken(messaging: Messaging, sw: ServiceWorkerRegistration): Promise<TokenFetchResult> {
   let activeSW = sw
+  let lastErrorCode: string | undefined
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const token = await getToken(messaging, {
         vapidKey: VAPID_KEY,
         serviceWorkerRegistration: activeSW,
       })
-      if (token) return token
+      if (token) return { token }
     } catch (err) {
       console.error(`[Push] getToken failed (attempt ${attempt + 1}):`, err)
+      lastErrorCode = (err as { code?: string } | null)?.code
       // Fallback: try without explicit VAPID in case of key mismatch/encoding issues.
       try {
         const fallbackToken = await getToken(messaging, {
           serviceWorkerRegistration: activeSW,
         })
-        if (fallbackToken) return fallbackToken
+        if (fallbackToken) return { token: fallbackToken }
       } catch (fallbackErr) {
         console.error(`[Push] getToken fallback failed (attempt ${attempt + 1}):`, fallbackErr)
+        lastErrorCode = (fallbackErr as { code?: string } | null)?.code || lastErrorCode
       }
     }
 
@@ -100,7 +115,7 @@ async function fetchToken(messaging: Messaging, sw: ServiceWorkerRegistration): 
       if (readyReg) activeSW = readyReg
     }
   }
-  return null
+  return { token: null, errorCode: lastErrorCode }
 }
 
 async function serverRegister(token: string): Promise<boolean> {
@@ -126,6 +141,7 @@ export function usePushNotifications() {
   const messagingRef = useRef<Messaging | null>(null)
   const swRef = useRef<ServiceWorkerRegistration | null>(null)
   const onMessageSetup = useRef(false)
+  const autoRetryRef = useRef(0)
 
   // Shared helper: get messaging + SW, cache in refs
   const getReady = useCallback(async (): Promise<{ messaging: Messaging; sw: ServiceWorkerRegistration } | null> => {
@@ -171,13 +187,14 @@ export function usePushNotifications() {
       if (!ready) { setPushState('disabled'); return }
 
       // Permission already granted — try to get/refresh token
-      const token = await fetchToken(ready.messaging, ready.sw)
+      const tokenResult = await fetchToken(ready.messaging, ready.sw)
       if (cancelled) return
-      if (token) {
-        serverRegister(token) // fire & forget
+      if (tokenResult.token) {
+        serverRegister(tokenResult.token) // fire & forget
         setPushState('enabled')
+        autoRetryRef.current = 0
       } else {
-        setPushState('disabled')
+        setPushState(mapPushStateFromTokenError(tokenResult.errorCode))
       }
 
       // Foreground message handler
@@ -221,19 +238,20 @@ export function usePushNotifications() {
       const ready = await getReady()
       if (!ready) { setPushState('disabled'); return }
 
-      const token = await fetchToken(ready.messaging, ready.sw)
-      if (!token) {
+      const tokenResult = await fetchToken(ready.messaging, ready.sw)
+      if (!tokenResult.token) {
         console.error('[Push] Could not obtain FCM token after permission was granted')
-        setPushState('disabled')
+        setPushState(mapPushStateFromTokenError(tokenResult.errorCode))
         return
       }
 
-      const registered = await serverRegister(token)
+      const registered = await serverRegister(tokenResult.token)
       if (!registered) {
         console.error('[Push] Server rejected token registration')
         // Still mark enabled client-side; push will work, just server doesn't know
       }
       setPushState('enabled')
+      autoRetryRef.current = 0
     } catch (error) {
       console.error('[Push] Enable failed:', error)
       setPushState('error')
@@ -280,6 +298,21 @@ export function usePushNotifications() {
       setPushState('prompt')
     }
   }, [getReady, handleEnable])
+
+  // Auto-retry token sync when permission is granted but state is still disabled.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (pushState !== 'disabled' || isToggling) return
+    if (Notification.permission !== 'granted') return
+    if (autoRetryRef.current >= 3) return
+
+    const timer = window.setTimeout(() => {
+      autoRetryRef.current += 1
+      void handleEnable()
+    }, 1200)
+
+    return () => window.clearTimeout(timer)
+  }, [pushState, isToggling, handleEnable])
 
   // Re-evaluate when tab regains focus/visibility after permission dialogs.
   useEffect(() => {
