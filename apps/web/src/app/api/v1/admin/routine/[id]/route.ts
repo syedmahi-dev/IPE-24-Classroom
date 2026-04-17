@@ -14,6 +14,7 @@ const updateSchema = z.object({
   room: z.string().min(1).max(50).optional(),
   teacher: z.string().max(100).optional(),
   targetGroup: z.enum(['ALL', 'ODD', 'EVEN']).optional(),
+  weekParity: z.enum(['ALL', 'ODD', 'EVEN']).optional(),
   isLab: z.boolean().optional(),
   semester: z.string().max(50).optional(),
 })
@@ -46,6 +47,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         ...(parsed.data.room !== undefined ? { room: parsed.data.room } : {}),
         ...(parsed.data.teacher !== undefined ? { teacher: parsed.data.teacher || null } : {}),
         ...(parsed.data.targetGroup !== undefined ? { targetGroup: parsed.data.targetGroup } : {}),
+        ...(parsed.data.weekParity !== undefined ? { weekParity: parsed.data.weekParity } : {}),
         ...(parsed.data.isLab !== undefined ? { isLab: parsed.data.isLab } : {}),
         ...(parsed.data.semester !== undefined ? { semester: parsed.data.semester || null } : {}),
       },

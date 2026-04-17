@@ -63,6 +63,7 @@ const createSchema = z.object({
   room: z.string().min(1).max(50),
   teacher: z.string().max(100).optional(),
   targetGroup: z.enum(['ALL', 'ODD', 'EVEN']).default('ALL'),
+  weekParity: z.enum(['ALL', 'ODD', 'EVEN']).default('ALL'),
   isLab: z.boolean().default(false),
   semester: z.string().max(50).optional(),
 })
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
         room: parsed.data.room,
         teacher: parsed.data.teacher || null,
         targetGroup: parsed.data.targetGroup,
+        weekParity: parsed.data.weekParity,
         isLab: parsed.data.isLab,
         semester: parsed.data.semester || null,
       },

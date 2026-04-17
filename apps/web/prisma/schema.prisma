@@ -322,6 +322,7 @@ model BaseRoutine {
   room        String
   teacher     String?
   targetGroup String   @default("ALL")  // "ALL", "ODD", "EVEN"
+  weekParity  String   @default("ALL")  // "ALL" = every week, "ODD" = odd weeks, "EVEN" = even weeks
   isLab       Boolean  @default(false)
   semester    String?                   // e.g. "Spring 2026"
   archivedAt  DateTime?

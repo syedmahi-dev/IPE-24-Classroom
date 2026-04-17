@@ -20,6 +20,7 @@ type BaseRoutine = {
   room: string
   teacher: string | null
   targetGroup: string
+  weekParity: string
   isLab: boolean
   semester: string | null
   createdAt: string
@@ -47,6 +48,11 @@ const GROUPS = [
   { value: 'ALL', label: 'All Students' },
   { value: 'ODD', label: 'Odd Group' },
   { value: 'EVEN', label: 'Even Group' },
+]
+const WEEK_PARITIES = [
+  { value: 'ALL', label: 'Every Week' },
+  { value: 'ODD', label: 'Odd Weeks (Week 1)' },
+  { value: 'EVEN', label: 'Even Weeks (Week 2)' },
 ]
 const OVERRIDE_TYPES = [
   { value: 'CANCELLED', label: 'Cancel Class' },
@@ -94,6 +100,7 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
   const [room, setRoom] = useState('')
   const [teacher, setTeacher] = useState('')
   const [targetGroup, setTargetGroup] = useState('ALL')
+  const [weekParity, setWeekParity] = useState('ALL')
   const [isLab, setIsLab] = useState(false)
   const [semester, setSemester] = useState('')
 
@@ -161,7 +168,7 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
     setCourseName(courses[0]?.name || '')
     setDayOfWeek('Monday')
     setStartTime(''); setEndTime(''); setRoom(''); setTeacher('')
-    setTargetGroup('ALL'); setIsLab(false); setSemester('')
+    setTargetGroup('ALL'); setWeekParity('ALL'); setIsLab(false); setSemester('')
     setRoutineModalOpen(true)
   }
 
@@ -171,6 +178,7 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
     setDayOfWeek(item.dayOfWeek); setStartTime(item.startTime)
     setEndTime(item.endTime); setRoom(item.room)
     setTeacher(item.teacher || ''); setTargetGroup(item.targetGroup)
+    setWeekParity(item.weekParity || 'ALL')
     setIsLab(item.isLab); setSemester(item.semester || '')
     setRoutineModalOpen(true)
   }
@@ -178,7 +186,7 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
   const handleRoutineSubmit = async () => {
     setRoutineSubmitting(true)
     try {
-      const payload = { courseCode, courseName: courseName || undefined, dayOfWeek, startTime, endTime, room, teacher: teacher || undefined, targetGroup, isLab, semester: semester || undefined }
+      const payload = { courseCode, courseName: courseName || undefined, dayOfWeek, startTime, endTime, room, teacher: teacher || undefined, targetGroup, weekParity, isLab, semester: semester || undefined }
       const url = editRoutine ? `/api/v1/admin/routine/${editRoutine.id}` : '/api/v1/admin/routine'
       const method = editRoutine ? 'PUT' : 'POST'
 
@@ -300,6 +308,17 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
         {r.isLab && <FlaskConical className="w-3 h-3" />}
         {r.targetGroup}
       </span>
+    )},
+    { key: 'weekParity', label: 'Week', render: (r) => (
+      r.weekParity === 'ALL' ? <span className="text-xs text-slate-400">Every</span> : (
+        <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${
+          r.weekParity === 'ODD'
+            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+            : 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
+        }`}>
+          {r.weekParity === 'ODD' ? 'Wk 1' : 'Wk 2'}
+        </span>
+      )
     )},
     { key: 'teacher', label: 'Teacher', render: (r) => <span className="text-sm text-slate-600 dark:text-slate-400">{r.teacher || '—'}</span> },
   ]
@@ -447,6 +466,10 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
 
         <div className="grid grid-cols-2 gap-4">
           <AdminFormField label="Lab Group" required type="select" value={targetGroup} onChange={setTargetGroup} options={GROUPS} />
+          <AdminFormField label="Week Parity (Biweekly)" type="select" value={weekParity} onChange={setWeekParity} options={WEEK_PARITIES} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <AdminFormField label="Semester" type="text" value={semester} onChange={setSemester} placeholder="Spring 2026" />
         </div>
 

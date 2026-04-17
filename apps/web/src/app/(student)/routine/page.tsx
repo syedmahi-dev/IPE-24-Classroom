@@ -46,6 +46,7 @@ export default function RoutinePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [studentGroup, setStudentGroup] = useState<string | null>(null)
+  const [weekParity, setWeekParity] = useState<string | null>(null)
 
   const fetchRoutine = async () => {
     setLoading(true)
@@ -59,6 +60,7 @@ export default function RoutinePage() {
       if (!result.success) throw new Error(result.error?.message || 'Failed')
       setRoutines(result.data)
       setStudentGroup(result.meta?.studentGroup || null)
+      setWeekParity(result.meta?.weekParity || null)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -87,17 +89,29 @@ export default function RoutinePage() {
             Your personalized weekly schedule with live updates.
           </p>
 
-          {/* Lab Group Indicator */}
-          {studentGroup && (
-            <div className="mt-4 flex items-center gap-2">
-              <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold border shadow-sm ${
-                studentGroup === 'ODD'
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/50'
-                  : 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/50'
-              }`}>
-                <Users2 className="w-4 h-4" />
-                {groupLabel[studentGroup] || studentGroup} Lab
-              </span>
+          {/* Lab Group & Week Parity Indicators */}
+          {(studentGroup || weekParity) && (
+            <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
+              {studentGroup && (
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold border shadow-sm ${
+                  studentGroup === 'ODD'
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/50'
+                    : 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/50'
+                }`}>
+                  <Users2 className="w-4 h-4" />
+                  {groupLabel[studentGroup] || studentGroup} Lab
+                </span>
+              )}
+              {weekParity && (
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold border shadow-sm ${
+                  weekParity === 'ODD'
+                    ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/50'
+                    : 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800/50'
+                }`}>
+                  <Calendar className="w-4 h-4" />
+                  {weekParity === 'ODD' ? 'Week 1 (Odd)' : 'Week 2 (Even)'}
+                </span>
+              )}
             </div>
           )}
         </div>

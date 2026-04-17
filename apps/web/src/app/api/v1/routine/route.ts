@@ -41,6 +41,63 @@ function getDayName(d: Date): string {
   return d.toLocaleDateString('en-US', { weekday: 'long' })
 }
 
+/**
+ * Get ISO week number for a date.
+ * Used to determine odd/even week for biweekly classes.
+ */
+function getISOWeekNumber(d: Date): number {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7))
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+}
+
+/**
+ * Get the week parity ("ODD" or "EVEN") for a given date based on ISO week number.
+ */
+function getWeekParity(d: Date): 'ODD' | 'EVEN' {
+  return getISOWeekNumber(d) % 2 === 1 ? 'ODD' : 'EVEN'
+}
+
+/**
+ * Auto-detect if a course is biweekly based on its code.
+ * Rule: lab courses whose code ends with an even digit are biweekly,
+ * EXCEPT courses prefixed with "Hum".
+ */
+function isBiweeklyCourse(courseCode: string): boolean {
+  if (courseCode.toLowerCase().startsWith('hum')) return false
+  const match = courseCode.match(/(\d+)$/)
+  if (!match) return false
+  const lastDigit = parseInt(match[1].slice(-1), 10)
+  return lastDigit % 2 === 0
+}
+
+/**
+ * Determine if a routine entry should be shown this week.
+ * Uses explicit weekParity if set, otherwise auto-detects from course code.
+ * For biweekly labs with group splits (ODD/EVEN targetGroup):
+ *   - ODD group shows on ODD parity weeks
+ *   - EVEN group shows on EVEN parity weeks
+ */
+function matchesWeekParity(
+  routine: { weekParity: string; isLab: boolean; courseCode: string; targetGroup: string },
+  currentWeekParity: 'ODD' | 'EVEN',
+): boolean {
+  // 1) Explicit weekParity takes priority
+  if (routine.weekParity !== 'ALL') {
+    return routine.weekParity === currentWeekParity
+  }
+
+  // 2) Auto-detect: biweekly lab with group split
+  if (routine.isLab && routine.targetGroup !== 'ALL' && isBiweeklyCourse(routine.courseCode)) {
+    // ODD group → ODD weeks, EVEN group → EVEN weeks
+    return routine.targetGroup === currentWeekParity
+  }
+
+  // 3) Regular course — show every week
+  return true
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth() as any
@@ -86,6 +143,14 @@ export async function GET(req: NextRequest) {
         orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
       })
 
+      // Determine week parity for biweekly filtering
+      const weekParityValue = getWeekParity(monday)
+
+      // Filter biweekly labs: auto-detect from course code or use explicit weekParity
+      const filteredRoutines = baseRoutines.filter(
+        (r) => matchesWeekParity(r, weekParityValue)
+      )
+
       // Fetch overrides for the date range
       const overrides = await prisma.routineOverride.findMany({
         where: {
@@ -98,7 +163,7 @@ export async function GET(req: NextRequest) {
       })
 
       // Merge: build the final schedule
-      const merged = baseRoutines.map((base) => {
+      const merged = filteredRoutines.map((base) => {
         const override = overrides.find(
           (o) => o.baseRoutineId === base.id &&
                  (o.type === 'CANCELLED' || o.type === 'ROOM_CHANGE' || o.type === 'TIME_CHANGE')
@@ -171,6 +236,7 @@ export async function GET(req: NextRequest) {
 
       return ok(finalSchedule, {
         studentGroup,
+        weekParity: weekParityValue,
         dateRange: { start: startDate.toISOString(), end: endDate.toISOString() },
       })
     }
