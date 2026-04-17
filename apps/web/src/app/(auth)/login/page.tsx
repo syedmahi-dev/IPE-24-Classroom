@@ -61,11 +61,6 @@ function LoginContent() {
     )
   }, { scope: loginRef })
 
-  const form = useForm<CredentialsFormValues>({
-    resolver: zodResolver(credentialsSchema),
-    defaultValues: { email: '', password: '', totp: '' },
-  })
-
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
     try {
