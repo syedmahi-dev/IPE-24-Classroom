@@ -6,7 +6,8 @@ import { getToken, deleteToken, onMessage, type Messaging } from 'firebase/messa
 
 export type PushState = 'loading' | 'unsupported' | 'prompt' | 'enabled' | 'disabled' | 'denied' | 'error'
 
-const VAPID_KEY = process.env.NEXT_PUBLIC_FCM_VAPID_KEY
+// VAPID key is a public key (Web Push certificate), safe to embed as fallback
+const VAPID_KEY = process.env.NEXT_PUBLIC_FCM_VAPID_KEY || 'BIho0tjpDfyiC4z-iH0h11Q6zB4CGHVO30fUANVur20lXUsM_2Atgt0OKhayzxSapKWB6Pu0l2RjEm9ZHQxqVgw'
 
 async function ensureSW(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null
