@@ -25,19 +25,22 @@ export function AdminPageHeader({
     <div className="relative group overflow-hidden rounded-[2.5rem]">
       <div className="absolute inset-0 bg-gradient-to-r from-admin-purple to-indigo-600 blur-3xl opacity-10 group-hover:opacity-20 transition-opacity duration-700" />
       <div className="relative glass p-8 md:p-10 flex flex-col md:flex-row items-center md:items-start gap-6 z-10">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-admin-purple to-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-admin-purple/30 transform -rotate-3 hover:rotate-0 transition-transform duration-500 flex-shrink-0">
-          <Icon className="w-8 h-8" />
+        <div className="relative flex-shrink-0">
+          <div className="absolute inset-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-admin-purple to-indigo-600 blur-lg opacity-70 animate-pulse"></div>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-admin-purple to-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-admin-purple/60 transform -rotate-3 hover:rotate-0 transition-transform duration-500 flex-shrink-0 relative z-10">
+            <Icon className="w-8 h-8" />
+          </div>
         </div>
         <div className="flex-1 text-center md:text-left">
           <div className="flex items-center gap-3 justify-center md:justify-start">
-            <h1 data-testid="admin-header-title" className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">{title}</h1>
+            <h1 data-testid="admin-header-title" className="text-3xl md:text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{title}</h1>
             {badge && (
-              <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
+              <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 shadow-sm">
                 {badge}
               </span>
             )}
           </div>
-          <p className="text-slate-500 font-medium text-base mt-2 max-w-xl leading-relaxed">{subtitle}</p>
+          <p className="text-slate-500 dark:text-slate-400 font-medium text-base mt-2 max-w-xl leading-relaxed">{subtitle}</p>
         </div>
         {actionLabel && onAction && (
           <button

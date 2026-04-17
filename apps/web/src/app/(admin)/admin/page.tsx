@@ -113,8 +113,11 @@ export default async function AdminPage() {
         {/* Quick Actions */}
         <div className="lg:col-span-2 space-y-6 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
           <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
-             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
-               <Settings className="w-5 h-5" />
+             <div className="relative">
+               <div className="absolute inset-0 w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 blur-lg opacity-70 animate-pulse"></div>
+               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-2xl shadow-indigo-500/60 relative z-10">
+                 <Settings className="w-5 h-5" />
+               </div>
              </div>
              Quick Actions
           </h2>
@@ -140,7 +143,15 @@ export default async function AdminPage() {
         {/* Recent Activity */}
         <div className="space-y-6 animate-slide-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100">Recent Updates</h2>
+            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 blur-lg opacity-70 animate-pulse"></div>
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 text-white flex items-center justify-center shadow-2xl shadow-cyan-500/60 relative z-10">
+                  <Megaphone className="w-5 h-5" />
+                </div>
+              </div>
+              Recent Updates
+            </h2>
             <a href="/admin/announcements" className="text-sm font-bold text-admin-purple hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700">View All</a>
           </div>
           <div className="space-y-4">
