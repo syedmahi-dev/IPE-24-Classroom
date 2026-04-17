@@ -14,6 +14,26 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+async function getPermissionState(): Promise<NotificationPermission> {
+  let permission = Notification.permission
+  if (
+    permission === 'default' &&
+    typeof navigator !== 'undefined' &&
+    'permissions' in navigator &&
+    navigator.permissions?.query
+  ) {
+    try {
+      const status = await navigator.permissions.query({ name: 'notifications' as PermissionName })
+      if (status.state === 'granted' || status.state === 'denied') {
+        permission = status.state
+      }
+    } catch {
+      // Ignore; fall back to Notification.permission
+    }
+  }
+  return permission
+}
+
 async function waitForServiceWorkerReady(timeoutMs = 10000): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null
   try {
@@ -142,7 +162,7 @@ export function usePushNotifications() {
     let cancelled = false
 
     const init = async () => {
-      const perm = Notification.permission
+      const perm = await getPermissionState()
       if (perm === 'denied') { setPushState('denied'); return }
       if (perm === 'default') { setPushState('prompt'); return }
 
@@ -190,12 +210,13 @@ export function usePushNotifications() {
     try {
       // Request permission if not yet granted
       if (Notification.permission === 'default') {
-        const result = await Notification.requestPermission()
-        if (result === 'denied') { setPushState('denied'); return }
-        if (result !== 'granted') { setPushState('prompt'); return }
+        await Notification.requestPermission()
+        await wait(150)
       }
-      if (Notification.permission === 'denied') { setPushState('denied'); return }
-      if (Notification.permission !== 'granted') { setPushState('prompt'); return }
+
+      const effectivePermission = await getPermissionState()
+      if (effectivePermission === 'denied') { setPushState('denied'); return }
+      if (effectivePermission !== 'granted') { setPushState('prompt'); return }
 
       const ready = await getReady()
       if (!ready) { setPushState('disabled'); return }
@@ -250,14 +271,48 @@ export function usePushNotifications() {
     swRef.current = null
     const ready = await getReady()
     if (!ready) { setPushState('disabled'); return }
-    if (Notification.permission === 'granted') {
+    const perm = await getPermissionState()
+    if (perm === 'granted') {
       await handleEnable()
-    } else if (Notification.permission === 'denied') {
+    } else if (perm === 'denied') {
       setPushState('denied')
     } else {
       setPushState('prompt')
     }
   }, [getReady, handleEnable])
+
+  // Re-evaluate when tab regains focus/visibility after permission dialogs.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const refresh = async () => {
+      const perm = await getPermissionState()
+      if (perm === 'granted' && pushState !== 'enabled' && !isToggling) {
+        await handleEnable()
+      }
+      if (perm === 'denied' && pushState !== 'denied') {
+        setPushState('denied')
+      }
+    }
+
+    const onFocus = () => {
+      void refresh()
+    }
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void refresh()
+      }
+    }
+
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [pushState, isToggling, handleEnable])
 
   return { pushState, isToggling, handleEnable, handleDisable, handleToggle, handleRetry }
 }
