@@ -130,6 +130,7 @@ export default function RoutinePage() {
                 weekType={weekType}
                 workingWeekNumber={workingWeekNumber}
                 isSkipped={isSkippedWeek}
+                studentGroup={studentGroup}
               />
             </div>
           )}

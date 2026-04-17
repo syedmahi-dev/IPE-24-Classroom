@@ -7,27 +7,31 @@ type WeekTypeIndicatorProps = {
   weekType: 'A' | 'B' | null
   workingWeekNumber: number | null
   isSkipped: boolean
+  studentGroup?: string | null
   className?: string
 }
 
-const weekConfig = {
-  A: {
-    label: 'Type A',
-    sublabel: 'Heavy Lab Week',
-    bgClass: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50',
-    textClass: 'text-emerald-700 dark:text-emerald-400',
-    dotClass: 'bg-emerald-500',
-  },
-  B: {
-    label: 'Type B',
-    sublabel: 'Light Lab Week',
-    bgClass: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50',
-    textClass: 'text-blue-700 dark:text-blue-400',
-    dotClass: 'bg-blue-500',
-  },
+function getWeekLabel(weekType: 'A' | 'B', studentGroup?: string | null): { sublabel: string; bgClass: string; textClass: string; dotClass: string } {
+  // G1 (EVEN): Type A = Heavy (4 labs), Type B = Light (3 labs)
+  // G2 (ODD):  Type A = Light (3 labs), Type B = Heavy (4 labs)
+  const isHeavy = studentGroup === 'ODD' ? weekType === 'B' : weekType === 'A'
+
+  return isHeavy
+    ? {
+        sublabel: 'Heavy Lab Week',
+        bgClass: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50',
+        textClass: 'text-emerald-700 dark:text-emerald-400',
+        dotClass: 'bg-emerald-500',
+      }
+    : {
+        sublabel: 'Light Lab Week',
+        bgClass: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50',
+        textClass: 'text-blue-700 dark:text-blue-400',
+        dotClass: 'bg-blue-500',
+      }
 }
 
-export function WeekTypeIndicator({ weekType, workingWeekNumber, isSkipped, className }: WeekTypeIndicatorProps) {
+export function WeekTypeIndicator({ weekType, workingWeekNumber, isSkipped, studentGroup, className }: WeekTypeIndicatorProps) {
   if (isSkipped) {
     return (
       <div className={cn(
@@ -54,7 +58,7 @@ export function WeekTypeIndicator({ weekType, workingWeekNumber, isSkipped, clas
     )
   }
 
-  const config = weekConfig[weekType]
+  const config = getWeekLabel(weekType, studentGroup)
 
   return (
     <div className={cn(
@@ -65,7 +69,7 @@ export function WeekTypeIndicator({ weekType, workingWeekNumber, isSkipped, clas
     )}>
       <span className={cn('w-2.5 h-2.5 rounded-full animate-pulse', config.dotClass)} />
       <Calendar className="w-4 h-4" />
-      <span>{config.label}</span>
+      <span>Type {weekType}</span>
       <span className="text-[10px] font-semibold opacity-70 uppercase tracking-wider">
         {config.sublabel}
       </span>
