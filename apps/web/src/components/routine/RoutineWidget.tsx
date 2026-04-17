@@ -24,6 +24,7 @@ export function RoutineWidget() {
   const [loading, setLoading] = useState(true)
   const [studentGroup, setStudentGroup] = useState<string | null>(null)
   const [weekType, setWeekType] = useState<string | null>(null)
+  const [isUpcoming, setIsUpcoming] = useState(false)
 
   useEffect(() => {
     const fetchTodayRoutine = async () => {
@@ -31,6 +32,7 @@ export function RoutineWidget() {
         // On Sat/Sun, show next Monday's classes
         const now = new Date()
         const day = now.getDay() // 0=Sun, 6=Sat
+        const upcoming = day === 0 || day === 6
         if (day === 0) now.setDate(now.getDate() + 1) // Sun → next Mon
         else if (day === 6) now.setDate(now.getDate() + 2) // Sat → next Mon
         const today = now.toISOString().split('T')[0]
@@ -41,6 +43,7 @@ export function RoutineWidget() {
           setClasses(result.data)
           setStudentGroup(result.meta?.studentGroup || null)
           setWeekType(result.meta?.weekType || null)
+          setIsUpcoming(upcoming)
         }
       } catch {
         // Silent fail — widget is non-critical
@@ -65,7 +68,9 @@ export function RoutineWidget() {
   return (
     <div className="glass rounded-2xl p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Today&apos;s Classes</h3>
+        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+          {isUpcoming ? "Monday\u2019s Classes" : "Today\u2019s Classes"}
+        </h3>
         <div className="flex items-center gap-2">
           {studentGroup && (
             <span className={`text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider ${
@@ -86,7 +91,7 @@ export function RoutineWidget() {
             </span>
           )}
           <span className="text-xs font-bold text-brand-700 dark:text-brand-400 bg-brand-100/50 dark:bg-brand-900/30 px-3 py-1.5 rounded-xl uppercase tracking-wider">
-            {new Date().toLocaleDateString('en-US', { weekday: 'short' })}
+            {isUpcoming ? 'Upcoming' : new Date().toLocaleDateString('en-US', { weekday: 'short' })}
           </span>
         </div>
       </div>
@@ -100,7 +105,7 @@ export function RoutineWidget() {
 
       {classes.length === 0 ? (
         <div className="py-8 text-center text-sm font-medium text-slate-500 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-slate-100/50 dark:border-slate-700/30">
-          No classes scheduled for today. Time to relax!
+          {isUpcoming ? 'No classes on Monday. Enjoy the weekend!' : 'No classes scheduled for today. Time to relax!'}
         </div>
       ) : (
         <div className="space-y-4">

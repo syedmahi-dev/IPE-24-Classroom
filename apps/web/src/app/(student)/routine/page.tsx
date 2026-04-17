@@ -50,6 +50,7 @@ export default function RoutinePage() {
   const [weekType, setWeekType] = useState<'A' | 'B' | null>(null)
   const [workingWeekNumber, setWorkingWeekNumber] = useState<number | null>(null)
   const [isSkippedWeek, setIsSkippedWeek] = useState(false)
+  const [isUpcomingWeek, setIsUpcomingWeek] = useState(false)
 
   const fetchRoutine = async () => {
     setLoading(true)
@@ -59,6 +60,7 @@ export default function RoutinePage() {
       // On Sat/Sun, show NEXT week so students see upcoming schedule
       const now = new Date()
       const day = now.getDay() // 0=Sun, 6=Sat
+      const showingUpcoming = day === 0 || day === 6
       if (day === 0) now.setDate(now.getDate() + 1) // Sun → next Mon
       else if (day === 6) now.setDate(now.getDate() + 2) // Sat → next Mon
       const target = now.toISOString().split('T')[0]
@@ -71,6 +73,7 @@ export default function RoutinePage() {
       setWeekType(result.meta?.weekType || null)
       setWorkingWeekNumber(result.meta?.workingWeekNumber ?? null)
       setIsSkippedWeek(result.meta?.isSkippedWeek || false)
+      setIsUpcomingWeek(showingUpcoming)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -98,6 +101,16 @@ export default function RoutinePage() {
           <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg mt-2 md:mt-3 max-w-xl">
             Your personalized weekly schedule with live updates.
           </p>
+
+          {/* Upcoming Week Banner */}
+          {isUpcomingWeek && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-800/50">
+              <Calendar className="w-4 h-4 text-emerald-500" />
+              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                Showing upcoming week&apos;s schedule
+              </span>
+            </div>
+          )}
 
           {/* Lab Group & Week Type Indicators */}
           {(studentGroup || weekType) && (
