@@ -1,33 +1,46 @@
 import { initializeApp, getApps } from 'firebase/app'
 import { getMessaging, isSupported } from 'firebase/messaging'
 
+// Firebase public config — same values embedded in firebase-messaging-sw.js.
+// These are safe to expose (they are public identifiers, not secrets).
+// Using env vars is preferred for multi-environment setups, but we fall back
+// to hardcoded values so push notifications work even if env vars are missing.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyB-qEtd6MNb-cHkTPtXROXGQbuUC-mtvDk',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'ipe-24.firebaseapp.com',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ipe-24',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'ipe-24.firebasestorage.app',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '538496451475',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:538496451475:web:7b349e771a84ffa791de66',
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 }
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+let app: ReturnType<typeof initializeApp> | null = null
+
+function getApp() {
+  if (typeof window === 'undefined') return null
+  if (!app) {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+  }
+  return app
+}
 
 let messaging: ReturnType<typeof getMessaging> | null = null
 
 export const initMessaging = async () => {
-  if (typeof window !== 'undefined') {
-    try {
-      const supported = await isSupported()
-      if (supported) {
-        messaging = getMessaging(app)
-        return messaging
-      }
-    } catch (e) {
-      console.error('Firebase Messaging is not supported', e)
+  if (typeof window === 'undefined') return null
+  try {
+    const firebaseApp = getApp()
+    if (!firebaseApp) return null
+    const supported = await isSupported()
+    if (supported) {
+      messaging = getMessaging(firebaseApp)
+      return messaging
     }
+  } catch (e) {
+    console.error('[Firebase] Messaging init failed:', e)
   }
   return null
 }
 
-export { app }
+export { getApp }

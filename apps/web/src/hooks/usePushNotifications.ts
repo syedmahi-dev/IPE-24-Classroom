@@ -120,15 +120,15 @@ export function usePushNotifications() {
         onMessage(ready.messaging, (payload) => {
           const title = payload.notification?.title || 'IPE-24 Update'
           const body = payload.notification?.body || ''
-          // Show browser notification even when page is focused
-          if (Notification.permission === 'granted') {
-            const n = new Notification(title, {
+          const link = payload.fcmOptions?.link || payload.data?.link
+          // Use service worker showNotification (works on mobile + desktop)
+          if (Notification.permission === 'granted' && ready.sw.active) {
+            ready.sw.showNotification(title, {
               body,
               icon: '/android-chrome-192x192.png',
               badge: '/favicon-32x32.png',
+              data: { link: link || '/' },
             })
-            const link = payload.fcmOptions?.link || payload.data?.link
-            if (link) n.onclick = () => { window.open(link, '_self'); n.close() }
           }
         })
       }
@@ -183,11 +183,10 @@ export function usePushNotifications() {
         try { await deleteToken(messagingRef.current) } catch {}
       }
       await serverUnregister()
-      setPushState('disabled')
     } catch {
-      await serverUnregister()
-      setPushState('disabled')
+      // serverUnregister failed — still mark as disabled locally
     } finally {
+      setPushState('disabled')
       setIsToggling(false)
     }
   }, [])
