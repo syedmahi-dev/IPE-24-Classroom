@@ -32,11 +32,14 @@ export const initMessaging = async () => {
   try {
     const firebaseApp = getApp()
     if (!firebaseApp) return null
-    const supported = await isSupported()
-    if (supported) {
-      messaging = getMessaging(firebaseApp)
-      return messaging
+    const supported = await isSupported().catch(() => null)
+    if (supported === false) {
+      // Some environments report unsupported here while still allowing token flow.
+      // We still attempt getMessaging and let getToken decide final support.
+      console.warn('[Firebase] messaging isSupported() returned false; attempting getMessaging anyway')
     }
+    messaging = getMessaging(firebaseApp)
+    return messaging
   } catch (e) {
     console.error('[Firebase] Messaging init failed:', e)
   }

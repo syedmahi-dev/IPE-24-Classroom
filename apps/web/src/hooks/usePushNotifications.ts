@@ -7,7 +7,8 @@ import { getToken, deleteToken, onMessage, type Messaging } from 'firebase/messa
 export type PushState = 'loading' | 'unsupported' | 'prompt' | 'enabled' | 'disabled' | 'denied' | 'error'
 
 // VAPID key is a public key (Web Push certificate), safe to embed as fallback
-const VAPID_KEY = process.env.NEXT_PUBLIC_FCM_VAPID_KEY || 'BIho0tjpDfyiC4z-iH0h11Q6zB4CGHVO30fUANVur20lXUsM_2Atgt0OKhayzxSapKWB6Pu0l2RjEm9ZHQxqVgw'
+const VAPID_KEY_RAW = process.env.NEXT_PUBLIC_FCM_VAPID_KEY || 'BIho0tjpDfyiC4z-iH0h11Q6zB4CGHVO30fUANVur20lXUsM_2Atgt0OKhayzxSapKWB6Pu0l2RjEm9ZHQxqVgw'
+const VAPID_KEY = VAPID_KEY_RAW.replace(/\s+/g, '')
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -62,6 +63,15 @@ async function fetchToken(messaging: Messaging, sw: ServiceWorkerRegistration): 
       if (token) return token
     } catch (err) {
       console.error(`[Push] getToken failed (attempt ${attempt + 1}):`, err)
+      // Fallback: try without explicit VAPID in case of key mismatch/encoding issues.
+      try {
+        const fallbackToken = await getToken(messaging, {
+          serviceWorkerRegistration: activeSW,
+        })
+        if (fallbackToken) return fallbackToken
+      } catch (fallbackErr) {
+        console.error(`[Push] getToken fallback failed (attempt ${attempt + 1}):`, fallbackErr)
+      }
     }
 
     if (attempt === 0) {
