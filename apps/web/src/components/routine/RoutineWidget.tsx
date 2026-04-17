@@ -35,7 +35,8 @@ export function RoutineWidget() {
         const upcoming = day === 0 || day === 6
         if (day === 0) now.setDate(now.getDate() + 1) // Sun → next Mon
         else if (day === 6) now.setDate(now.getDate() + 2) // Sat → next Mon
-        const today = now.toISOString().split('T')[0]
+        // Use local date parts to avoid UTC timezone shift
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
         const res = await fetch(`/api/v1/routine?date=${today}`)
         if (!res.ok) return
         const result = await res.json()
