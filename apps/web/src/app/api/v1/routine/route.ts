@@ -42,27 +42,70 @@ function getDayName(d: Date): string {
 }
 
 /**
- * Get ISO week number for a date.
- * Used to determine odd/even week for biweekly classes.
+ * Look up the current week type (A or B) from the RoutineWeek table.
+ * Falls back to ISO-week parity if no record exists yet.
  */
-function getISOWeekNumber(d: Date): number {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7))
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
-  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+async function getWeekType(monday: Date): Promise<{ weekType: 'A' | 'B'; workingWeekNumber: number | null; isSkipped: boolean }> {
+  const routineWeek = await prisma.routineWeek.findUnique({
+    where: { calendarWeekStart: monday },
+  })
+
+  if (routineWeek) {
+    if (routineWeek.isSkipped) {
+      return { weekType: 'A', workingWeekNumber: null, isSkipped: true }
+    }
+    return {
+      weekType: (routineWeek.weekType as 'A' | 'B') || 'A',
+      workingWeekNumber: routineWeek.workingWeekNumber,
+      isSkipped: false,
+    }
+  }
+
+  // Fallback: auto-create the week record
+  const priorWeeks = await prisma.routineWeek.count({
+    where: { calendarWeekStart: { lt: monday }, isSkipped: false },
+  })
+  const workingWeekNumber = priorWeeks + 1
+  const weekType = workingWeekNumber % 2 === 1 ? 'A' : 'B'
+
+  await prisma.routineWeek.create({
+    data: {
+      calendarWeekStart: monday,
+      workingWeekNumber,
+      weekType,
+      isSkipped: false,
+    },
+  })
+
+  return { weekType: weekType as 'A' | 'B', workingWeekNumber, isSkipped: false }
 }
 
 /**
- * Get the week parity ("ODD" or "EVEN") for a given date based on ISO week number.
+ * Map weekType + studentGroup to weekParity for BaseRoutine filtering.
+ * 
+ * Working-week system:
+ *   Type A (odd working weeks): EVEN group → Position A labs, ODD group → Position B labs
+ *   Type B (even working weeks): EVEN group → Position B labs, ODD group → Position A labs
+ * 
+ * In the DB, BaseRoutine.weekParity stores the *position*:
+ *   weekParity="ODD"  → shown when group is in Position B
+ *   weekParity="EVEN" → shown when group is in Position A  
+ *   weekParity="ALL"  → shown every week
  */
-function getWeekParity(d: Date): 'ODD' | 'EVEN' {
-  return getISOWeekNumber(d) % 2 === 1 ? 'ODD' : 'EVEN'
+function getEffectiveWeekParity(weekType: 'A' | 'B', studentGroup: 'ODD' | 'EVEN' | null): 'ODD' | 'EVEN' {
+  if (!studentGroup) return weekType === 'A' ? 'EVEN' : 'ODD'
+
+  // EVEN group (G1): Type A → Position A (EVEN parity), Type B → Position B (ODD parity)
+  // ODD group (G2):  Type A → Position B (ODD parity),  Type B → Position A (EVEN parity)
+  if (studentGroup === 'EVEN') {
+    return weekType === 'A' ? 'EVEN' : 'ODD'
+  } else {
+    return weekType === 'A' ? 'ODD' : 'EVEN'
+  }
 }
 
 /**
  * Auto-detect if a course is biweekly based on its code.
- * Rule: lab courses whose code ends with an even digit are biweekly,
- * EXCEPT courses prefixed with "Hum".
  */
 function isBiweeklyCourse(courseCode: string): boolean {
   if (courseCode.toLowerCase().startsWith('hum')) return false
@@ -74,24 +117,19 @@ function isBiweeklyCourse(courseCode: string): boolean {
 
 /**
  * Determine if a routine entry should be shown this week.
- * Uses explicit weekParity if set, otherwise auto-detects from course code.
- * For biweekly labs with group splits (ODD/EVEN targetGroup):
- *   - ODD group shows on ODD parity weeks
- *   - EVEN group shows on EVEN parity weeks
  */
 function matchesWeekParity(
   routine: { weekParity: string; isLab: boolean; courseCode: string; targetGroup: string },
-  currentWeekParity: 'ODD' | 'EVEN',
+  effectiveParity: 'ODD' | 'EVEN',
 ): boolean {
   // 1) Explicit weekParity takes priority
   if (routine.weekParity !== 'ALL') {
-    return routine.weekParity === currentWeekParity
+    return routine.weekParity === effectiveParity
   }
 
   // 2) Auto-detect: biweekly lab with group split
   if (routine.isLab && routine.targetGroup !== 'ALL' && isBiweeklyCourse(routine.courseCode)) {
-    // ODD group → ODD weeks, EVEN group → EVEN weeks
-    return routine.targetGroup === currentWeekParity
+    return routine.targetGroup === effectiveParity
   }
 
   // 3) Regular course — show every week
@@ -114,7 +152,7 @@ export async function GET(req: NextRequest) {
     // If a specific date or week is requested, return merged view
     if (date || week) {
       const targetDate = new Date(date || week || new Date().toISOString())
-      const monday = week ? getMonday(targetDate) : targetDate
+      const monday = week ? getMonday(targetDate) : getMonday(targetDate)
 
       // Determine date range
       const startDate = new Date(monday)
@@ -134,6 +172,10 @@ export async function GET(req: NextRequest) {
         days.push(getDayName(targetDate))
       }
 
+      // Look up working-week type from RoutineWeek table
+      const weekInfo = await getWeekType(monday)
+      const effectiveParity = getEffectiveWeekParity(weekInfo.weekType, studentGroup)
+
       // Fetch base routines for the relevant days
       const baseRoutines = await prisma.baseRoutine.findMany({
         where: {
@@ -143,12 +185,9 @@ export async function GET(req: NextRequest) {
         orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
       })
 
-      // Determine week parity for biweekly filtering
-      const weekParityValue = getWeekParity(monday)
-
-      // Filter biweekly labs: auto-detect from course code or use explicit weekParity
+      // Filter biweekly labs using the working-week derived parity
       const filteredRoutines = baseRoutines.filter(
-        (r) => matchesWeekParity(r, weekParityValue)
+        (r) => matchesWeekParity(r, effectiveParity)
       )
 
       // Fetch overrides for the date range
@@ -236,7 +275,9 @@ export async function GET(req: NextRequest) {
 
       return ok(finalSchedule, {
         studentGroup,
-        weekParity: weekParityValue,
+        weekType: weekInfo.weekType,
+        workingWeekNumber: weekInfo.workingWeekNumber,
+        isSkippedWeek: weekInfo.isSkipped,
         dateRange: { start: startDate.toISOString(), end: endDate.toISOString() },
       })
     }

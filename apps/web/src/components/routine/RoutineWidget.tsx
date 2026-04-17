@@ -23,6 +23,7 @@ export function RoutineWidget() {
   const [classes, setClasses] = useState<RoutineEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [studentGroup, setStudentGroup] = useState<string | null>(null)
+  const [weekType, setWeekType] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchTodayRoutine = async () => {
@@ -34,6 +35,7 @@ export function RoutineWidget() {
         if (result.success) {
           setClasses(result.data)
           setStudentGroup(result.meta?.studentGroup || null)
+          setWeekType(result.meta?.weekType || null)
         }
       } catch {
         // Silent fail — widget is non-critical
@@ -66,7 +68,16 @@ export function RoutineWidget() {
                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                 : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
             }`}>
-              {studentGroup}
+              {studentGroup === 'EVEN' ? 'G1' : 'G2'}
+            </span>
+          )}
+          {weekType && (
+            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider ${
+              weekType === 'A'
+                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+            }`}>
+              Type {weekType}
             </span>
           )}
           <span className="text-xs font-bold text-brand-700 dark:text-brand-400 bg-brand-100/50 dark:bg-brand-900/30 px-3 py-1.5 rounded-xl uppercase tracking-wider">

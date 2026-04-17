@@ -354,6 +354,23 @@ model RoutineOverride {
   @@map("routine_overrides")
 }
 
+model RoutineWeek {
+  id                String    @id @default(cuid())
+  calendarWeekStart DateTime  @unique               // Monday of this calendar week (date only)
+  workingWeekNumber Int?                             // null = skipped week, sequential counter
+  weekType          String?                          // "A" or "B" or null (skipped), derived from workingWeekNumber
+  isSkipped         Boolean   @default(false)
+  skippedReason     String?                          // "Mid-semester break", "Eid vacation", etc.
+  markedById        String?                          // userId of admin/CR who marked it
+  markedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([calendarWeekStart])
+  @@index([weekType])
+  @@map("routine_weeks")
+}
+
 model ConnectedDrive {
   id           String       @id @default(cuid())
   label        String       // Optional user-friendly name

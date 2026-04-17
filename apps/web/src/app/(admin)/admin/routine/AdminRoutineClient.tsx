@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { CalendarClock, Plus, Pencil, Trash2, Ban, Clock, MapPin, Users2, FlaskConical } from 'lucide-react'
+import { CalendarClock, Plus, Pencil, Trash2, Ban, Clock, MapPin, Users2, FlaskConical, SkipForward } from 'lucide-react'
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { AdminDataTable, Column } from '@/components/admin/AdminDataTable'
 import { AdminModal } from '@/components/admin/AdminModal'
 import { AdminFormField } from '@/components/admin/AdminFormField'
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import { WeekManager } from '@/components/routine/WeekManager'
 
 // ─── Types ───────────────────────────────────────────────────────────
 type BaseRoutine = {
@@ -78,7 +79,7 @@ type Course = { id: string; code: string; name: string }
 
 // ─── Component ───────────────────────────────────────────────────────
 export function AdminRoutineClient({ courses }: { courses: Course[] }) {
-  const [activeTab, setActiveTab] = useState<'schedule' | 'overrides'>('schedule')
+  const [activeTab, setActiveTab] = useState<'schedule' | 'overrides' | 'weeks'>('schedule')
 
   // ─── Base Schedule State ─────────────────────────────────────────
   const [routines, setRoutines] = useState<BaseRoutine[]>([])
@@ -348,10 +349,10 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
     <div className="space-y-6">
       <AdminPageHeader
         title="Routine Management"
-        subtitle="Manage semester schedule and temporary changes"
+        subtitle="Manage semester schedule, overrides, and week rotation"
         icon={CalendarClock}
-        actionLabel={activeTab === 'schedule' ? 'Add Class' : 'Add Override'}
-        onAction={activeTab === 'schedule' ? openCreateRoutine : openCreateOverride}
+        actionLabel={activeTab === 'schedule' ? 'Add Class' : activeTab === 'overrides' ? 'Add Override' : undefined}
+        onAction={activeTab === 'schedule' ? openCreateRoutine : activeTab === 'overrides' ? openCreateOverride : undefined}
         actionIcon={Plus}
       />
 
@@ -381,6 +382,19 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
           <span className="flex items-center gap-2">
             <Ban className="w-4 h-4" />
             Overrides ({overrideTotal})
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('weeks')}
+          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'weeks'
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-700/40'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <SkipForward className="w-4 h-4" />
+            Week Manager
           </span>
         </button>
       </div>
@@ -426,6 +440,13 @@ export function AdminRoutineClient({ courses }: { courses: Course[] }) {
             </button>
           )}
         />
+      )}
+
+      {/* Week Manager Tab */}
+      {activeTab === 'weeks' && (
+        <div className="glass rounded-2xl p-6 border border-white/40 dark:border-slate-700/30">
+          <WeekManager />
+        </div>
       )}
 
       {/* ─── Base Routine Modal ────────────────────────────────────── */}

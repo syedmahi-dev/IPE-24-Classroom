@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, Clock, Loader2, MapPin, Sparkles, AlertTriangle, Plus as PlusIcon, RefreshCw, FlaskConical, Users2 } from 'lucide-react'
+import { Calendar, Clock, Loader2, MapPin, Sparkles, AlertTriangle, Plus as PlusIcon, RefreshCw, FlaskConical, Users2, SkipForward } from 'lucide-react'
+import { WeekTypeIndicator } from '@/components/routine/WeekTypeIndicator'
 
 type RoutineEntry = {
   id: string
@@ -37,8 +38,8 @@ const statusBadgeStyle: Record<string, string> = {
 }
 
 const groupLabel: Record<string, string> = {
-  ODD: 'Odd Group',
-  EVEN: 'Even Group',
+  ODD: 'Group 2 (Odd)',
+  EVEN: 'Group 1 (Even)',
 }
 
 export default function RoutinePage() {
@@ -46,7 +47,9 @@ export default function RoutinePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [studentGroup, setStudentGroup] = useState<string | null>(null)
-  const [weekParity, setWeekParity] = useState<string | null>(null)
+  const [weekType, setWeekType] = useState<'A' | 'B' | null>(null)
+  const [workingWeekNumber, setWorkingWeekNumber] = useState<number | null>(null)
+  const [isSkippedWeek, setIsSkippedWeek] = useState(false)
 
   const fetchRoutine = async () => {
     setLoading(true)
@@ -60,7 +63,9 @@ export default function RoutinePage() {
       if (!result.success) throw new Error(result.error?.message || 'Failed')
       setRoutines(result.data)
       setStudentGroup(result.meta?.studentGroup || null)
-      setWeekParity(result.meta?.weekParity || null)
+      setWeekType(result.meta?.weekType || null)
+      setWorkingWeekNumber(result.meta?.workingWeekNumber ?? null)
+      setIsSkippedWeek(result.meta?.isSkippedWeek || false)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -89,8 +94,8 @@ export default function RoutinePage() {
             Your personalized weekly schedule with live updates.
           </p>
 
-          {/* Lab Group & Week Parity Indicators */}
-          {(studentGroup || weekParity) && (
+          {/* Lab Group & Week Type Indicators */}
+          {(studentGroup || weekType) && (
             <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
               {studentGroup && (
                 <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold border shadow-sm ${
@@ -99,19 +104,24 @@ export default function RoutinePage() {
                     : 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/50'
                 }`}>
                   <Users2 className="w-4 h-4" />
-                  {groupLabel[studentGroup] || studentGroup} Lab
+                  {groupLabel[studentGroup] || studentGroup}
                 </span>
               )}
-              {weekParity && (
-                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold border shadow-sm ${
-                  weekParity === 'ODD'
-                    ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/50'
-                    : 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800/50'
-                }`}>
-                  <Calendar className="w-4 h-4" />
-                  {weekParity === 'ODD' ? 'Week 1 (Odd)' : 'Week 2 (Even)'}
-                </span>
-              )}
+              <WeekTypeIndicator
+                weekType={weekType}
+                workingWeekNumber={workingWeekNumber}
+                isSkipped={isSkippedWeek}
+              />
+            </div>
+          )}
+
+          {/* Skipped week banner */}
+          {isSkippedWeek && (
+            <div className="mt-4 flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-800/50">
+              <SkipForward className="w-5 h-5 text-amber-500" />
+              <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
+                This week has been marked as skipped (vacation/closure). The schedule shown is based on the last active week type.
+              </span>
             </div>
           )}
         </div>
