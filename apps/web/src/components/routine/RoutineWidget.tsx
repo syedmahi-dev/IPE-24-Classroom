@@ -28,7 +28,12 @@ export function RoutineWidget() {
   useEffect(() => {
     const fetchTodayRoutine = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0]
+        // On Sat/Sun, show next Monday's classes
+        const now = new Date()
+        const day = now.getDay() // 0=Sun, 6=Sat
+        if (day === 0) now.setDate(now.getDate() + 1) // Sun → next Mon
+        else if (day === 6) now.setDate(now.getDate() + 2) // Sat → next Mon
+        const today = now.toISOString().split('T')[0]
         const res = await fetch(`/api/v1/routine?date=${today}`)
         if (!res.ok) return
         const result = await res.json()
