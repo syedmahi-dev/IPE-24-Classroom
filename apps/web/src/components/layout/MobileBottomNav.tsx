@@ -37,21 +37,21 @@ export function MobileBottomNav({ role }: { role: string }) {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-[3rem] py-1.5 px-3 rounded-2xl transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center gap-0.5 min-w-[3rem] py-1.5 px-3 rounded-2xl transition-all duration-200 press-scale ${
                 isActive
                   ? 'text-brand-600 dark:text-brand-400'
                   : 'text-slate-400 dark:text-slate-500 active:text-slate-600 dark:active:text-slate-300'
               }`}
             >
-              <div className={`relative p-1 rounded-xl transition-all duration-200 ${
-                isActive ? 'bg-brand-50 dark:bg-brand-900/20' : ''
+              <div className={`relative p-1.5 rounded-xl transition-all duration-300 ease-spring ${
+                isActive ? 'bg-brand-50 dark:bg-brand-900/20 scale-110 shadow-sm shadow-brand-500/10' : ''
               }`}>
-                <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? '' : ''}`} />
                 {isActive && (
-                  <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-500" />
+                  <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-500 animate-scale-in" />
                 )}
               </div>
-              <span className={`text-[10px] font-bold leading-none ${
+              <span className={`text-[10px] font-bold leading-none transition-colors duration-200 ${
                 isActive ? 'text-brand-600 dark:text-brand-400' : ''
               }`}>
                 {link.label}

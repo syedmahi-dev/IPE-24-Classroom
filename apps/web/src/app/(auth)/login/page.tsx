@@ -53,10 +53,20 @@ function LoginContent() {
         if (reduced) return
 
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-        tl.from('.gsap-login-logo', { opacity: 0, scale: 0.8, duration: 0.5 })
-          .from('.gsap-login-title', { opacity: 0, y: 16, duration: 0.4 }, '-=0.2')
-          .from('.gsap-login-card', { opacity: 0, y: 24, duration: 0.5 }, '-=0.2')
-          .from('.gsap-login-footer', { opacity: 0, y: 12, duration: 0.3 }, '-=0.1')
+        tl.from('.gsap-login-logo', { opacity: 0, scale: 0.85, y: -10, duration: 0.6 })
+          .from('.gsap-login-title', { opacity: 0, y: 20, duration: 0.5 }, '-=0.25')
+          .from('.gsap-login-card', { opacity: 0, y: 30, scale: 0.97, duration: 0.6 }, '-=0.2')
+          .from('.gsap-login-footer', { opacity: 0, y: 12, duration: 0.35 }, '-=0.15')
+
+        // Subtle glow pulse on the logo background
+        gsap.to('.gsap-login-glow', {
+          opacity: 0.75,
+          scale: 1.1,
+          duration: 2,
+          ease: 'sine.inOut',
+          yoyo: true,
+          repeat: -1,
+        })
       }
     )
   }, { scope: loginRef })
@@ -112,7 +122,7 @@ function LoginContent() {
           {/* Logo with enhanced visual hierarchy */}
           <div className="gsap-login-logo flex justify-center">
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-2xl md:rounded-3xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+              <div className="gsap-login-glow absolute inset-0 bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-2xl md:rounded-3xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
               <div className="relative w-18 h-18 md:w-24 md:h-24 bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden border border-white/20">
                 <Image
                   src="/iut-logo.svg"
@@ -144,7 +154,7 @@ function LoginContent() {
             aria-live="polite"
             className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl flex gap-3 items-start backdrop-blur-sm"
           >
-            <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm leading-relaxed">
               Only valid IUT accounts <strong>(@iut-dhaka.edu)</strong> can access this portal.
             </p>

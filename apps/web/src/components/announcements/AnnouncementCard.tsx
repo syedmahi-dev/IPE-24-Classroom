@@ -32,11 +32,13 @@ interface Props {
 
 export function AnnouncementCard({ announcement }: Props) {
   return (
-    <div className="glass rounded-2xl p-5 hover:shadow-glass-hover hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer relative overflow-hidden">
+    <div className="glass rounded-2xl p-5 hover:shadow-glass-hover hover:-translate-y-0.5 transition-all duration-300 ease-smooth group cursor-pointer relative overflow-hidden will-change-transform">
       {/* Decorative side accent based on urgent status */}
       {announcement.type === 'urgent' && (
         <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-red-500"></div>
       )}
+      {/* Hover glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-500/0 to-indigo-500/0 group-hover:from-brand-500/[0.02] group-hover:to-indigo-500/[0.02] transition-all duration-500 rounded-2xl pointer-events-none" />
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-3">

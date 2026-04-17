@@ -6,9 +6,10 @@ import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { ArrowRight, Bot, Calendar, Bell, FileText, Users, Zap, ChevronDown, Github, Mail, Shield, ArrowUp, LayoutDashboard } from 'lucide-react'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 
-gsap.registerPlugin(useGSAP)
+gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 export default function LandingPage() {
   const { data: session, status } = useSession()
@@ -45,6 +46,92 @@ export default function LandingPage() {
           .from('.gsap-hero-sub', { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
           .from('.gsap-hero-cta', { opacity: 0, y: 20, duration: 0.5 }, '-=0.2')
           .from('.gsap-hero-trust', { opacity: 0, y: 12, duration: 0.4 }, '-=0.2')
+
+        // Section headers — reveal on scroll
+        gsap.utils.toArray<HTMLElement>('.gsap-section-header').forEach((el) => {
+          gsap.from(el, {
+            opacity: 0,
+            y: 30,
+            duration: 0.7,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 85%',
+              once: true,
+            },
+          })
+        })
+
+        // Feature cards — batch reveal with stagger
+        const featureCards = gsap.utils.toArray<HTMLElement>('.gsap-feature-card')
+        if (featureCards.length) {
+          gsap.set(featureCards, { opacity: 0, y: 40 })
+          ScrollTrigger.batch(featureCards, {
+            start: 'top 88%',
+            onEnter: (elements) => {
+              gsap.to(elements, {
+                opacity: 1,
+                y: 0,
+                duration: 0.7,
+                stagger: 0.12,
+                ease: 'power3.out',
+                overwrite: true,
+              })
+            },
+            once: true,
+          })
+        }
+
+        // Capability cards — stagger from left
+        const capCards = gsap.utils.toArray<HTMLElement>('.gsap-cap-card')
+        if (capCards.length) {
+          gsap.set(capCards, { opacity: 0, x: -30 })
+          ScrollTrigger.batch(capCards, {
+            start: 'top 88%',
+            onEnter: (elements) => {
+              gsap.to(elements, {
+                opacity: 1,
+                x: 0,
+                duration: 0.6,
+                stagger: 0.1,
+                ease: 'power3.out',
+                overwrite: true,
+              })
+            },
+            once: true,
+          })
+        }
+
+        // Stats — scale up with counter effect
+        gsap.utils.toArray<HTMLElement>('.gsap-stat').forEach((el) => {
+          gsap.from(el, {
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.6,
+            ease: 'back.out(1.7)',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 88%',
+              once: true,
+            },
+          })
+        })
+
+        // CTA section — elegant entrance
+        const ctaSection = document.querySelector('.gsap-cta-section')
+        if (ctaSection) {
+          gsap.from(ctaSection, {
+            opacity: 0,
+            y: 40,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: ctaSection,
+              start: 'top 85%',
+              once: true,
+            },
+          })
+        }
       }
     )
   }, { scope: mainRef })
@@ -192,7 +279,7 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto">
             
             {/* Section Header */}
-            <div className="text-center mb-10 md:mb-16 max-w-3xl mx-auto">
+            <div className="text-center mb-10 md:mb-16 max-w-3xl mx-auto gsap-section-header">
               <h2 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 text-slate-50">
                 Everything You Need in One Place
               </h2>
@@ -205,7 +292,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               
               {/* Feature 1: AI Virtual CR - Large Card */}
-              <div className="group lg:col-span-1 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-2xl md:rounded-3xl p-6 md:p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer animate-fade-in">
+              <div className="gsap-feature-card group lg:col-span-1 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-2xl md:rounded-3xl p-6 md:p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer will-change-transform">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-500/20 to-blue-600/20 text-blue-300 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Bot className="w-6 h-6 md:w-7 md:h-7" />
                 </div>
@@ -219,7 +306,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 2: Live Class Routine */}
-              <div className="group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+              <div className="gsap-feature-card group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer will-change-transform">
                 <div className="w-14 h-14 bg-gradient-to-br from-green-500/20 to-emerald-600/20 text-green-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Calendar className="w-7 h-7" />
                 </div>
@@ -233,7 +320,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 3: Unified Broadcasts */}
-              <div className="group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+              <div className="gsap-feature-card group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer will-change-transform">
                 <div className="w-14 h-14 bg-gradient-to-br from-amber-500/20 to-orange-600/20 text-amber-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Bell className="w-7 h-7" />
                 </div>
@@ -247,7 +334,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 4: Course Resource Library - Wide Card */}
-              <div className="group lg:col-span-2 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+              <div className="gsap-feature-card group lg:col-span-2 bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer will-change-transform">
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-violet-600/20 text-purple-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <FileText className="w-7 h-7" />
                 </div>
@@ -261,7 +348,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 5: Polls & Study Groups */}
-              <div className="group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
+              <div className="gsap-feature-card group bg-gradient-to-br from-slate-900/50 to-slate-900/30 border border-slate-800/50 rounded-3xl p-8 hover:border-slate-700/50 hover:bg-slate-900/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-xl cursor-pointer will-change-transform">
                 <div className="w-14 h-14 bg-gradient-to-br from-pink-500/20 to-rose-600/20 text-pink-300 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Users className="w-7 h-7" />
                 </div>
@@ -281,7 +368,7 @@ export default function LandingPage() {
         <section id="capabilities" className="py-12 md:py-24 px-4 md:px-6 bg-gradient-to-b from-transparent to-indigo-950/10">
           <div className="max-w-5xl mx-auto">
             
-            <div className="text-center mb-10 md:mb-16">
+            <div className="text-center mb-10 md:mb-16 gsap-section-header">
               <h2 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 text-slate-50">
                 Seamlessly Integrated
               </h2>
@@ -292,7 +379,7 @@ export default function LandingPage() {
 
             {/* Integration Grid */}
             <div className="grid md:grid-cols-2 gap-4 md:gap-8">
-              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer animate-fade-in">
+              <div className="gsap-cap-card bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer will-change-transform">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
                     <Zap className="w-6 h-6 text-indigo-300" />
@@ -304,7 +391,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+              <div className="gsap-cap-card bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer will-change-transform">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
                     <Shield className="w-6 h-6 text-cyan-300" />
@@ -316,7 +403,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+              <div className="gsap-cap-card bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer will-change-transform">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <Bot className="w-6 h-6 text-green-300" />
@@ -328,7 +415,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+              <div className="gsap-cap-card bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 backdrop-blur-sm hover:border-slate-700/50 transition-all duration-300 cursor-pointer will-change-transform">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
                     <Zap className="w-6 h-6 text-amber-300" />
@@ -347,19 +434,19 @@ export default function LandingPage() {
         <section className="py-12 md:py-20 px-4 md:px-6">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-3 gap-4 md:gap-8">
-              <div className="text-center group">
+              <div className="gsap-stat text-center group">
                 <div className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
                   500+
                 </div>
                 <p className="text-slate-400 font-medium">Active Users</p>
               </div>
-              <div className="text-center group">
+              <div className="gsap-stat text-center group">
                 <div className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
                   99.9%
                 </div>
                 <p className="text-slate-400 font-medium text-sm md:text-base">Uptime SLA</p>
               </div>
-              <div className="text-center group">
+              <div className="gsap-stat text-center group">
                 <div className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
                   24/7
                 </div>
@@ -371,7 +458,7 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section className="py-12 md:py-24 px-4 md:px-6">
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="gsap-cta-section max-w-3xl mx-auto text-center">
             <h2 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 text-slate-50">
               Ready to Access Your Classroom?
             </h2>

@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { STUDENT_NAV, ADMIN_NAV } from "@/config/navigation"
 import { LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive, X } from "lucide-react"
+import gsap from 'gsap'
 
 const ICONS = {
   LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive
@@ -15,6 +16,8 @@ import Image from 'next/image'
 export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mobileOpen?: boolean; onMobileClose?: () => void }) {
   const pathname = usePathname()
   const links = role === "admin" || role === "super_admin" ? ADMIN_NAV : STUDENT_NAV
+  const mobileDrawerRef = useRef<HTMLElement>(null)
+  const mobileBackdropRef = useRef<HTMLDivElement>(null)
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -23,6 +26,27 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
+
+  // GSAP mobile drawer animation
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (mobileOpen) {
+      if (mobileBackdropRef.current) {
+        gsap.fromTo(mobileBackdropRef.current,
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: reduced ? 0 : 0.25, ease: 'power2.out' }
+        )
+      }
+      if (mobileDrawerRef.current) {
+        gsap.fromTo(mobileDrawerRef.current,
+          { x: '-100%' },
+          { x: '0%', duration: reduced ? 0 : 0.3, ease: 'power3.out' }
+        )
+      }
+    }
+  }, [mobileOpen])
 
   const sidebarContent = (
     <>
@@ -139,11 +163,13 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+            ref={mobileBackdropRef}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            style={{ visibility: 'hidden' }}
             onClick={onMobileClose}
           />
           {/* Drawer */}
-          <aside className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl animate-slide-in-left">
+          <aside ref={mobileDrawerRef} className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl" style={{ transform: 'translateX(-100%)' }}>
             <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
             {sidebarContent}
           </aside>

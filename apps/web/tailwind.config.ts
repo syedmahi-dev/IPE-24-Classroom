@@ -57,16 +57,25 @@ const config: Config = {
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
+        'fade-in-up': 'fadeInUp 0.5s ease-out',
         'slide-up': 'slideUp 0.4s ease-out',
         'slide-in-left': 'slideInLeft 0.3s ease-out',
         'float': 'float 6s ease-in-out infinite',
         'gradient': 'gradient 6s ease infinite',
         'shimmer': 'shimmer 2s ease-in-out infinite',
+        'scale-in': 'scaleIn 0.3s ease-out',
+        'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'bounce-subtle': 'bounceSubtle 0.4s ease-out',
       },
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
@@ -74,6 +83,10 @@ const config: Config = {
         },
         slideInLeft: {
           '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(0)' },
         },
         float: {
@@ -89,7 +102,25 @@ const config: Config = {
           '50%': { opacity: '1' },
           '100%': { opacity: '0.5' },
         },
-      }
+        scaleIn: {
+          '0%': { transform: 'scale(0.9)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        glowPulse: {
+          '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+          '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+        },
+        bounceSubtle: {
+          '0%': { transform: 'translateY(0)' },
+          '40%': { transform: 'translateY(-6px)' },
+          '60%': { transform: 'translateY(-3px)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      },
     },
   },
 }

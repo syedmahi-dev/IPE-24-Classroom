@@ -5,9 +5,9 @@ export function ExamCountdown({ exam }: { exam: any }) {
   const isClose = date.getTime() - new Date().getTime() < 1000 * 60 * 60 * 24 * 3 // 3 days
 
   return (
-    <div className="glass rounded-xl p-5 hover:shadow-glass-hover hover:-translate-y-0.5 transition-all duration-300 w-full relative overflow-hidden group">
+    <div className="glass rounded-xl p-5 hover:shadow-glass-hover hover:-translate-y-0.5 transition-all duration-300 ease-smooth w-full relative overflow-hidden group will-change-transform">
       {/* Dynamic left accent */}
-      <div className={`absolute top-0 left-0 bottom-0 w-1 ${isClose ? 'bg-red-500' : 'bg-brand-400 group-hover:bg-brand-500 transition-colors'}`}></div>
+      <div className={`absolute top-0 left-0 bottom-0 w-1 transition-colors duration-300 ${isClose ? 'bg-red-500' : 'bg-brand-400 group-hover:bg-brand-500'}`}></div>
       <div className="flex items-start justify-between gap-4 pl-1">
         <div>
           <div className="flex items-center gap-2 mb-2">

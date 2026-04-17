@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Sidebar } from "./Sidebar"
 import { TopBar } from "./TopBar"
 import { MobileBottomNav } from "./MobileBottomNav"

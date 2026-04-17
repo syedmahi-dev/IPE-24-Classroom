@@ -11,6 +11,7 @@ import { RoutineWidget } from '@/components/routine/RoutineWidget'
 import { ExamCountdown } from '@/components/exams/ExamCountdown'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { StaggerList } from '@/components/animations/StaggerList'
+import { RevealOnScroll } from '@/components/animations/GSAPAnimations'
 import { Hand, Megaphone, PartyPopper, Sparkles, Clock } from 'lucide-react'
 
 export default async function DashboardPage() {
@@ -82,9 +83,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-8 relative z-10 pt-2 md:pt-4">
         
         {/* Main Content Area */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-8 animate-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+        <RevealOnScroll from="bottom" distance={30} className="lg:col-span-7 xl:col-span-8 space-y-8">
           
-          <div className="flex items-center justify-between">
+          <div className="gsap-reveal-item flex items-center justify-between">
             <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
               <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/20">
                 <Megaphone className="w-5 h-5" />
@@ -94,7 +95,7 @@ export default async function DashboardPage() {
             <a href="/announcements" className="text-sm font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors bg-white hover:bg-brand-50 dark:bg-slate-800 dark:hover:bg-slate-700 px-5 py-2.5 rounded-xl cursor-pointer shadow-sm border border-slate-200 dark:border-slate-700">See All</a>
           </div>
           
-          <div className="grid gap-5">
+          <div className="gsap-reveal-item grid gap-5">
             {announcements.length > 0 ? (
               <StaggerList className="grid gap-5">
                 {announcements.map((a: any) => <div key={a.id} className="gsap-stagger-item"><AnnouncementCard announcement={a} /></div>)}
@@ -107,17 +108,17 @@ export default async function DashboardPage() {
               </div>
             )}
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Sidebar Area */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-8 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+        <RevealOnScroll from="bottom" distance={30} stagger={0.15} className="lg:col-span-5 xl:col-span-4 space-y-8">
           
-          <div className="glass rounded-[2rem] border border-white/60 dark:border-slate-800/80 shadow-xl overflow-hidden relative group">
+          <div className="gsap-reveal-item glass rounded-[2rem] border border-white/60 dark:border-slate-800/80 shadow-xl overflow-hidden relative group">
              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -z-10 group-hover:bg-brand-500/20 transition-colors duration-500" />
              <RoutineWidget />
           </div>
           
-          <div className="space-y-5">
+          <div className="gsap-reveal-item space-y-5">
             <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
               <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-400 to-red-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/20 relative">
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -143,7 +144,7 @@ export default async function DashboardPage() {
               )}
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </div>
   )

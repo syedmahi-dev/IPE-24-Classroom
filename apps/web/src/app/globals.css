@@ -117,6 +117,32 @@
     background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
     background-size: 24px 24px;
   }
+
+  /* Will-change hints for animated elements */
+  .will-change-transform {
+    will-change: transform;
+  }
+  .will-change-opacity {
+    will-change: opacity;
+  }
+
+  /* Smooth hover card lift — compositor-only */
+  .hover-lift {
+    @apply transition-all duration-300 ease-smooth;
+  }
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-xl;
+  }
+
+  /* Focus-visible ring for keyboard nav */
+  .focus-ring {
+    @apply focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none;
+  }
+
+  /* Interaction feedback */
+  .press-scale {
+    @apply active:scale-[0.97] transition-transform duration-150;
+  }
 }
 
 /* ─── Accessibility: Respect reduced motion preference ─── */

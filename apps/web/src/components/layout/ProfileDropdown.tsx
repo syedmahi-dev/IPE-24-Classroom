@@ -1,15 +1,17 @@
 "use client"
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { LogOut, User, Settings, Moon, Sun } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import Image from 'next/image'
+import gsap from 'gsap'
 
 export function ProfileDropdown({ user }: { user: any }) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -26,6 +28,23 @@ export function ProfileDropdown({ user }: { user: any }) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // GSAP dropdown entrance animation
+  useEffect(() => {
+    if (!menuRef.current) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (isOpen) {
+      if (reduced) {
+        gsap.set(menuRef.current, { autoAlpha: 1 })
+        return
+      }
+      gsap.fromTo(menuRef.current,
+        { autoAlpha: 0, y: -8, scale: 0.95 },
+        { autoAlpha: 1, y: 0, scale: 1, duration: 0.2, ease: 'power3.out' }
+      )
+    }
+  }, [isOpen])
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -56,7 +75,7 @@ export function ProfileDropdown({ user }: { user: any }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-2 z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
+        <div ref={menuRef} className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-2 z-[100]" style={{ visibility: 'hidden' }}>
           <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-2">
             <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{user?.name}</p>
             <p className="text-xs font-medium text-slate-500 truncate">{user?.email}</p>
