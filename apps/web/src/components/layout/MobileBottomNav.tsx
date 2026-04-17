@@ -13,10 +13,11 @@ const MOBILE_NAV = [
 ]
 
 const ADMIN_MOBILE_NAV = [
-  { href: '/admin', label: 'Home', icon: LayoutDashboard },
-  { href: '/admin/announcements', label: 'Posts', icon: Megaphone },
-  { href: '/admin/files', label: 'Files', icon: Calendar },
-  { href: '/chat', label: 'AI Chat', icon: MessageCircle },
+  { href: '/admin', label: 'Admin', icon: LayoutDashboard },
+  { href: '/admin/announcements', label: 'Manage', icon: Megaphone },
+  { href: '/routine', label: 'Routine', icon: Calendar },
+  { href: '/resources', label: 'Files', icon: Calendar },
+  { href: '/chat', label: 'Chat', icon: MessageCircle },
   { href: '/profile', label: 'Profile', icon: User },
 ]
 

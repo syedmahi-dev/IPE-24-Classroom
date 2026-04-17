@@ -57,43 +57,64 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-8 px-5 space-y-2 relative z-10 scrollbar-hide">
-        {links.map((link) => {
-          const l = link as any
-          const Icon = ICONS[link.icon]
-          const isLocked = l.superAdminOnly && role !== "super_admin"
-          const isActive = pathname === link.href
-          
-          return (
-            <Link
-              key={link.href}
-              href={isLocked ? '#' : link.href}
-              data-testid={`nav-${link.label.replace(/\s+/g, '-')}`}
-              aria-disabled={isLocked}
-              tabIndex={isLocked ? -1 : 0}
-              className={`flex items-center px-4 py-3.5 text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none ${
-                isLocked 
-                  ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50 bg-slate-50/50 dark:bg-slate-900/30 grayscale' 
-                  : isActive
-                    ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 shadow-sm border border-brand-100 dark:border-brand-900 hover:shadow-md'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:shadow-sm border border-transparent hover:border-white/40 dark:hover:border-white/10 cursor-pointer'
-              }`}
-            >
-              {isActive && !isLocked && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-r-full bg-brand-500" />
+      <nav className="flex-1 overflow-y-auto py-8 px-5 space-y-1 relative z-10 scrollbar-hide">
+        {(() => {
+          // Group navigation items by section (for admin with student features)
+          const groupedLinks: { [key: string]: typeof links } = {}
+          links.forEach(link => {
+            const section = (link as any).section || 'Main'
+            if (!groupedLinks[section]) groupedLinks[section] = []
+            groupedLinks[section].push(link)
+          })
+
+          return Object.entries(groupedLinks).map(([section, sectionLinks]) => (
+            <div key={section} className="space-y-2">
+              {/* Section header (only if multiple sections) */}
+              {Object.keys(groupedLinks).length > 1 && (
+                <div className="px-4 py-2 mt-4 first:mt-0 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  {section}
+                </div>
               )}
-              {Icon && (
-                <Icon className={`mr-4 flex-shrink-0 h-5 w-5 transition-transform duration-300 ${
-                  isActive ? 'scale-110 text-brand-600 dark:text-brand-400' : 'group-hover:scale-110 group-hover:text-brand-500 dark:group-hover:text-brand-400 text-slate-400 dark:text-slate-500'
-                }`} />
-              )}
-              <span className="relative z-10">{link.label}</span>
-              {l.superAdminOnly && !isLocked && (
-                <div className="ml-auto w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" title="CR Only" />
-              )}
-            </Link>
-          )
-        })}
+              {/* Navigation links in section */}
+              {sectionLinks.map((link) => {
+                const l = link as any
+                const Icon = ICONS[link.icon]
+                const isLocked = l.superAdminOnly && role !== "super_admin"
+                const isActive = pathname === link.href
+                
+                return (
+                  <Link
+                    key={link.href}
+                    href={isLocked ? '#' : link.href}
+                    data-testid={`nav-${link.label.replace(/\s+/g, '-')}`}
+                    aria-disabled={isLocked}
+                    tabIndex={isLocked ? -1 : 0}
+                    className={`flex items-center px-4 py-3.5 text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none ${
+                      isLocked 
+                        ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50 bg-slate-50/50 dark:bg-slate-900/30 grayscale' 
+                        : isActive
+                          ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 shadow-sm border border-brand-100 dark:border-brand-900 hover:shadow-md'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:shadow-sm border border-transparent hover:border-white/40 dark:hover:border-white/10 cursor-pointer'
+                    }`}
+                  >
+                    {isActive && !isLocked && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-r-full bg-brand-500" />
+                    )}
+                    {Icon && (
+                      <Icon className={`mr-4 flex-shrink-0 h-5 w-5 transition-transform duration-300 ${
+                        isActive ? 'scale-110 text-brand-600 dark:text-brand-400' : 'group-hover:scale-110 group-hover:text-brand-500 dark:group-hover:text-brand-400 text-slate-400 dark:text-slate-500'
+                      }`} />
+                    )}
+                    <span className="relative z-10">{link.label}</span>
+                    {l.superAdminOnly && !isLocked && (
+                      <div className="ml-auto w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" title="SuperAdmin Only" />
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          ))
+        })()}
       </nav>
 
       {/* Footer Area */}
