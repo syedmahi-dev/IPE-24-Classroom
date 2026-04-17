@@ -32,6 +32,20 @@ const config: Config = {
         cr: {
           amber: '#f59e0b', // amber-500
         },
+        // Semantic colors for status/type badges
+        semantic: {
+          success: '#10b981', // emerald-500
+          warning: '#f59e0b', // amber-500
+          danger: '#ef4444', // red-500
+          info: '#3b82f6', // blue-500
+          purple: '#a855f7', // purple-600
+        },
+        // Stat card gradient accents
+        'stat-success': '#10b98133',
+        'stat-warning': '#f59e0b33',
+        'stat-danger': '#ef444433',
+        'stat-info': '#3b82f633',
+        'stat-purple': '#a855f733',
       },
       fontFamily: {
         sans: ['var(--font-outfit)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
