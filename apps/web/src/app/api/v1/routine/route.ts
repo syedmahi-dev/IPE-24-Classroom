@@ -127,12 +127,10 @@ function matchesWeekParity(
     return routine.weekParity === effectiveParity
   }
 
-  // 2) Auto-detect: biweekly lab with group split
-  if (routine.isLab && routine.targetGroup !== 'ALL' && isBiweeklyCourse(routine.courseCode)) {
-    return routine.targetGroup === effectiveParity
-  }
-
-  // 3) Regular course — show every week
+  // 2) weekParity="ALL" means show every week — skip auto-detect
+  //    Labs like IPE 4208 have weekParity="ALL" + targetGroup="ODD"/"EVEN"
+  //    which means they are already filtered by targetGroup in the DB query.
+  //    Do NOT re-interpret them as biweekly here.
   return true
 }
 

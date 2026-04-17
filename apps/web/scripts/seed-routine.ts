@@ -60,8 +60,8 @@ const labClasses: RoutineEntry[] = [
   { courseCode: 'Phy 4214', courseName: 'Physics Lab', dayOfWeek: 'Tuesday', startTime: '09:15', endTime: '10:30', room: 'PL', teacher: 'Prof. Dr. A T Md. Kaosar Jamil / Prof. Dr. A. K. M. Akhter Hossain', targetGroup: 'ODD', weekParity: 'ODD', isLab: true, semester: SEMESTER },
   { courseCode: 'Phy 4214', courseName: 'Physics Lab', dayOfWeek: 'Tuesday', startTime: '09:15', endTime: '10:30', room: 'PL', teacher: 'Prof. Dr. A T Md. Kaosar Jamil / Prof. Dr. A. K. M. Akhter Hossain', targetGroup: 'EVEN', weekParity: 'ODD', isLab: true, semester: SEMESTER },
 
-  // Tuesday Slots 3–4: IPE 4208 — fixed position, G2 only (Type B weeks)
-  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II (Machine Shop)', dayOfWeek: 'Tuesday', startTime: '10:30', endTime: '13:00', room: 'MS', teacher: 'Mr. Immul Kayas / Mr. Tanvir Hossain', targetGroup: 'ODD', weekParity: 'ODD', isLab: true, semester: SEMESTER },
+  // Tuesday Slots 3–4: IPE 4208 — fixed position, G2 only (EVERY working week)
+  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II (Machine Shop)', dayOfWeek: 'Tuesday', startTime: '10:30', endTime: '13:00', room: 'MS', teacher: 'Mr. Immul Kayas / Mr. Tanvir Hossain', targetGroup: 'ODD', weekParity: 'ALL', isLab: true, semester: SEMESTER },
 
   // Tuesday Slots 5–6: Chem 4216 — Position A (G1 on Type A, G2 on Type B)
   { courseCode: 'Chem 4216', courseName: 'Chemistry Lab', dayOfWeek: 'Tuesday', startTime: '14:30', endTime: '17:00', room: 'CL', teacher: 'Dr. Md. Jalil Miah / Mr. Md. Shahabuddin', targetGroup: 'EVEN', weekParity: 'EVEN', isLab: true, semester: SEMESTER },
@@ -75,8 +75,8 @@ const labClasses: RoutineEntry[] = [
   { courseCode: 'EEE 4282', courseName: 'Electrical Circuits & Machines Lab', dayOfWeek: 'Thursday', startTime: '08:00', endTime: '10:30', room: 'EL', teacher: 'Ms. Jasim Tasnim Rahman / Ms. Tabassum Rahman Aishy', targetGroup: 'ODD', weekParity: 'ODD', isLab: true, semester: SEMESTER },
   { courseCode: 'EEE 4282', courseName: 'Electrical Circuits & Machines Lab', dayOfWeek: 'Thursday', startTime: '08:00', endTime: '10:30', room: 'EL', teacher: 'Ms. Jasim Tasnim Rahman / Ms. Tabassum Rahman Aishy', targetGroup: 'EVEN', weekParity: 'ODD', isLab: true, semester: SEMESTER },
 
-  // Thursday Slots 5–6: IPE 4208 — fixed position, G1 only (Type A weeks)
-  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II (Machine Shop)', dayOfWeek: 'Thursday', startTime: '14:30', endTime: '17:00', room: 'MS', teacher: 'Mr. Tanvir Hossain / Mr. Immul Kayas', targetGroup: 'EVEN', weekParity: 'EVEN', isLab: true, semester: SEMESTER },
+  // Thursday Slots 5–6: IPE 4208 — fixed position, G1 only (EVERY working week)
+  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II (Machine Shop)', dayOfWeek: 'Thursday', startTime: '14:30', endTime: '17:00', room: 'MS', teacher: 'Mr. Tanvir Hossain / Mr. Immul Kayas', targetGroup: 'EVEN', weekParity: 'ALL', isLab: true, semester: SEMESTER },
 ]
 
 async function main() {

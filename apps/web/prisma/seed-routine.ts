@@ -59,11 +59,11 @@ const routineData = [
   // ME 4226 — Thursday 08:00-10:30 — paired with EEE 4282 (simultaneous, different rooms)
   { courseCode: 'ME 4226', courseName: 'Material Engineering Lab', dayOfWeek: 'Thursday', startTime: '08:00', endTime: '10:30', room: 'AL', teacher: 'MSI/MAS', targetGroup: 'ALL', weekParity: 'EVEN', isLab: true },
 
-  // IPE 4208 — Thursday 14:30-17:00 — G1 only, fixed position (never swaps)
-  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II', dayOfWeek: 'Thursday', startTime: '14:30', endTime: '17:00', room: 'MS', teacher: 'TH/IK', targetGroup: 'EVEN', weekParity: 'EVEN', isLab: true },
+  // IPE 4208 — Thursday 14:30-17:00 — G1 only, EVERY working week (never swaps)
+  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II', dayOfWeek: 'Thursday', startTime: '14:30', endTime: '17:00', room: 'MS', teacher: 'TH/IK', targetGroup: 'EVEN', weekParity: 'ALL', isLab: true },
 
-  // IPE 4208 — Tuesday 10:30-13:00 — G2 only, fixed position (never swaps)
-  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II', dayOfWeek: 'Tuesday', startTime: '10:30', endTime: '13:00', room: 'MS', teacher: 'IK/TH', targetGroup: 'ODD', weekParity: 'EVEN', isLab: true },
+  // IPE 4208 — Tuesday 10:30-13:00 — G2 only, EVERY working week (never swaps)
+  { courseCode: 'IPE 4208', courseName: 'Workshop Practice II', dayOfWeek: 'Tuesday', startTime: '10:30', endTime: '13:00', room: 'MS', teacher: 'IK/TH', targetGroup: 'ODD', weekParity: 'ALL', isLab: true },
 
   // ═══════════════════════════════════════════════════════════════════════════
   // BIWEEKLY LABS — Position B (weekParity="ODD")
@@ -129,7 +129,8 @@ async function main() {
   console.log('  │  Semester start:     April 20, 2026 (Monday)       │')
   console.log('  │  Working Week 1:     Type A                        │')
   console.log('  │    G1 (EVEN) labs:   ME4210, Chem4216, ME4226, IPE4208 │')
-  console.log('  │    G2 (ODD) labs:    Phy4214, EEE4282              │')
+  console.log('  │    G2 (ODD) labs:    Phy4214, EEE4282, IPE4208     │')
+  console.log('  │    (IPE 4208 runs every week for both groups)      │')
   console.log('  └─────────────────────────────────────────────────────┘')
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
