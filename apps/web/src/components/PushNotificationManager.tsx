@@ -2,14 +2,42 @@
 
 import { useState } from 'react'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { BellRing, BellOff, X, Loader2 } from 'lucide-react'
+import { BellRing, BellOff, X, Loader2, RefreshCw } from 'lucide-react'
 
 export default function PushNotificationManager() {
-  const { pushState, isToggling, handleToggle, handleEnable } = usePushNotifications()
+  const { pushState, isToggling, handleToggle, handleEnable, handleRetry } = usePushNotifications()
   const [dismissed, setDismissed] = useState(false)
 
   // Don't render anything while loading or if unsupported
   if (pushState === 'loading' || pushState === 'unsupported') return null
+
+  // Error state — something went wrong, offer retry
+  if (pushState === 'error') {
+    return (
+      <div className="glass rounded-[2rem] p-5 md:p-6 shadow-xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 border border-red-200/50 dark:border-red-500/20 bg-gradient-to-r from-red-50/50 to-orange-50/50 dark:from-red-900/10 dark:to-orange-900/10 relative overflow-hidden">
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0 shadow-inner">
+            <BellOff className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100">
+              Notification Setup Failed
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Something went wrong setting up push notifications. Try again or refresh the page.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleRetry}
+          className="relative z-10 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold shadow-lg active:scale-95 transition-all flex items-center gap-2 shrink-0"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Retry
+        </button>
+      </div>
+    )
+  }
 
   // Enabled/disabled toggle view
   if (pushState === 'enabled' || pushState === 'disabled') {

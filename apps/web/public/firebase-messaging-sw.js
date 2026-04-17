@@ -1,18 +1,22 @@
 /* eslint-disable no-undef */
-importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-compat.js');
 
-// We need to fetch the env vars. Wait, service workers don't have access to process.env.
-// We must register the Service Worker with matching Config during the client code registration.
-// However, the easiest way is to use a URLSearchParams strategy when registering the SW or initialize inside the client.
-// Actually, firebase-messaging will find this file. So we can just wait for config.
-// The config can be injected when it's built or we can initialize it with data passed via postMessage.
+// Firebase public config — these are NEXT_PUBLIC_ values, safe to embed.
+// Self-initializing so background messages work even when no client page is open.
+const firebaseConfig = {
+  apiKey: 'AIzaSyB-qEtd6MNb-cHkTPtXROXGQbuUC-mtvDk',
+  authDomain: 'ipe-24.firebaseapp.com',
+  projectId: 'ipe-24',
+  storageBucket: 'ipe-24.firebasestorage.app',
+  messagingSenderId: '538496451475',
+  appId: '1:538496451475:web:7b349e771a84ffa791de66',
+};
 
-// Since we cannot use process.env here directly, we'll listen for a message to initialize it.
-// Alternatively, setting it via query params is common in Next.js:
-// `navigator.serviceWorker.register('/firebase-messaging-sw.js?firebaseConfig=...')`
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -20,41 +24,29 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-let messaging = null;
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Background message:', payload);
 
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'INIT_FIREBASE') {
-    if (!firebase.apps.length) {
-      firebase.initializeApp(event.data.firebaseConfig);
-      messaging = firebase.messaging();
+  const notificationTitle = payload.notification?.title || 'IPE-24 Update';
+  const notificationOptions = {
+    body: payload.notification?.body || '',
+    icon: '/android-chrome-192x192.png',
+    badge: '/favicon-32x32.png',
+    data: {
+      link: payload.fcmOptions?.link || payload.data?.link || '/',
+    },
+  };
 
-      messaging.onBackgroundMessage((payload) => {
-        console.log('[firebase-messaging-sw.js] Received background message ', payload);
-        const notificationTitle = payload.notification.title;
-        const notificationOptions = {
-          body: payload.notification.body,
-          icon: '/android-chrome-192x192.png',
-          badge: '/favicon-32x32.png',
-          data: {
-            link: payload.fcmOptions?.link || payload.data?.link || '/'
-          }
-        };
-
-        self.registration.showNotification(notificationTitle, notificationOptions);
-      });
-    }
-  }
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const link = event.notification.data.link || '/';
-  
+  const link = event.notification.data?.link || '/';
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if there is already a window/tab open with the target URL
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
+      for (const client of windowClients) {
         if (client.url === link && 'focus' in client) {
           return client.focus();
         }
