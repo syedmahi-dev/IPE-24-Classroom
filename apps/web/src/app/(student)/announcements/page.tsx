@@ -1,8 +1,12 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { AnnouncementCard } from '@/components/announcements/AnnouncementCard'
 import { Megaphone, Search, Filter, Loader2, AlertCircle } from 'lucide-react'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
+
+gsap.registerPlugin(useGSAP)
 
 type AnnouncementType = 'general' | 'exam' | 'file_update' | 'routine_update' | 'urgent' | 'event'
 
@@ -14,6 +18,24 @@ export default function AnnouncementsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [selectedType, setSelectedType] = useState<AnnouncementType | 'all'>('all')
   const [search, setSearch] = useState('')
+  const gridRef = useRef<HTMLDivElement>(null)
+
+  // Animate cards when announcements change
+  useEffect(() => {
+    if (!loading && announcements.length > 0 && gridRef.current) {
+      const mm = gsap.matchMedia()
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.from(gridRef.current!.children, {
+          autoAlpha: 0,
+          y: 20,
+          duration: 0.4,
+          stagger: 0.06,
+          ease: 'power2.out',
+        })
+      })
+      return () => mm.revert()
+    }
+  }, [loading, announcements])
 
   const fetchAnnouncements = useCallback(async () => {
     setLoading(true)
@@ -133,7 +155,7 @@ export default function AnnouncementsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative z-10">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative z-10">
           {announcements.map((announcement: any) => (
             <AnnouncementCard key={announcement.id} announcement={announcement} />
           ))}

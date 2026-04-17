@@ -10,6 +10,7 @@ import { AnnouncementCard } from '@/components/announcements/AnnouncementCard'
 import { RoutineWidget } from '@/components/routine/RoutineWidget'
 import { ExamCountdown } from '@/components/exams/ExamCountdown'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { StaggerList } from '@/components/animations/StaggerList'
 import { Hand, Megaphone, PartyPopper, Sparkles, Clock } from 'lucide-react'
 
 export default async function DashboardPage() {
@@ -95,7 +96,9 @@ export default async function DashboardPage() {
           
           <div className="grid gap-5">
             {announcements.length > 0 ? (
-              announcements.map((a: any) => <AnnouncementCard key={a.id} announcement={a} />)
+              <StaggerList className="grid gap-5">
+                {announcements.map((a: any) => <div key={a.id} className="gsap-stagger-item"><AnnouncementCard announcement={a} /></div>)}
+              </StaggerList>
             ) : (
               <div className="glass p-12 rounded-[2rem] text-center border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex flex-col items-center">
                 <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4"><Megaphone className="w-8 h-8 text-slate-400" /></div>

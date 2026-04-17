@@ -2,13 +2,17 @@
 
 import Image from 'next/image'
 import { signIn } from 'next-auth/react'
-import { useState, Suspense } from 'react'
+import { useState, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Lock, FlaskConical, Loader2, Eye, EyeOff, ShieldAlert, Mail, KeyRound } from 'lucide-react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
+
+gsap.registerPlugin(useGSAP)
 
 // Validation schemas
 const credentialsSchema = z.object({
@@ -25,10 +29,37 @@ function LoginContent() {
   const [isAdminLoading, setIsAdminLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('google')
   const [showPassword, setShowPassword] = useState(false)
+  const loginRef = useRef<HTMLDivElement>(null)
   
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
   const errorCode = searchParams.get('error')
+
+  const form = useForm<CredentialsFormValues>({
+    resolver: zodResolver(credentialsSchema),
+    defaultValues: { email: '', password: '', totp: '' },
+  })
+
+  // GSAP login card entrance animation
+  useGSAP(() => {
+    const mm = gsap.matchMedia()
+    mm.add(
+      {
+        normal: '(prefers-reduced-motion: no-preference)',
+        reduced: '(prefers-reduced-motion: reduce)',
+      },
+      (ctx) => {
+        const { reduced } = ctx.conditions!
+        if (reduced) return
+
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+        tl.from('.gsap-login-logo', { autoAlpha: 0, scale: 0.8, duration: 0.5 })
+          .from('.gsap-login-title', { autoAlpha: 0, y: 16, duration: 0.4 }, '-=0.2')
+          .from('.gsap-login-card', { autoAlpha: 0, y: 24, duration: 0.5 }, '-=0.2')
+          .from('.gsap-login-footer', { autoAlpha: 0, y: 12, duration: 0.3 }, '-=0.1')
+      }
+    )
+  }, { scope: loginRef })
 
   const form = useForm<CredentialsFormValues>({
     resolver: zodResolver(credentialsSchema),
@@ -80,11 +111,11 @@ function LoginContent() {
 
   return (
     <>
-      <div className="w-full max-w-md relative z-10 px-4 md:px-0">
+      <div className="w-full max-w-md relative z-10 px-4 md:px-0" ref={loginRef}>
         {/* Header Section - Enhanced Branding */}
         <div className="text-center space-y-3 md:space-y-4 mb-6 md:mb-10">
           {/* Logo with enhanced visual hierarchy */}
-          <div className="flex justify-center">
+          <div className="gsap-login-logo flex justify-center">
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-2xl md:rounded-3xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
               <div className="relative w-18 h-18 md:w-24 md:h-24 bg-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden border border-white/20">
@@ -101,7 +132,7 @@ function LoginContent() {
           </div>
 
           {/* Typography improvements - Better hierarchy */}
-          <div className="space-y-2 md:space-y-3">
+          <div className="gsap-login-title space-y-2 md:space-y-3">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-50 leading-tight">
               IPE-24 Portal
             </h1>
@@ -126,7 +157,7 @@ function LoginContent() {
         )}
 
         {/* Main Card with improved styling */}
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="gsap-login-card bg-slate-900/50 backdrop-blur-md border border-slate-800/50 rounded-2xl shadow-2xl overflow-hidden">
           {/* Tab Navigation */}
           <div className="border-b border-slate-800/50 p-4 bg-slate-950/20">
             <div className="flex gap-2 bg-slate-950/50 rounded-lg p-1">
@@ -266,7 +297,7 @@ function LoginContent() {
         </div>
 
         {/* Footer Security Info */}
-        <div className="text-center mt-8 space-y-3">
+        <div className="gsap-login-footer text-center mt-8 space-y-3">
           <div className="flex items-center justify-center gap-2 text-slate-500 text-sm">
             <Lock className="w-4 h-4" aria-hidden="true" />
             <p>Your data is securely handled via NextAuth & encryption</p>
