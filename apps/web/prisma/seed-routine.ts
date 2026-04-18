@@ -38,7 +38,7 @@ const routineData = [
   { courseCode: 'ME 4225', courseName: 'Material Engineering', dayOfWeek: 'Wednesday', startTime: '11:45', endTime: '13:00', room: 'Annex', teacher: 'MAS', targetGroup: 'ALL', weekParity: 'ALL', isLab: false },
 
   // ── Thursday (1 double-period theory) ──
-  { courseCode: 'Phy 4213', courseName: 'Waves and Oscillation, Geometrical Optics', dayOfWeek: 'Thursday', startTime: '10:30', endTime: '13:00', room: '604(2)', teacher: 'MDR', targetGroup: 'ALL', weekParity: 'ALL', isLab: false },
+  { courseCode: 'Phy 4213', courseName: 'Waves and Oscillation, Geometrical Optics', dayOfWeek: 'Thursday', startTime: '10:30', endTime: '11:45', room: '604(2)', teacher: 'MDR', targetGroup: 'ALL', weekParity: 'ALL', isLab: false },
 
   // ── Friday (3 theory classes) ──
   { courseCode: 'Chem 4215', courseName: 'Chemistry of Engineering Materials', dayOfWeek: 'Friday', startTime: '08:00', endTime: '09:15', room: '101(3)', teacher: 'MSU', targetGroup: 'ALL', weekParity: 'ALL', isLab: false },
