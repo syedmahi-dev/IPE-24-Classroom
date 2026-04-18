@@ -11,27 +11,27 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, subtitle, gradientColor, trend }: StatCardProps) {
   const gradientMap = {
-    blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/20 hover:border-blue-500/40',
-    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/20 hover:border-purple-500/40',
-    amber: 'from-amber-500/20 to-amber-600/10 border-amber-500/20 hover:border-amber-500/40',
-    emerald: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/20 hover:border-emerald-500/40',
-    red: 'from-red-500/20 to-red-600/10 border-red-500/20 hover:border-red-500/40',
+    blue: 'from-blue-500/10 dark:from-blue-500/20 to-blue-600/5 dark:to-blue-600/10 border-blue-200 dark:border-blue-500/20 hover:border-blue-300 dark:hover:border-blue-500/40',
+    purple: 'from-purple-500/10 dark:from-purple-500/20 to-purple-600/5 dark:to-purple-600/10 border-purple-200 dark:border-purple-500/20 hover:border-purple-300 dark:hover:border-purple-500/40',
+    amber: 'from-amber-500/10 dark:from-amber-500/20 to-amber-600/5 dark:to-amber-600/10 border-amber-200 dark:border-amber-500/20 hover:border-amber-300 dark:hover:border-amber-500/40',
+    emerald: 'from-emerald-500/10 dark:from-emerald-500/20 to-emerald-600/5 dark:to-emerald-600/10 border-emerald-200 dark:border-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-500/40',
+    red: 'from-red-500/10 dark:from-red-500/20 to-red-600/5 dark:to-red-600/10 border-red-200 dark:border-red-500/20 hover:border-red-300 dark:hover:border-red-500/40',
   }
 
   const iconColorMap = {
-    blue: 'text-blue-400',
-    purple: 'text-purple-400',
-    amber: 'text-amber-400',
-    emerald: 'text-emerald-400',
-    red: 'text-red-400',
+    blue: 'text-blue-600 dark:text-blue-400',
+    purple: 'text-purple-600 dark:text-purple-400',
+    amber: 'text-amber-600 dark:text-amber-400',
+    emerald: 'text-emerald-600 dark:text-emerald-400',
+    red: 'text-red-600 dark:text-red-400',
   }
 
   const labelColorMap = {
-    blue: 'text-blue-200',
-    purple: 'text-purple-200',
-    amber: 'text-amber-200',
-    emerald: 'text-emerald-200',
-    red: 'text-red-200',
+    blue: 'text-blue-700 dark:text-blue-200',
+    purple: 'text-purple-700 dark:text-purple-200',
+    amber: 'text-amber-700 dark:text-amber-200',
+    emerald: 'text-emerald-700 dark:text-emerald-200',
+    red: 'text-red-700 dark:text-red-200',
   }
 
   return (
@@ -42,7 +42,7 @@ function StatCard({ icon, label, value, subtitle, gradientColor, trend }: StatCa
       <div className="relative z-10 space-y-3">
         {/* Icon with background */}
         <div className="flex items-center justify-between">
-          <div className={`p-2.5 rounded-xl bg-slate-950/40 border border-slate-700/30 group-hover:border-slate-600/50 transition-colors ${iconColorMap[gradientColor]}`}>
+          <div className={`p-2.5 rounded-xl bg-white/80 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-700/30 group-hover:border-slate-300 dark:group-hover:border-slate-600/50 transition-colors ${iconColorMap[gradientColor]}`}>
             {icon}
           </div>
           {trend && (
@@ -64,10 +64,10 @@ function StatCard({ icon, label, value, subtitle, gradientColor, trend }: StatCa
 
         {/* Value */}
         <div className="space-y-1">
-          <p className="text-3xl font-black text-slate-50 tracking-tight">
+          <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
-          {subtitle && <p className="text-xs font-medium text-slate-400">{subtitle}</p>}
+          {subtitle && <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{subtitle}</p>}
         </div>
       </div>
     </div>

@@ -150,8 +150,8 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
       label: 'Question',
       render: (item) => (
         <div className="max-w-sm">
-          <p className="font-bold text-slate-800 line-clamp-2">{item.question}</p>
-          <p className="text-[11px] text-slate-400 mt-1">{item.optionsList.length} options</p>
+          <p className="font-bold text-slate-800 dark:text-slate-100 line-clamp-2">{item.question}</p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{item.optionsList.length} options</p>
         </div>
       ),
     },
@@ -172,7 +172,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
       label: 'Status',
       render: (item) => (
         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-          item.isClosed ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700'
+          item.isClosed ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
         }`}>
           {item.isClosed ? 'Closed' : 'Active'}
         </span>
@@ -183,7 +183,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
       label: 'Created',
       hideOnMobile: true,
       render: (item) => (
-        <span className="text-xs font-medium text-slate-500">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
           {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </span>
       ),
@@ -218,7 +218,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
             {!item.isClosed && (
               <button
                 onClick={(e) => { e.stopPropagation(); closePoll(item) }}
-                className="p-2 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition-all"
+                className="p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-slate-400 hover:text-amber-600 transition-all"
                 title="Close Poll"
               >
                 <Lock className="w-4 h-4" />
@@ -227,7 +227,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
             {userRole === 'super_admin' && (
               <button
                 onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
-                className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+                className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
                 title="Delete"
               >
                 <Trash2 className="w-4 h-4" />
@@ -239,7 +239,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
           <select
             value={filterStatus}
             onChange={(e) => { setFilterStatus(e.target.value); setPage(1) }}
-            className="px-4 py-3 bg-white/50 border border-white rounded-xl text-sm font-bold text-slate-600 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
+            className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
           >
             <option value="">All Polls</option>
             <option value="active">Active</option>
@@ -261,7 +261,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
         <div className="space-y-5">
           <AdminFormField type="text" label="Question" value={question} onChange={setQuestion} placeholder="What do you want to ask?" required />
           <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-sm font-bold text-slate-700">
+            <label className="flex items-center gap-1.5 text-sm font-bold text-slate-700 dark:text-slate-300">
               Options <span className="text-red-400">*</span>
             </label>
             {options.map((opt, idx) => (
@@ -271,7 +271,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
                   value={opt}
                   onChange={(e) => updateOption(idx, e.target.value)}
                   placeholder={`Option ${idx + 1}`}
-                  className="flex-1 px-4 py-3 bg-white/70 border border-slate-200 rounded-xl text-slate-800 font-semibold text-sm focus:outline-none focus:ring-4 focus:ring-admin-purple/10 focus:border-admin-purple/40 transition-all placeholder:text-slate-400 placeholder:font-medium"
+                  className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-semibold text-sm focus:outline-none focus:ring-4 focus:ring-admin-purple/10 dark:focus:ring-admin-purple/20 focus:border-admin-purple/40 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-medium"
                 />
                 {options.length > 2 && (
                   <button onClick={() => removeOption(idx)} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
@@ -308,10 +308,10 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
               return (
                 <div key={idx} className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-slate-700">{opt}</span>
-                    <span className="text-xs font-bold text-slate-500">{votes} votes ({pct}%)</span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{opt}</span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{votes} votes ({pct}%)</span>
                   </div>
-                  <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-admin-purple to-indigo-500 rounded-full transition-all duration-700"
                       style={{ width: `${pct}%` }}
@@ -320,8 +320,8 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
                 </div>
               )
             })}
-            <div className="pt-3 border-t border-slate-100 text-center">
-              <span className="text-sm font-bold text-slate-500">{resultsItem.totalVotes} total votes</span>
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-700 text-center">
+              <span className="text-sm font-bold text-slate-500 dark:text-slate-400">{resultsItem.totalVotes} total votes</span>
             </div>
           </div>
         )}

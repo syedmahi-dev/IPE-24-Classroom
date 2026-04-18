@@ -18,9 +18,9 @@ type DbUser = {
 }
 
 const ROLE_STYLES: Record<string, string> = {
-  super_admin: 'bg-slate-900 text-amber-400 border border-slate-700',
-  admin: 'bg-indigo-100 text-indigo-700',
-  student: 'bg-slate-100 text-slate-600',
+  super_admin: 'bg-slate-900 dark:bg-amber-500/10 text-amber-400 border border-slate-700 dark:border-amber-500/30',
+  admin: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
+  student: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -94,15 +94,15 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
         return (
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
-              user.role === 'super_admin' ? 'bg-amber-100 text-amber-700' :
-              user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' :
-              'bg-slate-100 text-slate-600'
+              user.role === 'super_admin' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' :
+              user.role === 'admin' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400' :
+              'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
             }`}>
               {avatarInitial}
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">{displayName}</p>
-              <p className="text-[11px] text-slate-400 font-medium">{displayEmail}</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{displayName}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">{displayEmail}</p>
             </div>
           </div>
         )
@@ -124,7 +124,7 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
       label: 'Joined',
       hideOnMobile: true,
       render: (user) => (
-        <span className="text-xs font-medium text-slate-500">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
           {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       ),
@@ -160,12 +160,12 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
         ].map((stat) => {
           const Icon = stat.icon
           return (
-            <div key={stat.label} className="glass p-6 rounded-[2rem] relative overflow-hidden group hover:-translate-y-1 transition-all duration-300 bg-white/50 border border-white/60">
-              <div className={`absolute -right-6 -top-6 w-28 h-28 bg-gradient-to-br ${stat.color} opacity-10 rounded-full group-hover:scale-150 transition-transform duration-700`} />
+            <div key={stat.label} className="glass p-6 rounded-[2rem] relative overflow-hidden group hover:-translate-y-1 transition-all duration-300 bg-white/50 dark:bg-slate-800/50 border border-white/60 dark:border-slate-700/50">
+              <div className={`absolute -right-6 -top-6 w-28 h-28 bg-gradient-to-br ${stat.color} opacity-10 dark:opacity-20 rounded-full group-hover:scale-150 transition-transform duration-700`} />
               <div className="flex items-center justify-between relative z-10">
                 <div>
-                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                  <p data-testid="stat-value" className="text-3xl font-black text-slate-800 mt-1 tracking-tight">{stat.value}</p>
+                  <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{stat.label}</p>
+                  <p data-testid="stat-value" className="text-3xl font-black text-slate-800 dark:text-slate-100 mt-1 tracking-tight">{stat.value}</p>
                 </div>
                 <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white shadow-lg`}>
                   <Icon className="w-6 h-6" />
@@ -203,8 +203,8 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
               onClick={(e) => e.stopPropagation()}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer outline-none border transition-all ${
                 user.role === 'admin'
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'
+                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
             >
               <option value="student">Student</option>

@@ -33,12 +33,12 @@ const TYPE_OPTIONS = [
 ]
 
 const TYPE_COLORS: Record<string, string> = {
-  general: 'bg-slate-100 text-slate-700',
-  exam: 'bg-rose-100 text-rose-700',
-  file_update: 'bg-teal-100 text-teal-700',
-  routine_update: 'bg-amber-100 text-amber-700',
-  urgent: 'bg-red-100 text-red-700',
-  event: 'bg-indigo-100 text-indigo-700',
+  general: 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300',
+  exam: 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300',
+  file_update: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300',
+  routine_update: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
+  urgent: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300',
+  event: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
 }
 
 export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
@@ -166,8 +166,8 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
       label: 'Title',
       render: (item) => (
         <div className="max-w-xs">
-          <p className="font-bold text-slate-800 truncate">{item.title}</p>
-          <p className="text-xs text-slate-400 truncate mt-0.5">{item.body.slice(0, 80)}...</p>
+          <p className="font-bold text-slate-800 dark:text-slate-100 truncate">{item.title}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{item.body.slice(0, 80)}...</p>
         </div>
       ),
     },
@@ -175,7 +175,7 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
       key: 'type',
       label: 'Type',
       render: (item) => (
-        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${TYPE_COLORS[item.type] || 'bg-slate-100 text-slate-600'}`}>
+        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${TYPE_COLORS[item.type] || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
           {item.type.replace('_', ' ')}
         </span>
       ),
@@ -185,7 +185,7 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
       label: 'Author',
       hideOnMobile: true,
       render: (item) => (
-        <span className="text-sm font-semibold text-slate-600">{item.author.name}</span>
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.author.name}</span>
       ),
     },
     {
@@ -196,8 +196,8 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
           onClick={(e) => { e.stopPropagation(); togglePublish(item) }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
             item.isPublished
-              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-500/30'
+              : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
           }`}
         >
           {item.isPublished ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -210,7 +210,7 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
       label: 'Date',
       hideOnMobile: true,
       render: (item) => (
-        <span className="text-xs font-medium text-slate-500">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
           {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       ),
@@ -247,14 +247,14 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
           <>
             <button
               onClick={(e) => { e.stopPropagation(); openEdit(item) }}
-              className="p-2 rounded-lg hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
+              className="p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
               title="Edit"
             >
               <Pencil className="w-4 h-4" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
-              className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />
@@ -265,7 +265,7 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
           <select
             value={filterType}
             onChange={(e) => { setFilterType(e.target.value); setPage(1) }}
-            className="px-4 py-3 bg-white/50 border border-white rounded-xl text-sm font-bold text-slate-600 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
+            className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
           >
             <option value="">All Types</option>
             {TYPE_OPTIONS.map((o) => (

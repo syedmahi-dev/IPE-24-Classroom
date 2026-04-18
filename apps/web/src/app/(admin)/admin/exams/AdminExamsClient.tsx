@@ -140,8 +140,8 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
       label: 'Exam',
       render: (item) => (
         <div className="max-w-xs">
-          <p className="font-bold text-slate-800">{item.title}</p>
-          <p className="text-xs text-slate-400 font-medium mt-0.5">{item.course.code} — {item.course.name}</p>
+          <p className="font-bold text-slate-800 dark:text-slate-100">{item.title}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">{item.course.code} — {item.course.name}</p>
         </div>
       ),
     },
@@ -152,7 +152,7 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
         const d = new Date(item.examDate)
         const isPast = d < new Date()
         return (
-          <div className={`text-sm font-semibold ${isPast ? 'text-slate-400' : 'text-slate-700'}`}>
+          <div className={`text-sm font-semibold ${isPast ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
             <p>{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
             <p className="text-xs font-medium">{d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
           </div>
@@ -164,16 +164,16 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
       label: 'Duration',
       hideOnMobile: true,
       render: (item) => item.duration
-        ? <span className="flex items-center gap-1 text-sm font-semibold text-slate-600"><Clock className="w-3.5 h-3.5" />{item.duration}m</span>
-        : <span className="text-xs text-slate-400">—</span>,
+        ? <span className="flex items-center gap-1 text-sm font-semibold text-slate-600 dark:text-slate-300"><Clock className="w-3.5 h-3.5" />{item.duration}m</span>
+        : <span className="text-xs text-slate-400 dark:text-slate-500">—</span>,
     },
     {
       key: 'room',
       label: 'Room',
       hideOnMobile: true,
       render: (item) => item.room
-        ? <span className="text-sm font-semibold text-slate-600">{item.room}</span>
-        : <span className="text-xs text-slate-400">TBA</span>,
+        ? <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.room}</span>
+        : <span className="text-xs text-slate-400 dark:text-slate-500">TBA</span>,
     },
     {
       key: 'isActive',
@@ -182,7 +182,7 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
         const isPast = new Date(item.examDate) < new Date()
         return (
           <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-            isPast ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700'
+            isPast ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
           }`}>
             {isPast ? 'Completed' : 'Upcoming'}
           </span>
@@ -218,13 +218,13 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
           <>
             <button
               onClick={(e) => { e.stopPropagation(); openEdit(item) }}
-              className="p-2 rounded-lg hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
+              className="p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
             >
               <Pencil className="w-4 h-4" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
-              className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
             >
               <Trash2 className="w-4 h-4" />
             </button>

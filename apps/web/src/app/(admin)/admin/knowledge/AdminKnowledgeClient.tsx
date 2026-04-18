@@ -28,10 +28,10 @@ const SOURCE_OPTIONS = [
 ]
 
 const SOURCE_COLORS: Record<string, string> = {
-  pdf: 'bg-red-100 text-red-700',
-  notes: 'bg-blue-100 text-blue-700',
-  syllabus: 'bg-teal-100 text-teal-700',
-  other: 'bg-slate-100 text-slate-600',
+  pdf: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300',
+  notes: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  syllabus: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300',
+  other: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
 }
 
 export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
@@ -125,8 +125,8 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
       label: 'Document',
       render: (item) => (
         <div className="max-w-sm">
-          <p className="font-bold text-slate-800 truncate">{item.title}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5 truncate">{item.content.slice(0, 100)}...</p>
+          <p className="font-bold text-slate-800 dark:text-slate-100 truncate">{item.title}</p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">{item.content.slice(0, 100)}...</p>
         </div>
       ),
     },
@@ -134,7 +134,7 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
       key: 'sourceType',
       label: 'Type',
       render: (item) => (
-        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${SOURCE_COLORS[item.sourceType] || 'bg-slate-100 text-slate-600'}`}>
+        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${SOURCE_COLORS[item.sourceType] || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
           {item.sourceType}
         </span>
       ),
@@ -144,15 +144,15 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
       label: 'Course',
       hideOnMobile: true,
       render: (item) => item.courseCode
-        ? <span className="text-xs font-bold text-slate-600">{item.courseCode}</span>
-        : <span className="text-xs text-slate-400">—</span>,
+        ? <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{item.courseCode}</span>
+        : <span className="text-xs text-slate-400 dark:text-slate-500">—</span>,
     },
     {
       key: 'chunks',
       label: 'Chunks',
       hideOnMobile: true,
       render: (item) => (
-        <span className="text-sm font-semibold text-slate-600">{item._count.chunks}</span>
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item._count.chunks}</span>
       ),
     },
     {
@@ -160,7 +160,7 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
       label: 'Added',
       hideOnMobile: true,
       render: (item) => (
-        <span className="text-xs font-medium text-slate-500">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
           {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </span>
       ),
@@ -197,7 +197,7 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
           userRole === 'super_admin' ? (
             <button
               onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
-              className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
             >
               <Trash2 className="w-4 h-4" />
             </button>

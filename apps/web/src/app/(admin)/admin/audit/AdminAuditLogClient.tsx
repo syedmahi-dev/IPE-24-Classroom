@@ -18,10 +18,10 @@ type AuditEntry = {
 }
 
 const ACTION_COLORS: Record<string, string> = {
-  CREATE: 'bg-emerald-100 text-emerald-700',
-  UPDATE: 'bg-blue-100 text-blue-700',
-  DELETE: 'bg-red-100 text-red-700',
-  CLOSE: 'bg-amber-100 text-amber-700',
+  CREATE: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+  UPDATE: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  DELETE: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300',
+  CLOSE: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
 }
 
 const ACTION_OPTIONS = ['CREATE', 'UPDATE', 'DELETE', 'CLOSE']
@@ -100,12 +100,12 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
 
         return (
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
+            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300">
               {avatarInitial}
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">{displayName}</p>
-              <p className="text-[11px] text-slate-400">{displayEmail}</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{displayName}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">{displayEmail}</p>
             </div>
           </div>
         )
@@ -115,7 +115,7 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
       key: 'action',
       label: 'Action',
       render: (item) => (
-        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${ACTION_COLORS[item.action] || 'bg-slate-100 text-slate-600'}`}>
+        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${ACTION_COLORS[item.action] || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
           {item.action}
         </span>
       ),
@@ -127,8 +127,8 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
         const targetId = item.targetId ?? ''
         return (
           <div>
-            <span className="text-sm font-semibold text-slate-600">{item.targetType}</span>
-            <p className="text-[11px] text-slate-400 font-mono">
+            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.targetType}</span>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
               {targetId ? `${targetId.slice(0, 12)}...` : '—'}
             </p>
           </div>
@@ -162,7 +162,7 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
           return <span className="text-xs text-slate-400">—</span>
         }
         return (
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
             <p className="font-semibold">{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
             <p className="font-medium">{d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
           </div>
@@ -206,7 +206,7 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
           <select
             value={filterAction}
             onChange={(e) => { setFilterAction(e.target.value); setPage(1) }}
-            className="px-4 py-3 bg-white/50 border border-white rounded-xl text-sm font-bold text-slate-600 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
+            className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
           >
             <option value="">All Actions</option>
             {ACTION_OPTIONS.map((a) => (
@@ -225,7 +225,7 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
         return (
           <div className="glass p-6 rounded-2xl animate-slide-up">
             <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Metadata</h4>
-            <pre className="text-xs font-mono text-slate-600 bg-slate-50 p-4 rounded-xl overflow-x-auto">
+            <pre className="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl overflow-x-auto">
               {typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2)}
             </pre>
           </div>

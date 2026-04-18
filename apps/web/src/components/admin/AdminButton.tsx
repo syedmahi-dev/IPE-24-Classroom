@@ -18,11 +18,11 @@ interface AdminButtonProps {
 
 const variantStyles = {
   primary: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white border border-purple-500/30 shadow-lg hover:shadow-xl',
-  secondary: 'bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-slate-100 border border-slate-600/50 shadow-md hover:shadow-lg',
+  secondary: 'bg-slate-100 dark:bg-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-600/80 text-slate-700 dark:text-slate-100 border border-slate-200 dark:border-slate-600/50 shadow-md hover:shadow-lg',
   danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white border border-red-500/30 shadow-lg hover:shadow-xl',
   success: 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white border border-emerald-500/30 shadow-lg hover:shadow-xl',
   warning: 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white border border-amber-500/30 shadow-lg hover:shadow-xl',
-  ghost: 'bg-transparent hover:bg-slate-800/50 text-slate-300 hover:text-slate-200 border border-slate-700/50 hover:border-slate-600/50',
+  ghost: 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50',
 }
 
 const sizeStyles = {

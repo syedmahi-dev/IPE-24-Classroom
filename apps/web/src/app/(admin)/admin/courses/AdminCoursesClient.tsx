@@ -130,8 +130,8 @@ export function AdminCoursesClient() {
       label: 'Course',
       render: (item) => (
         <div className="max-w-xs">
-          <p className="font-bold text-slate-800">{item.code}</p>
-          <p className="text-xs text-slate-400 font-medium mt-0.5 truncate">{item.name}</p>
+          <p className="font-bold text-slate-800 dark:text-slate-100">{item.code}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5 truncate">{item.name}</p>
         </div>
       ),
     },
@@ -139,22 +139,22 @@ export function AdminCoursesClient() {
       key: 'creditHours',
       label: 'Credits',
       hideOnMobile: true,
-      render: (item) => <span className="text-sm font-semibold text-slate-600">{item.creditHours} CR</span>,
+      render: (item) => <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.creditHours} CR</span>,
     },
     {
       key: 'teacherName',
       label: 'Instructor',
       hideOnMobile: true,
       render: (item) => item.teacherName 
-        ? <span className="text-sm font-semibold text-slate-600 truncate max-w-[150px] inline-block">{item.teacherName}</span>
-        : <span className="text-xs text-slate-400">TBA</span>,
+        ? <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[150px] inline-block">{item.teacherName}</span>
+        : <span className="text-xs text-slate-400 dark:text-slate-500">TBA</span>,
     },
     {
       key: 'isActive',
       label: 'Status',
       render: (item) => (
         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-          item.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+          item.isActive ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
         }`}>
           {item.isActive ? 'Active' : 'Inactive'}
         </span>
@@ -189,13 +189,13 @@ export function AdminCoursesClient() {
           <>
             <button
               onClick={(e) => { e.stopPropagation(); openEdit(item) }}
-              className="p-2 rounded-lg hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
+              className="p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
             >
               <Pencil className="w-4 h-4" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
-              className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
             >
               <Trash2 className="w-4 h-4" />
             </button>

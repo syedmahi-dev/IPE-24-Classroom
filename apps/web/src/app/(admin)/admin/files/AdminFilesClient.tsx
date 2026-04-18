@@ -36,11 +36,11 @@ const CATEGORY_OPTIONS = [
 ]
 
 const CATEGORY_COLORS: Record<string, string> = {
-  lecture_notes: 'bg-blue-100 text-blue-700',
-  assignment: 'bg-amber-100 text-amber-700',
-  past_paper: 'bg-purple-100 text-purple-700',
-  syllabus: 'bg-teal-100 text-teal-700',
-  other: 'bg-slate-100 text-slate-600',
+  lecture_notes: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  assignment: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
+  past_paper: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300',
+  syllabus: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300',
+  other: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
 }
 
 function getFileIcon(mimeType: string) {
@@ -155,8 +155,8 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
         <div className="flex items-center gap-3 max-w-xs">
           {getFileIcon(item.mimeType)}
           <div className="min-w-0">
-            <p className="font-bold text-slate-800 truncate">{item.name}</p>
-            <p className="text-[11px] text-slate-400 font-medium">{formatSize(item.sizeBytes)}</p>
+            <p className="font-bold text-slate-800 dark:text-slate-100 truncate">{item.name}</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">{formatSize(item.sizeBytes)}</p>
           </div>
         </div>
       ),
@@ -166,14 +166,14 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
       label: 'Folder',
       hideOnMobile: true,
       render: (item) => item.course
-        ? <span className="text-xs font-bold text-indigo-600">{item.course.code}</span>
-        : <span className="text-xs font-bold text-slate-500">{CATEGORY_OPTIONS.find(c => c.value === item.category)?.label || item.category}</span>,
+        ? <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{item.course.code}</span>
+        : <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{CATEGORY_OPTIONS.find(c => c.value === item.category)?.label || item.category}</span>,
     },
     {
       key: 'category',
       label: 'Category',
       render: (item) => (
-        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${CATEGORY_COLORS[item.category] || 'bg-slate-100 text-slate-600'}`}>
+        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${CATEGORY_COLORS[item.category] || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
           {item.category.replace('_', ' ')}
         </span>
       ),
@@ -182,14 +182,14 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
       key: 'uploadedBy',
       label: 'Uploader',
       hideOnMobile: true,
-      render: (item) => <span className="text-sm font-semibold text-slate-600">{item.uploadedBy.name}</span>,
+      render: (item) => <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.uploadedBy.name}</span>,
     },
     {
       key: 'createdAt',
       label: 'Date',
       hideOnMobile: true,
       render: (item) => (
-        <span className="text-xs font-medium text-slate-500">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
           {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </span>
       ),
@@ -230,14 +230,14 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-500 transition-all"
+              className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 text-slate-400 hover:text-blue-500 transition-all"
               title="Download Secure Proxy"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
             <button
               onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
-              className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
+              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />
@@ -248,7 +248,7 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
           <select
             value={filterCourse}
             onChange={(e) => { setFilterCourse(e.target.value); setPage(1) }}
-            className="px-4 py-3 bg-white/50 border border-white rounded-xl text-sm font-bold text-slate-600 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
+            className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
           >
             <option value="">All Courses</option>
             {courses.map((c) => (
@@ -292,9 +292,9 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
           <AdminFormField type="select" label="Category" value={category} onChange={setCategory} options={CATEGORY_OPTIONS} />
 
           {/* Folder placement hint */}
-          <div className="flex items-start gap-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-100">
-            <FolderPlus className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-indigo-700 leading-relaxed">
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
+            <FolderPlus className="w-5 h-5 text-indigo-500 dark:text-indigo-400 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-indigo-700 dark:text-indigo-300 leading-relaxed">
               <span className="font-bold">Folder:</span>{' '}
               {courseId
                 ? <>This file will appear in the <span className="font-black">{courses.find(c => c.id === courseId)?.code}</span> course folder.</>
