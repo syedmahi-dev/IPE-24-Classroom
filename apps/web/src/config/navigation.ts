@@ -8,6 +8,7 @@ export const STUDENT_NAV = [
   { href: '/study-groups',  label: 'Study Groups',   icon: 'Users' },
   { href: '/chat',          label: 'Virtual CR',     icon: 'MessageCircle' },
   { href: '/profile',       label: 'Profile',        icon: 'User' },
+  { href: '/settings',      label: 'Settings',       icon: 'Settings' },
 ]
 
 export const ADMIN_NAV = [

@@ -1,6 +1,4 @@
 export const dynamic = 'force-dynamic';
-import { AdminSettingsClient } from './AdminSettingsClient'
-import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
@@ -8,10 +6,5 @@ export const metadata = {
 }
 
 export default async function AdminSettingsPage() {
-  const session: any = await auth()
-  if (!session?.user || !['super_admin'].includes(session.user.role)) {
-    redirect('/admin')
-  }
-
-  return <AdminSettingsClient />
+  redirect('/settings')
 }

@@ -41,7 +41,7 @@ export default async function AdminPage() {
   const superActions = [
     { href: '/admin/users', label: 'Manage Users', icon: Users, color: 'from-amber-500 to-orange-500' },
     { href: '/admin/audit', label: 'Audit Log', icon: ScrollText, color: 'from-slate-600 to-slate-800' },
-    { href: '/admin/settings', label: 'Settings', icon: Settings, color: 'from-indigo-500 to-purple-600' },
+    { href: '/settings', label: 'Settings', icon: Settings, color: 'from-indigo-500 to-purple-600' },
   ]
 
   const quickActions = isSuper ? [...crActions, ...superActions] : crActions

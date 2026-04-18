@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { 
   Settings as SettingsIcon, Shield, Bell, Moon, Sun, Monitor, 
   Lock, Key, Globe, Eye, Loader2, Save, Sparkles, Smartphone, Check,
-  AlertTriangle, Database, Zap
+  AlertTriangle, Database, Zap, ShieldAlert, ArrowRightCircle, GraduationCap
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
 import { SecuritySettings } from './components/SecuritySettings'
+import { SemesterSettings } from './components/SemesterSettings'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 
 export default function SettingsPage() {
@@ -236,6 +237,11 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+
+          {/* Semester Transition — Super Admin Only */}
+          {role === 'super_admin' && (
+            <SemesterSettings />
+          )}
 
         </div>
 
