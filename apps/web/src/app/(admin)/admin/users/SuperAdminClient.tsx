@@ -11,10 +11,10 @@ import { AdminFormField } from '@/components/admin/AdminFormField'
 
 type DbUser = {
   id: string
-  name: string
-  email: string
+  name?: string | null
+  email?: string | null
   role: string
-  createdAt: Date
+  createdAt: Date | string
 }
 
 const ROLE_STYLES: Record<string, string> = {
@@ -36,10 +36,12 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
 
-  const filteredUsers = initialUsers.filter(u =>
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const normalizedSearch = search.toLowerCase()
+  const filteredUsers = initialUsers.filter((user) => {
+    const email = (user.email ?? '').toLowerCase()
+    const name = (user.name ?? '').toLowerCase()
+    return email.includes(normalizedSearch) || name.includes(normalizedSearch)
+  })
 
   const openAddModal = () => {
     setNewEmail('')
@@ -84,21 +86,27 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
     {
       key: 'name',
       label: 'User',
-      render: (user) => (
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
-            user.role === 'super_admin' ? 'bg-amber-100 text-amber-700' :
-            user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' :
-            'bg-slate-100 text-slate-600'
-          }`}>
-            {user.name.charAt(0).toUpperCase()}
+      render: (user) => {
+        const displayName = user.name?.trim() || 'Unnamed User'
+        const displayEmail = user.email?.trim() || 'unknown@iut-dhaka.edu'
+        const avatarInitial = displayName.charAt(0).toUpperCase()
+
+        return (
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
+              user.role === 'super_admin' ? 'bg-amber-100 text-amber-700' :
+              user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' :
+              'bg-slate-100 text-slate-600'
+            }`}>
+              {avatarInitial}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-800">{displayName}</p>
+              <p className="text-[11px] text-slate-400 font-medium">{displayEmail}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-bold text-slate-800">{user.name}</p>
-            <p className="text-[11px] text-slate-400 font-medium">{user.email}</p>
-          </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       key: 'role',

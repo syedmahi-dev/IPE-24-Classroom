@@ -9,12 +9,12 @@ import { AdminDataTable, Column } from '@/components/admin/AdminDataTable'
 type AuditEntry = {
   id: string
   actorId: string
-  actor: { id: string; name: string; email: string; avatarUrl: string | null }
+  actor: { id: string; name?: string | null; email?: string | null; avatarUrl?: string | null } | null
   action: string
   targetType: string
-  targetId: string
+  targetId?: string | null
   metadata: string | null
-  createdAt: string
+  createdAt: string | Date
 }
 
 const ACTION_COLORS: Record<string, string> = {
@@ -68,9 +68,14 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
       const entries = result.data as AuditEntry[]
       const csv = [
         'Timestamp,Actor,Email,Action,Target Type,Target ID,Metadata',
-        ...entries.map((e) =>
-          `"${new Date(e.createdAt).toISOString()}","${e.actor.name}","${e.actor.email}","${e.action}","${e.targetType}","${e.targetId}","${(e.metadata || '').replace(/"/g, '""')}"`
-        ),
+        ...entries.map((e) => {
+          const actorName = e.actor?.name?.trim() || 'Unknown'
+          const actorEmail = e.actor?.email?.trim() || 'unknown@iut-dhaka.edu'
+          const targetId = e.targetId ?? ''
+          const timestamp = new Date(e.createdAt)
+          const iso = Number.isNaN(timestamp.valueOf()) ? '' : timestamp.toISOString()
+          return `"${iso}","${actorName}","${actorEmail}","${e.action}","${e.targetType}","${targetId}","${(e.metadata || '').replace(/"/g, '""')}"`
+        }),
       ].join('\n')
 
       const blob = new Blob([csv], { type: 'text/csv' })
@@ -88,17 +93,23 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
     {
       key: 'actor',
       label: 'Actor',
-      render: (item) => (
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
-            {item.actor.name.charAt(0).toUpperCase()}
+      render: (item) => {
+        const displayName = item.actor?.name?.trim() || 'Unknown'
+        const displayEmail = item.actor?.email?.trim() || 'unknown@iut-dhaka.edu'
+        const avatarInitial = displayName.charAt(0).toUpperCase()
+
+        return (
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
+              {avatarInitial}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-800">{displayName}</p>
+              <p className="text-[11px] text-slate-400">{displayEmail}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-bold text-slate-800">{item.actor.name}</p>
-            <p className="text-[11px] text-slate-400">{item.actor.email}</p>
-          </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       key: 'action',
@@ -112,12 +123,17 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
     {
       key: 'targetType',
       label: 'Target',
-      render: (item) => (
-        <div>
-          <span className="text-sm font-semibold text-slate-600">{item.targetType}</span>
-          <p className="text-[11px] text-slate-400 font-mono">{item.targetId.slice(0, 12)}...</p>
-        </div>
-      ),
+      render: (item) => {
+        const targetId = item.targetId ?? ''
+        return (
+          <div>
+            <span className="text-sm font-semibold text-slate-600">{item.targetType}</span>
+            <p className="text-[11px] text-slate-400 font-mono">
+              {targetId ? `${targetId.slice(0, 12)}...` : '—'}
+            </p>
+          </div>
+        )
+      },
     },
     {
       key: 'metadata',
@@ -142,6 +158,9 @@ export function AdminAuditLogClient({ userRole }: { userRole: string }) {
       label: 'Time',
       render: (item) => {
         const d = new Date(item.createdAt)
+        if (Number.isNaN(d.valueOf())) {
+          return <span className="text-xs text-slate-400">—</span>
+        }
         return (
           <div className="text-xs text-slate-500">
             <p className="font-semibold">{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>

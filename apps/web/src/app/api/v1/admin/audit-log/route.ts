@@ -27,15 +27,18 @@ export async function GET(req: Request) {
 
     const { page, limit, action, search } = parsed.data
     const skip = (page - 1) * limit
+    const searchQuery = search?.trim()
 
     const where: any = {
       ...(action ? { action } : {}),
-      ...(search ? {
+      ...(searchQuery ? {
         actor: {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
+          is: {
+            OR: [
+              { name: { contains: searchQuery, mode: 'insensitive' } },
+              { email: { contains: searchQuery, mode: 'insensitive' } },
+            ],
+          },
         },
       } : {}),
     }
