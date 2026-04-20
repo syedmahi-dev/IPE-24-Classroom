@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
+import { notifyAll } from '@/lib/notifications'
 import { z } from 'zod'
 
 const updateSchema = z.object({
@@ -49,6 +50,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     })
 
     await logAudit(session.user.id, 'UPDATE', 'announcement', params.id, parsed.data)
+
+    // If this update is publishing a previously-unpublished announcement, notify all users
+    const isFirstPublish = parsed.data.isPublished === true && !existing.isPublished
+    if (isFirstPublish) {
+      notifyAll({
+        title: updated.title,
+        body: updated.body.length > 120 ? updated.body.slice(0, 120) + '…' : updated.body,
+        link: '/announcements',
+      }).catch((err) => console.error('[Notify] Publish-toggle broadcast failed:', err))
+    }
 
     return ok(updated)
   } catch (error) {
