@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
-import { broadcastPushNotification } from '@/lib/fcm'
+import { notifyAll } from '@/lib/notifications'
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -104,12 +104,12 @@ export async function POST(req: Request) {
 
     await logAudit(session.user.id, 'CREATE', 'poll', poll.id, { question })
 
-    // Send push notification (non-blocking)
-    broadcastPushNotification(
-      'New Poll',
-      question.length > 120 ? question.slice(0, 120) + '…' : question,
-      '/polls'
-    ).catch((err) => console.error('[Push] Broadcast failed:', err))
+    // Persist notification records + push broadcast (non-blocking)
+    notifyAll({
+      title: 'New Poll — Vote Now!',
+      body: question.length > 120 ? question.slice(0, 120) + '…' : question,
+      link: '/polls',
+    }).catch((err) => console.error('[Notify] Poll broadcast failed:', err))
 
     return ok({ ...poll, optionsList: options, totalVotes: 0, voteDistribution: options.map(() => 0) })
   } catch (error) {

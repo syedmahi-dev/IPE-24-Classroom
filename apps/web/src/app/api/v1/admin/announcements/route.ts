@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
-import { broadcastPushNotification } from '@/lib/fcm'
+import { notifyAll } from '@/lib/notifications'
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -105,13 +105,13 @@ export async function POST(req: Request) {
 
     await logAudit(session.user.id, 'CREATE', 'announcement', announcement.id, { title, type })
 
-    // Send push notification to all subscribed users (non-blocking)
+    // Persist notification records + push broadcast (non-blocking)
     if (isPublished) {
-      broadcastPushNotification(
+      notifyAll({
         title,
-        content.length > 120 ? content.slice(0, 120) + '…' : content,
-        '/announcements'
-      ).catch((err) => console.error('[Push] Broadcast failed:', err))
+        body: content.length > 120 ? content.slice(0, 120) + '…' : content,
+        link: '/announcements',
+      }).catch((err) => console.error('[Notify] Announcement broadcast failed:', err))
     }
 
     return ok(announcement)

@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
+import { notifyAll } from '@/lib/notifications'
 import { z } from 'zod'
 
 const querySchema = z.object({
@@ -129,6 +130,21 @@ export async function POST(req: Request) {
       courseCode: parsed.data.courseCode,
       reason: parsed.data.reason,
     })
+
+    // Persist notification records + push broadcast (non-blocking)
+    const overrideDate = new Date(parsed.data.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
+    const courseLabel = parsed.data.courseCode || parsed.data.courseName || 'a class'
+    const notifyBodyMap: Record<string, string> = {
+      CANCELLED: `${courseLabel} is CANCELLED on ${overrideDate}.`,
+      MAKEUP: `Makeup class for ${courseLabel} on ${overrideDate}${parsed.data.startTime ? ' at ' + parsed.data.startTime : ''}.`,
+      TIME_CHANGE: `${courseLabel} time changed on ${overrideDate}${parsed.data.startTime ? ' to ' + parsed.data.startTime : ''}.`,
+      ROOM_CHANGE: `${courseLabel} room changed on ${overrideDate}${parsed.data.room ? ' to ' + parsed.data.room : ''}.`,
+    }
+    notifyAll({
+      title: 'Schedule Change',
+      body: notifyBodyMap[parsed.data.type] ?? `Routine update for ${overrideDate}.`,
+      link: '/routine',
+    }).catch((err) => console.error('[Notify] Override broadcast failed:', err))
 
     return ok(override)
   } catch (error) {

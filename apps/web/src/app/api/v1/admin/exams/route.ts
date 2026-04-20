@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
-import { broadcastPushNotification } from '@/lib/fcm'
+import { notifyAll } from '@/lib/notifications'
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -100,12 +100,12 @@ export async function POST(req: Request) {
 
     await logAudit(session.user.id, 'CREATE', 'exam', exam.id, { title, courseId })
 
-    // Send push notification (non-blocking)
-    broadcastPushNotification(
-      `New Exam: ${title}`,
-      `${course.code} — ${new Date(examDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
-      '/exams'
-    ).catch((err) => console.error('[Push] Broadcast failed:', err))
+    // Persist notification records + push broadcast (non-blocking)
+    notifyAll({
+      title: `New Exam: ${title}`,
+      body: `${course.code} — ${new Date(examDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+      link: '/exams',
+    }).catch((err) => console.error('[Notify] Exam broadcast failed:', err))
 
     return ok(exam)
   } catch (error) {
