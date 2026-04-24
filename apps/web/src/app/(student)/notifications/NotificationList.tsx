@@ -1,6 +1,4 @@
-'use client'
-
-import { useTransition } from 'react'
+import { useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { markAsRead, markAllAsRead, clearAllNotifications } from '@/actions/notifications'
 import { BellRing, Check, CheckCircle2, Clock, Trash2 } from 'lucide-react'
@@ -18,6 +16,17 @@ type Notification = {
 export default function NotificationList({ initialNotifications }: { initialNotifications: Notification[] }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+
+  // Automatically mark all as read when the page is viewed
+  useEffect(() => {
+    const hasUnread = initialNotifications.some(n => !n.isRead)
+    if (hasUnread) {
+      startTransition(async () => {
+        await markAllAsRead()
+        router.refresh()
+      })
+    }
+  }, [initialNotifications, router])
 
   const handleMarkAsRead = (id: string) => {
     startTransition(async () => {

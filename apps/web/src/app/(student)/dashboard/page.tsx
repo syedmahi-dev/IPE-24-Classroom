@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 import { AnnouncementCard } from '@/components/announcements/AnnouncementCard'
 import { RoutineWidget } from '@/components/routine/RoutineWidget'
 import { ExamCountdown } from '@/components/exams/ExamCountdown'
-import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { StaggerList } from '@/components/animations/StaggerList'
 import { RevealOnScroll } from '@/components/animations/GSAPAnimations'
 import { Hand, Megaphone, PartyPopper, Sparkles, Clock } from 'lucide-react'
@@ -73,9 +72,6 @@ export default async function DashboardPage() {
                 Ready to conquer your academic goals today?
               </p>
             </div>
-          </div>
-          <div className="relative z-20 flex-shrink-0 transform hover:scale-105 transition-transform">
-            <NotificationBell />
           </div>
         </div>
       </div>
