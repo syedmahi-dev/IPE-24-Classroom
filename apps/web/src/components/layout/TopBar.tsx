@@ -1,7 +1,30 @@
 import Link from "next/link"
 import { Menu, Search, Bell, Sparkles } from "lucide-react"
 import { ProfileDropdown } from "./ProfileDropdown"
+import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
+
 export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unreadCount?: number, onMenuClick?: () => void }) {
+  const [query, setQuery] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+    }
+  }
   return (
     <header className="h-16 md:h-24 glass mt-3 md:mt-6 mx-3 md:mx-8 rounded-2xl md:rounded-[2.5rem] flex items-center justify-between px-4 md:px-8 z-30 sticky top-3 md:top-6 shadow-xl md:shadow-2xl shadow-brand-900/5">
       {/* Ambient background blur inside the topbar */}
@@ -16,15 +39,27 @@ export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unre
             <Search className="h-5 w-5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors" />
           </div>
           <input
+            ref={inputRef}
             type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleSearch}
             aria-label="Search class materials"
             className="block w-full pl-14 pr-5 py-3 md:py-3.5 border border-white/60 dark:border-white/10 shadow-sm rounded-xl md:rounded-2xl bg-white/60 dark:bg-slate-900/60 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-300 dark:focus:border-brand-700 text-sm font-bold text-slate-700 dark:text-slate-200 transition-all duration-300"
             placeholder="Search class materials, announcements..."
           />
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-             <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-                ⌘ K
-             </kbd>
+          <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
+             <button
+                onClick={() => {
+                  if (query.trim()) {
+                    router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+                  }
+                }}
+                title="Search"
+                className="hidden md:flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+             >
+                <Search className="w-4 h-4" />
+             </button>
           </div>
         </div>
       </div>
