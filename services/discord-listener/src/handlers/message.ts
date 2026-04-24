@@ -149,12 +149,19 @@ async function handleReviewGate(
     return
   }
 
-  const reviewChannel = message.guild?.channels.cache.get(channelConfig.reviewChannelId) as
-    | TextChannel
-    | undefined
+  // Fetch review channel from the client (not the guild) — supports cross-server review
+  let reviewChannel: TextChannel | undefined
+  try {
+    const fetched = await message.client.channels.fetch(channelConfig.reviewChannelId)
+    if (fetched?.isTextBased()) {
+      reviewChannel = fetched as TextChannel
+    }
+  } catch {
+    // channel not found or bot lacks access
+  }
 
   if (!reviewChannel) {
-    logger.error('handler', 'review channel not found', {
+    logger.error('handler', 'review channel not found — ensure bot is invited to the review server', {
       reviewChannelId: channelConfig.reviewChannelId,
     })
     await message.react('❓').catch(() => {})
