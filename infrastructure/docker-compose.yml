@@ -111,6 +111,24 @@ services:
     networks:
       - ipe24-net
 
+  # ── DISCORD LISTENER ─────────────────────────────────────────────────────
+  discord-listener:
+    build:
+      context: ../services/discord-listener
+      dockerfile: Dockerfile
+    container_name: ipe24-discord-listener
+    restart: always
+    env_file: ../services/discord-listener/.env
+    ports:
+      - "127.0.0.1:3005:3005"
+    depends_on:
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - ipe24-net
+
   # ── TELEGRAM BOT ─────────────────────────────────────────────────────────
   telegram-bot:
     build:
