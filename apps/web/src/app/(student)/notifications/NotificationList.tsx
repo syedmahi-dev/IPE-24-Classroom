@@ -1,3 +1,5 @@
+"use client"
+
 import { useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { markAsRead, markAllAsRead, clearAllNotifications } from '@/actions/notifications'
