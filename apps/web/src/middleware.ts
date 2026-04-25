@@ -17,6 +17,20 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
+  // Internal service routes — authenticate by shared secret (no session cookie needed)
+  // This MUST be checked before the session cookie check, because service-to-service
+  // requests (Discord Listener, Telegram Bot, n8n) don't have browser cookies.
+  if (pathname.startsWith('/api/v1/internal/')) {
+    const secret = req.headers.get('x-internal-secret')
+    if (secret !== process.env.INTERNAL_API_SECRET) {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'UNAUTHORIZED', message: 'Invalid secret' } },
+        { status: 401 }
+      )
+    }
+    return NextResponse.next()
+  }
+
   // Check for session cookie — NextAuth v5 uses 'authjs.session-token'
   // On HTTPS (production), it's '__Secure-authjs.session-token'
   const hasSession =
@@ -34,17 +48,6 @@ export async function middleware(req: NextRequest) {
       )
     }
     return NextResponse.redirect(new URL('/login', req.url))
-  }
-
-  // Internal routes — require secret header
-  if (pathname.startsWith('/api/v1/internal/')) {
-    const secret = req.headers.get('x-internal-secret')
-    if (secret !== process.env.INTERNAL_API_SECRET) {
-      return NextResponse.json(
-        { success: false, data: null, error: { code: 'UNAUTHORIZED', message: 'Invalid secret' } },
-        { status: 401 }
-      )
-    }
   }
 
   return NextResponse.next()
