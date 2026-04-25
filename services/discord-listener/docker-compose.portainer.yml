@@ -1,0 +1,44 @@
+version: '3.9'
+
+# ── Standalone Portainer Stack for Discord Listener ────────────────────────
+# This is a LEAN stack designed for the Home Server.
+# The web portal runs on Vercel. The database is on Supabase.
+# Only Redis (dedup) + Discord Listener are needed here.
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    container_name: ipe24-redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - ipe24-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  discord-listener:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ipe24-discord-listener
+    restart: always
+    env_file: .env
+    ports:
+      - "127.0.0.1:3005:3005"   # Health endpoint — not exposed publicly
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - ipe24-net
+
+networks:
+  ipe24-net:
+    driver: bridge
+
+volumes:
+  redis_data:

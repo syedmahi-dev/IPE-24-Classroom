@@ -60,27 +60,32 @@ export async function publishAnnouncement(
 
   // --- 2. Telegram Bot (forward message to class group) ---
   let telegramOk = false
-  try {
-    const tgMessage = buildTelegramMessage(classification, files)
-    const res = await fetch(`${TELEGRAM_BOT_URL}/send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-internal-secret': INTERNAL_API_SECRET,
-      },
-      body: JSON.stringify({ message: tgMessage }),
-    })
+  const telegramUrl = TELEGRAM_BOT_URL
+  if (!telegramUrl || telegramUrl === 'disabled') {
+    logger.info('publisher', 'telegram disabled — skipping')
+  } else {
+    try {
+      const tgMessage = buildTelegramMessage(classification, files)
+      const res = await fetch(`${telegramUrl}/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-secret': INTERNAL_API_SECRET,
+        },
+        body: JSON.stringify({ message: tgMessage }),
+      })
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      telegramOk = true
+      logger.info('publisher', 'telegram message sent')
+    } catch (err) {
+      // Telegram failures are non-fatal — website is more important
+      const msg = `Telegram publish failed: ${String(err)}`
+      errors.push(msg)
+      logger.warn('publisher', msg)
     }
-    telegramOk = true
-    logger.info('publisher', 'telegram message sent')
-  } catch (err) {
-    // Telegram failures are non-fatal — website is more important
-    const msg = `Telegram publish failed: ${String(err)}`
-    errors.push(msg)
-    logger.warn('publisher', msg)
   }
 
   return { website: websiteOk, telegram: telegramOk, errors }
