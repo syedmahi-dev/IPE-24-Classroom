@@ -27,13 +27,22 @@ const TYPE_LABELS = {
 }
 
 const SANITIZE_CONFIG = {
-  ALLOWED_TAGS: ['p', 'b', 'i', 'ul', 'ol', 'li', 'a', 'br', 'strong', 'em', 'h3', 'h4'],
-  ALLOWED_ATTR: ['href'],
+  ALLOWED_TAGS: [
+    'p', 'b', 'i', 'ul', 'ol', 'li', 'a', 'br', 'strong', 'em',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'blockquote', 'code', 'pre', 'hr',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'small', 'span', 'div',
+  ],
+  ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
 }
 
 export default async function AnnouncementDetailPage({ params }: { params: { id: string } }) {
   const session = await auth()
-  if (!session) return notFound()
+  if (!session) {
+    const { redirect } = await import('next/navigation')
+    redirect('/login')
+  }
 
   const announcement = await prisma.announcement.findUnique({
     where: { id: params.id, isPublished: true },

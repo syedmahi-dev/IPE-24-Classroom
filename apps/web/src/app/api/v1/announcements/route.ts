@@ -8,7 +8,7 @@ import { z } from 'zod'
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
-  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event']).optional(),
+  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update']).optional(),
 })
 
 /**
@@ -73,7 +73,7 @@ export async function GET(req: Request) {
 const createAnnouncementSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(5000),
-  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event']).default('general'),
+  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update']).default('general'),
   courseIds: z.array(z.string()).optional(),
 })
 
