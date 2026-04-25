@@ -18,6 +18,7 @@ const TYPE_EMOJIS: Record<string, string> = {
   routine_update: '📅',
   urgent: '🚨',
   event: '🎉',
+  course_update: '📚',
 }
 
 export async function publishAnnouncement(

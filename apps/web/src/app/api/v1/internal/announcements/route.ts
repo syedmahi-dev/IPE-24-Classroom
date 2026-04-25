@@ -9,7 +9,7 @@ import { NextRequest } from 'next/server'
 const bodySchema = z.object({
   title: z.string().min(1).max(60),
   body: z.string().min(1).max(50000),
-  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event']).default('general'),
+  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update']).default('general'),
   source: z.enum(['telegram', 'discord', 'web']).nullable().optional(),
 })
 

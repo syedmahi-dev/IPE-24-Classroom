@@ -20,7 +20,7 @@ Message: "{MESSAGE}"
 
 Respond with this exact JSON structure:
 {
-  "type": "general|exam|file_update|routine_update|urgent|event",
+  "type": "general|exam|file_update|routine_update|urgent|event|course_update",
   "title": "short title (max 60 chars)",
   "body": "clean formatted message body — preserve important details, clean up casual language",
   "urgency": "low|medium|high",
@@ -29,14 +29,15 @@ Respond with this exact JSON structure:
 }
 
 Rules:
-- type "exam" = any mention of tests, quizzes, assessments, exam schedules
-- type "routine_update" = class schedule changes, room changes, time changes
+- type "exam" = any mention of tests, quizzes, assessments, exam schedules, viva, CT (class test)
+- type "routine_update" = class schedule changes, room changes, time changes, class cancellations, makeup classes
 - type "file_update" = notes, slides, documents, resources shared
 - type "urgent" = anything time-critical with less than 24 hours notice
 - type "event" = meetings, trips, workshops, optional gatherings
-- type "general" = everything else
+- type "course_update" = any general update related to a specific course that does NOT fit exam/file/routine (e.g. course syllabus changes, teacher info, course policy, marks update, grade release, assignment deadline reminders, lab instructions)
+- type "general" = everything else not related to a specific course
 - fileCategory: if attachments are present, classify them as lecture_notes (slides, notes, lectures), assignment (homework, lab reports, assignments), past_paper (previous question papers, exam papers), syllabus (course syllabus, outline), or other. Default to "other" if no attachments.
-- detectedCourseCode: if the message mentions a specific course code (e.g. IPE4208, PHY4214, ME4226, EEE4282), extract it in uppercase. Return null if no course code is mentioned.`
+- detectedCourseCode: if the message mentions a specific course code (e.g. IPE4208, PHY4214, ME4226, EEE4282, CHEM4215, MATH4211, HUM4212), extract it in uppercase with space removed (e.g. IPE4208). Return null if no course code is mentioned.`
 
 export async function classifyMessage(
   text: string,
@@ -77,8 +78,9 @@ export async function classifyMessage(
       detectedCourseCode = parsed.detectedCourseCode.toUpperCase().trim()
     }
 
+    const VALID_TYPES = ['general','exam','file_update','routine_update','urgent','event','course_update']
     return {
-      type: (['general','exam','file_update','routine_update','urgent','event'].includes(parsed.type)
+      type: (VALID_TYPES.includes(parsed.type)
         ? parsed.type
         : 'general') as AnnouncementType,
       title: String(parsed.title).slice(0, 60),

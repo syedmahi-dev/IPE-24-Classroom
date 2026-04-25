@@ -30,6 +30,7 @@ const TYPE_OPTIONS = [
   { value: 'routine_update', label: 'Routine Update' },
   { value: 'urgent', label: 'Urgent' },
   { value: 'event', label: 'Event' },
+  { value: 'course_update', label: 'Course Update' },
 ]
 
 const TYPE_COLORS: Record<string, string> = {
@@ -39,6 +40,7 @@ const TYPE_COLORS: Record<string, string> = {
   routine_update: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300',
   urgent: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300',
   event: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
+  course_update: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
 }
 
 export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const AnnouncementTypeSchema = z.enum([
-  'general', 'exam', 'file_update', 'routine_update', 'urgent', 'event'
+  'general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update'
 ])
 export type AnnouncementType = z.infer<typeof AnnouncementTypeSchema>
 

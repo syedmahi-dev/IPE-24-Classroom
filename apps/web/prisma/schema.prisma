@@ -96,7 +96,7 @@ model Announcement {
   id                 String           @id @default(cuid())
   title              String
   body               String
-  type               String           @default("general") // general, exam, file_update, routine_update, urgent, event
+  type               String           @default("general") // general, exam, file_update, routine_update, urgent, event, course_update
   source             String?          // 'telegram' | 'discord' | 'web' | null
   isPublished        Boolean          @default(false)
   publishedAt        DateTime?

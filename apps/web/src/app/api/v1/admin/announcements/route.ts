@@ -9,7 +9,7 @@ import { notifyAll } from '@/lib/notifications'
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
-  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event']).optional(),
+  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update']).optional(),
   search: z.string().optional(),
 })
 
@@ -64,7 +64,7 @@ export async function GET(req: Request) {
 const createSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(5000),
-  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event']).default('general'),
+  type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update']).default('general'),
   isPublished: z.boolean().default(true),
   courseIds: z.array(z.string()).optional(),
 })
@@ -83,18 +83,46 @@ export async function POST(req: Request) {
     const parsed = createSchema.safeParse(body)
     if (!parsed.success) return ERRORS.VALIDATION(parsed.error.errors[0]?.message || 'Invalid data')
 
-    const { title, body: content, type, isPublished, courseIds } = parsed.data
+    const { title, body: content, type: manualType, isPublished, courseIds: manualCourseIds } = parsed.data
+
+    // AI Categorization Logic
+    let finalType = manualType
+    let finalCourseIds = manualCourseIds || []
+
+    // Only run Gemini if type is general or if it's a new announcement
+    // to avoid overriding intentional manual categorization
+    const { categorizeAnnouncement } = await import('@/lib/gemini')
+    const aiResult = await categorizeAnnouncement(title, content)
+
+    if (aiResult) {
+      if (manualType === 'general' && aiResult.category !== 'general') {
+        finalType = aiResult.category as any
+      }
+
+      // Automatically link courses if courseCodes are found and not manually specified
+      if (finalCourseIds.length === 0 && aiResult.courseCodes.length > 0) {
+        const matchingCourses = await prisma.course.findMany({
+          where: {
+            OR: aiResult.courseCodes.map(code => ({
+              code: { contains: code, mode: 'insensitive' }
+            }))
+          },
+          select: { id: true }
+        })
+        finalCourseIds = matchingCourses.map(c => c.id)
+      }
+    }
 
     const announcement = await prisma.announcement.create({
       data: {
         title,
         body: content,
-        type,
+        type: finalType,
         authorId: session.user.id,
         isPublished,
         publishedAt: isPublished ? new Date() : null,
-        courses: courseIds?.length
-          ? { create: courseIds.map((courseId) => ({ courseId })) }
+        courses: finalCourseIds.length
+          ? { create: finalCourseIds.map((courseId) => ({ courseId })) }
           : undefined,
       },
       include: {

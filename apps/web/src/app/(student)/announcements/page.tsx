@@ -8,7 +8,7 @@ import { useGSAP } from '@gsap/react'
 
 gsap.registerPlugin(useGSAP)
 
-type AnnouncementType = 'general' | 'exam' | 'file_update' | 'routine_update' | 'urgent' | 'event'
+type AnnouncementType = 'general' | 'exam' | 'file_update' | 'routine_update' | 'urgent' | 'event' | 'course_update'
 
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState([])
@@ -72,6 +72,7 @@ export default function AnnouncementsPage() {
     { value: 'exam', label: 'Exams', colorClass: 'hover:text-rose-600' },
     { value: 'file_update', label: 'Files', colorClass: 'hover:text-teal-600' },
     { value: 'routine_update', label: 'Routine', colorClass: 'hover:text-amber-600' },
+    { value: 'course_update', label: 'Courses', colorClass: 'hover:text-indigo-600' },
     { value: 'urgent', label: 'Urgent', colorClass: 'hover:text-red-600' },
   ]
 
