@@ -1,7 +1,7 @@
 import { Message, TextChannel, GuildMember } from 'discord.js'
 import { getChannelConfig, ChannelConfig } from '../config'
 import { claimMessage } from '../lib/redis'
-import { classifyMessage } from '../services/classifier'
+import { classifyMessage, ClassificationResult } from '../services/classifier'
 import { uploadUrlToDrive, DriveUploadResult } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
 import { buildPreviewEmbed } from '../services/preview'
@@ -58,22 +58,34 @@ export async function handleMessage(message: Message): Promise<void> {
 
     // --- 1. Classify message content ---
     const messageText = message.content || '(no text — file attachment only)'
-    const classification = channelConfig.defaultAnnouncementType
+    const attachmentNames = [...message.attachments.values()].map((a) => a.name ?? 'file')
+
+    const classification: ClassificationResult = channelConfig.defaultAnnouncementType
       ? {
           type: channelConfig.defaultAnnouncementType,
           title: messageText.split(/[.\n]/)[0].slice(0, 60) || 'Class Announcement',
           body: messageText,
           urgency: 'medium' as const,
+          fileCategory: 'other' as const,
+          detectedCourseCode: null,
         }
-      : await classifyMessage(messageText)
+      : await classifyMessage(messageText, attachmentNames)
 
     logger.info('handler', 'classified', {
       type: classification.type,
       title: classification.title,
       urgency: classification.urgency,
+      fileCategory: classification.fileCategory,
+      detectedCourseCode: classification.detectedCourseCode,
     })
 
-    // --- 2. Upload file attachments to Google Drive ---
+    // --- 2. Determine Drive subfolder name ---
+    // Priority: channel courseCode > AI-detected course > channel label > root
+    const subFolderName = resolveSubFolderName(channelConfig, classification)
+
+    logger.info('handler', 'resolved subfolder', { subFolderName })
+
+    // --- 3. Upload file attachments to Google Drive ---
     const files: DriveUploadResult[] = []
     for (const attachment of message.attachments.values()) {
       if (!ALLOWED_MIME_TYPES.has(attachment.contentType ?? '')) {
@@ -95,7 +107,8 @@ export async function handleMessage(message: Message): Promise<void> {
           attachment.url,
           attachment.name ?? 'attachment',
           attachment.contentType ?? 'application/octet-stream',
-          attachment.size
+          attachment.size,
+          subFolderName // Upload into the subfolder
         )
         files.push(result)
       } catch (err) {
@@ -103,14 +116,17 @@ export async function handleMessage(message: Message): Promise<void> {
       }
     }
 
-    // --- 3. Remove ⏳ reaction ---
+    // --- 4. Remove ⏳ reaction ---
     await message.reactions.cache.get('⏳')?.users.remove().catch(() => {})
 
-    // --- 4. Dispatch by mode ---
+    // --- 5. Dispatch by mode ---
+    const courseCode = channelConfig.courseCode || classification.detectedCourseCode || undefined
+    const folderLabel = channelConfig.label
+
     if (channelConfig.mode === 'AUTO_PUBLISH') {
-      await handleAutoPublish(message, channelConfig, classification, files)
+      await handleAutoPublish(message, channelConfig, classification, files, courseCode, folderLabel)
     } else {
-      await handleReviewGate(message, channelConfig, classification, files, channelName)
+      await handleReviewGate(message, channelConfig, classification, files, channelName, courseCode, folderLabel)
     }
   } catch (err) {
     logger.error('handler', 'unhandled error in message handler', { error: String(err) })
@@ -118,13 +134,49 @@ export async function handleMessage(message: Message): Promise<void> {
   }
 }
 
+/**
+ * Resolve the Google Drive subfolder name for a message.
+ * Priority:
+ *   1. Channel has explicit courseCode (e.g. "IPE4208") → use that
+ *   2. AI detected a courseCode from message text → use that
+ *   3. Channel has a label (e.g. "announcements") → capitalize and use as folder
+ *   4. Fallback → "General"
+ */
+function resolveSubFolderName(
+  channelConfig: ChannelConfig,
+  classification: ClassificationResult
+): string {
+  // 1. Explicit course code from channel config
+  if (channelConfig.courseCode) {
+    return channelConfig.courseCode.toUpperCase()
+  }
+
+  // 2. AI-detected course code (useful for "resources" channel)
+  if (classification.detectedCourseCode) {
+    return classification.detectedCourseCode.toUpperCase()
+  }
+
+  // 3. Use channel label as folder name (e.g. "Announcements", "Schedule Updates")
+  if (channelConfig.label) {
+    return channelConfig.label
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  // 4. Fallback
+  return 'General'
+}
+
 async function handleAutoPublish(
   message: Message,
   _config: ChannelConfig,
-  classification: ReturnType<typeof classifyMessage> extends Promise<infer T> ? T : never,
-  files: DriveUploadResult[]
+  classification: ClassificationResult,
+  files: DriveUploadResult[],
+  courseCode?: string,
+  folderLabel?: string
 ): Promise<void> {
-  const result = await publishAnnouncement(classification, files, message.url)
+  const result = await publishAnnouncement(classification, files, message.url, courseCode, folderLabel)
   await message.react('✅').catch(() => {})
 
   if (result.errors.length > 0) {
@@ -137,9 +189,11 @@ async function handleAutoPublish(
 async function handleReviewGate(
   message: Message,
   channelConfig: ChannelConfig,
-  classification: ReturnType<typeof classifyMessage> extends Promise<infer T> ? T : never,
+  classification: ClassificationResult,
   files: DriveUploadResult[],
-  sourceChannelName: string
+  sourceChannelName: string,
+  courseCode?: string,
+  folderLabel?: string
 ): Promise<void> {
   if (!channelConfig.reviewChannelId) {
     logger.error('handler', 'REVIEW_GATE mode but no reviewChannelId configured', {
@@ -179,6 +233,8 @@ async function handleReviewGate(
     channelConfig,
     classification,
     files,
+    courseCode,
+    folderLabel,
   })
 }
 

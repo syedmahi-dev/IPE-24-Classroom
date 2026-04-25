@@ -49,14 +49,15 @@ export function buildPreviewEmbed(
 
 export function buildPublishedEmbed(
   classification: ClassificationResult,
-  result: { website: boolean; telegram: boolean }
+  result: { website: boolean; telegram: boolean; filesCreated: number }
 ): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle(`✅ Published — ${classification.title}`)
     .setColor(Colors.Green)
     .addFields(
       { name: 'Website', value: result.website ? '✅ Posted' : '❌ Failed', inline: true },
-      { name: 'Telegram', value: result.telegram ? '✅ Sent' : '⚠️ Failed', inline: true },
+      { name: 'Telegram', value: result.telegram ? '✅ Sent' : '⚠️ Skipped', inline: true },
+      { name: 'Files', value: result.filesCreated > 0 ? `📁 ${result.filesCreated} saved` : '—', inline: true },
     )
     .setTimestamp()
     .setFooter({ text: 'discord-listener' })

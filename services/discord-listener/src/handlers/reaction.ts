@@ -22,8 +22,10 @@ export async function awaitCRApproval(params: {
   channelConfig: ChannelConfig
   classification: ClassificationResult
   files: DriveUploadResult[]
+  courseCode?: string
+  folderLabel?: string
 }): Promise<void> {
-  const { previewMessage, originalMessage, channelConfig, classification, files } = params
+  const { previewMessage, originalMessage, channelConfig, classification, files, courseCode, folderLabel } = params
   const { REACTION_TIMEOUT_MS } = getConfig()
 
   const sourceUrl = originalMessage.url
@@ -52,7 +54,7 @@ export async function awaitCRApproval(params: {
     if (approved) {
       logger.info('reaction', 'CR approved announcement', { title: classification.title })
 
-      const result = await publishAnnouncement(classification, files, sourceUrl)
+      const result = await publishAnnouncement(classification, files, sourceUrl, courseCode, folderLabel)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await previewMessage.edit({ embeds: [buildPublishedEmbed(classification, result) as any] })

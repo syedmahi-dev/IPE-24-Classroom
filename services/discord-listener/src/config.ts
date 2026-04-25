@@ -21,6 +21,8 @@ export const ChannelConfigSchema = z.object({
   defaultAnnouncementType: AnnouncementTypeSchema.optional(),
   // Human-readable label for logs
   label: z.string().optional(),
+  // Course code mapping — e.g. "IPE4208" for Drive subfolders and DB records
+  courseCode: z.string().optional(),
 })
 export type ChannelConfig = z.infer<typeof ChannelConfigSchema>
 

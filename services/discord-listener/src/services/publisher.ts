@@ -7,6 +7,7 @@ import { logger } from '../lib/logger'
 export interface PublishResult {
   website: boolean
   telegram: boolean
+  filesCreated: number
   errors: string[]
 }
 
@@ -22,7 +23,9 @@ const TYPE_EMOJIS: Record<string, string> = {
 export async function publishAnnouncement(
   classification: ClassificationResult,
   files: DriveUploadResult[],
-  sourceMessageUrl: string
+  sourceMessageUrl: string,
+  courseCode?: string,
+  folderLabel?: string
 ): Promise<PublishResult> {
   const { INTERNAL_API_URL, INTERNAL_API_SECRET, TELEGRAM_BOT_URL } = getConfig()
   const errors: string[] = []
@@ -58,7 +61,49 @@ export async function publishAnnouncement(
     logger.error('publisher', msg)
   }
 
-  // --- 2. Telegram Bot (forward message to class group) ---
+  // --- 2. Create FileUpload records for each uploaded file ---
+  let filesCreated = 0
+  if (files.length > 0) {
+    // Determine the effective course code: explicit from channel config, or AI-detected
+    const effectiveCourseCode = courseCode || classification.detectedCourseCode || undefined
+
+    for (const file of files) {
+      try {
+        const res = await fetch(`${INTERNAL_API_URL}/api/v1/internal/files`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-internal-secret': INTERNAL_API_SECRET,
+          },
+          body: JSON.stringify({
+            name: file.name,
+            driveId: file.driveId,
+            driveUrl: file.driveUrl,
+            downloadUrl: file.downloadUrl,
+            mimeType: file.mimeType,
+            sizeBytes: file.sizeBytes,
+            category: classification.fileCategory,
+            courseCode: effectiveCourseCode,
+            folderLabel: folderLabel,
+            source: 'discord',
+          }),
+        })
+
+        if (!res.ok) {
+          const text = await res.text()
+          throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`)
+        }
+        filesCreated++
+        logger.info('publisher', 'file record created', { name: file.name, courseCode: effectiveCourseCode })
+      } catch (err) {
+        const msg = `File record creation failed for ${file.name}: ${String(err)}`
+        errors.push(msg)
+        logger.warn('publisher', msg)
+      }
+    }
+  }
+
+  // --- 3. Telegram Bot (forward message to class group) ---
   let telegramOk = false
   const telegramUrl = TELEGRAM_BOT_URL
   if (!telegramUrl || telegramUrl === 'disabled') {
@@ -88,7 +133,7 @@ export async function publishAnnouncement(
     }
   }
 
-  return { website: websiteOk, telegram: telegramOk, errors }
+  return { website: websiteOk, telegram: telegramOk, filesCreated, errors }
 }
 
 function buildHtmlBody(
