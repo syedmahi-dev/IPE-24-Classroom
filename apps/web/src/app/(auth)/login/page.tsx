@@ -321,7 +321,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Background decorative elements — smooth float */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-float"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }}></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float [animation-delay:3s]"></div>
       
       {/* Dot-grid pattern + gradient overlay */}
       <div className="absolute inset-0 bg-dot-grid pointer-events-none"></div>

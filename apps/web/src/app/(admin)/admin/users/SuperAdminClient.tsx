@@ -201,6 +201,7 @@ export function SuperAdminClient({ initialUsers }: { initialUsers: DbUser[] }) {
               value={user.role}
               onChange={(e) => handleRoleChange(user.id, e.target.value)}
               onClick={(e) => e.stopPropagation()}
+              title="Change user role"
               className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer outline-none border transition-all ${
                 user.role === 'admin'
                   ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'

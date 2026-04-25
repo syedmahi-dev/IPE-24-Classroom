@@ -112,7 +112,7 @@ export default function AnnouncementsPage() {
             <button
               key={option.value}
               type="button"
-              aria-pressed={selectedType === option.value}
+              aria-pressed={selectedType === option.value ? "true" : "false"}
               onClick={() => {
                 setSelectedType(option.value)
                 setPage(1)

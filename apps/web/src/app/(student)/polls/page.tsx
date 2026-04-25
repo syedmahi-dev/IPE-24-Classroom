@@ -103,7 +103,7 @@ export default function PollsPage() {
                     <div key={idx} className="relative group">
                       <div 
                         className="absolute inset-0 bg-purple-100/50 dark:bg-purple-900/30 rounded-2xl transition-all duration-1000 ease-out" 
-                        style={{ width: `${percentage}%` }} 
+                        ref={(el) => { if (el) el.style.width = `${percentage}%` }}
                       />
                       <button 
                         onClick={() => handleVote(poll.id, idx)}

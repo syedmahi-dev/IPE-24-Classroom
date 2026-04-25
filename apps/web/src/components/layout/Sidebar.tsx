@@ -165,12 +165,11 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
           {/* Backdrop */}
           <div 
             ref={mobileBackdropRef}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
-            style={{ visibility: 'hidden' }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden invisible"
             onClick={onMobileClose}
           />
           {/* Drawer */}
-          <aside ref={mobileDrawerRef} role="dialog" aria-modal="true" className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl" style={{ transform: 'translateX(-100%)' }}>
+          <aside ref={mobileDrawerRef} role="dialog" aria-modal="true" className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl -translate-x-full">
             <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
             {sidebarContent}
           </aside>

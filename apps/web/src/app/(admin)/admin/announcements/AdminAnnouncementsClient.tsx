@@ -265,6 +265,7 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
           <select
             value={filterType}
             onChange={(e) => { setFilterType(e.target.value); setPage(1) }}
+            title="Filter by type"
             className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
           >
             <option value="">All Types</option>

@@ -64,6 +64,21 @@ function formatDate(dateStr: string) {
   })
 }
 
+const EXTERNAL_FOLDERS = [
+  { name: 'Batch file', url: 'https://drive.google.com/drive/folders/1kT6kHS6mEJp9yUl07pangOULJJrTZHya?usp=sharing', type: 'category', category: 'batch' },
+  { name: 'Classnotes', url: 'https://drive.google.com/drive/folders/1DjyhFGzp8wCNKmzFxmOpRNZO8wnIt-B8?usp=sharing', type: 'category', category: 'notes' },
+  { name: 'Question Bank', url: 'https://drive.google.com/drive/folders/1VWPQ1BaWsMuq4g0sfC4ZjncrnvOJrB56?usp=sharing', type: 'category', category: 'questions' },
+  { name: 'CHEM 4215', url: 'https://drive.google.com/drive/folders/1QHdqASaF_gMPxjaA4lzSAKz0oC9V2mOo?usp=sharing', type: 'course', code: 'CHEM 4215' },
+  { name: 'CHEM 4216', url: 'https://drive.google.com/drive/folders/1EXBZh7CKLvhDEiIQkbKSJIG0yY9ZV7OT?usp=sharing', type: 'course', code: 'CHEM 4216' },
+  { name: 'EEE 4281', url: 'https://drive.google.com/drive/folders/1b9ZlXJd9VdcXsFQewGlUPz6-spqr_iIL?usp=sharing', type: 'course', code: 'EEE 4281' },
+  { name: 'EEE 4282', url: 'https://drive.google.com/drive/folders/1ZJ8hu2tdbvF0ggROk_-setiYicAtAEyp?usp=sharing', type: 'course', code: 'EEE 4282' },
+  { name: 'HUM 4212', url: 'https://drive.google.com/drive/folders/1EOrMji-QEAq40PDVqAZjXk5uZOuXl2kW?usp=sharing', type: 'course', code: 'HUM 4212' },
+  { name: 'IPE 4208', url: 'https://drive.google.com/drive/folders/1KPgWmmwFtKD-WltibNww0-Gafm52QoOk?usp=sharing', type: 'course', code: 'IPE 4208' },
+  { name: 'MATH 4211', url: 'https://drive.google.com/drive/folders/1GWl8oHgOjsJpTA6VU45eHafG7oqieST1?usp=sharing', type: 'course', code: 'MATH 4211' },
+  { name: 'ME 4210', url: 'https://drive.google.com/drive/folders/1GQByw6LOV664i3GKPosHx2AAjlNf2-AX?usp=sharing', type: 'course', code: 'ME 4210' },
+  { name: 'ME 4225', url: 'https://drive.google.com/drive/folders/1j1BdRqvs8A8I58DOrKU4DK0c-RX61YLu?usp=sharing', type: 'course', code: 'ME 4225' },
+]
+
 export default function ResourcesPage() {
   const [folders, setFolders] = useState<Folder[]>([])
   const [files, setFiles] = useState<FileRecord[]>([])
@@ -155,12 +170,24 @@ export default function ResourcesPage() {
     return CATEGORY_ICONS[folder.category || 'other'] || Files
   }
 
-  const getFolderColor = (folder: Folder) => {
+  const getFolderColor = (folder: any) => {
     if (folder.type === 'course') {
       return { bg: 'bg-indigo-50 dark:bg-indigo-900/20', text: 'text-indigo-500 dark:text-indigo-400', gradient: 'from-indigo-500 to-blue-600' }
     }
     return CATEGORY_COLORS[folder.category || 'other'] || DEFAULT_CATEGORY_COLOR
   }
+
+  // Combine local and external folders
+  const allFolders = [
+    ...EXTERNAL_FOLDERS.map(f => ({
+      ...f,
+      id: `external:${f.url}`,
+      fileCount: 'Drive',
+      latestUpload: null,
+      isExternal: true
+    })),
+    ...folders
+  ]
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
@@ -236,7 +263,7 @@ export default function ResourcesPage() {
       {/* ===== FOLDER VIEW (Top Level) ===== */}
       {!loading && !error && !activeFolder && (
         <>
-          {folders.length === 0 ? (
+          {allFolders.length === 0 ? (
             <div className="glass rounded-[2rem] p-16 text-center">
               <FolderOpen className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
               <h3 className="text-xl font-black text-slate-600 dark:text-slate-300">No resources yet</h3>
@@ -246,46 +273,65 @@ export default function ResourcesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {folders.map((folder) => {
+              {allFolders.map((folder: any) => {
                 const Icon = getFolderIcon(folder)
                 const colors = getFolderColor(folder)
+                
+                const cardContent = (
+                  <div className="flex items-start gap-4">
+                    <div className={`w-14 h-14 rounded-[1.25rem] ${colors.bg} ${colors.text} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-inner`}>
+                      <Icon className="w-7 h-7" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight line-clamp-2">
+                        {folder.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                          {folder.fileCount === 'Drive' ? 'Cloud Drive' : `${folder.fileCount} ${folder.fileCount === 1 ? 'file' : 'files'}`}
+                        </span>
+                        {folder.type === 'course' && (
+                          <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gradient-to-r ${colors.gradient} text-white`}>
+                            Course
+                          </span>
+                        )}
+                        {(folder.type === 'category' || folder.isExternal) && folder.category && (
+                          <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gradient-to-r ${colors.gradient} text-white`}>
+                            {folder.category?.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                      {folder.latestUpload && (
+                        <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1.5">
+                          Updated {formatDate(folder.latestUpload)}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 flex-shrink-0 mt-1 transition-colors" />
+                  </div>
+                )
+
+                if (folder.isExternal) {
+                  return (
+                    <a
+                      key={folder.id}
+                      href={folder.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="glass rounded-[2rem] p-6 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/5 dark:hover:shadow-blue-900/20 transition-all group text-left w-full border-2 border-blue-500/10"
+                    >
+                      {cardContent}
+                    </a>
+                  )
+                }
+
                 return (
                   <button
                     key={folder.id}
                     onClick={() => openFolder(folder)}
                     className="glass rounded-[2rem] p-6 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/5 dark:hover:shadow-blue-900/20 transition-all group text-left w-full"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className={`w-14 h-14 rounded-[1.25rem] ${colors.bg} ${colors.text} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-inner`}>
-                        <Icon className="w-7 h-7" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight line-clamp-2">
-                          {folder.name}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
-                            {folder.fileCount} {folder.fileCount === 1 ? 'file' : 'files'}
-                          </span>
-                          {folder.type === 'course' && (
-                            <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gradient-to-r ${colors.gradient} text-white`}>
-                              Course
-                            </span>
-                          )}
-                          {folder.type === 'category' && (
-                            <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gradient-to-r ${colors.gradient} text-white`}>
-                              {folder.category?.replace('_', ' ')}
-                            </span>
-                          )}
-                        </div>
-                        {folder.latestUpload && (
-                          <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1.5">
-                            Updated {formatDate(folder.latestUpload)}
-                          </p>
-                        )}
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 flex-shrink-0 mt-1 transition-colors" />
-                    </div>
+                    {cardContent}
                   </button>
                 )
               })}

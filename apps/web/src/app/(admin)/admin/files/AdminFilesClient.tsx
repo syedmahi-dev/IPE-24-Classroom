@@ -248,6 +248,7 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
           <select
             value={filterCourse}
             onChange={(e) => { setFilterCourse(e.target.value); setPage(1) }}
+            title="Filter by course"
             className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
           >
             <option value="">All Courses</option>

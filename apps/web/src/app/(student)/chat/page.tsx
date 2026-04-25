@@ -132,8 +132,8 @@ export default function ChatPage() {
               </div>
               <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-[1.5rem] rounded-bl-sm px-6 py-4 shadow-sm flex items-center gap-1.5 h-14">
                  <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" />
-                 <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                 <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                                   <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce [animation-delay:150ms]" />
+                                   <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce [animation-delay:300ms]" />
               </div>
             </div>
           )}

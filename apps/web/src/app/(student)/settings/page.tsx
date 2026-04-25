@@ -164,6 +164,7 @@ export default function SettingsPage() {
                 <button 
                   onClick={() => setNotifications({ ...notifications, email: !notifications.email })}
                   className={`w-12 h-6 rounded-full transition-colors relative ${notifications.email ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                  aria-label="Toggle email updates"
                 >
                   <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${notifications.email ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>
@@ -191,6 +192,7 @@ export default function SettingsPage() {
                   className={`w-12 h-6 rounded-full transition-colors relative ${
                     pushState === 'enabled' ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'
                   } ${isToggling || pushState === 'denied' || pushState === 'unsupported' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  aria-label="Toggle push notifications"
                 >
                   <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform flex items-center justify-center ${
                     pushState === 'enabled' ? 'translate-x-6' : 'translate-x-0'
@@ -225,6 +227,7 @@ export default function SettingsPage() {
                 <button 
                   onClick={() => setPrivacy({ ...privacy, showEmail: !privacy.showEmail })}
                   className={`w-12 h-6 rounded-full transition-colors relative ${privacy.showEmail ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                  aria-label="Toggle show email info"
                 >
                   <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${privacy.showEmail ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>

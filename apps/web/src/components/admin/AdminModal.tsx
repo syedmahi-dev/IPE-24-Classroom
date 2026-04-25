@@ -75,6 +75,7 @@ export function AdminModal({
             </div>
             <button
               onClick={onClose}
+              aria-label="Close modal"
               className="p-2.5 -mt-1 -mr-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all active:scale-90"
             >
               <X className="w-5 h-5" />

@@ -54,7 +54,7 @@ export default async function AdminDrivesPage() {
         </a>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up [animation-delay:0.1s] [animation-fill-mode:both]">
         {drives.length === 0 ? (
           <div className="col-span-1 md:col-span-2 lg:col-span-3 glass p-10 rounded-[2rem] text-center border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
             <div className="w-20 h-20 mx-auto bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">

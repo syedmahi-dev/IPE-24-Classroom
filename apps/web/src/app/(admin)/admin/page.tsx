@@ -89,7 +89,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up [animation-delay:0.1s] [animation-fill-mode:both]">
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
@@ -111,7 +111,7 @@ export default async function AdminPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
         {/* Quick Actions */}
-        <div className="lg:col-span-2 space-y-6 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+        <div className="lg:col-span-2 space-y-6 animate-slide-up [animation-delay:0.2s] [animation-fill-mode:both]">
           <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
              <div className="relative">
                <div className="absolute inset-0 w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 blur-lg opacity-70 animate-pulse"></div>
@@ -141,7 +141,7 @@ export default async function AdminPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="space-y-6 animate-slide-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+        <div className="space-y-6 animate-slide-up [animation-delay:0.3s] [animation-fill-mode:both]">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
               <div className="relative">

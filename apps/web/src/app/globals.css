@@ -174,8 +174,8 @@
 
 /* ─── Mobile: Hide scrollbar but keep scrollable ─── */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -184,12 +184,16 @@
 /* ─── Mobile: Prevent text size adjustment on orientation change ─── */
 html {
   -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 /* ─── Mobile: Smooth momentum scrolling on iOS ─── */
 .scroll-touch {
-  -webkit-overflow-scrolling: touch;
+  @supports (-webkit-overflow-scrolling: touch) {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* ─── Mobile: Bottom nav spacer ─── */

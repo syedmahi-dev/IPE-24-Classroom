@@ -198,6 +198,7 @@ export function AdminKnowledgeClient({ userRole }: { userRole: string }) {
             <button
               onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
               className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
+              title="Delete document"
             >
               <Trash2 className="w-4 h-4" />
             </button>

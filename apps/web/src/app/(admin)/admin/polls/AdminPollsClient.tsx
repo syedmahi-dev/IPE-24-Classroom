@@ -239,6 +239,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
           <select
             value={filterStatus}
             onChange={(e) => { setFilterStatus(e.target.value); setPage(1) }}
+            title="Filter by status"
             className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
           >
             <option value="">All Polls</option>
@@ -274,7 +275,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
                   className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-semibold text-sm focus:outline-none focus:ring-4 focus:ring-admin-purple/10 dark:focus:ring-admin-purple/20 focus:border-admin-purple/40 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-medium"
                 />
                 {options.length > 2 && (
-                  <button onClick={() => removeOption(idx)} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                  <button onClick={() => removeOption(idx)} className="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Remove option">
                     <XIcon className="w-4 h-4" />
                   </button>
                 )}
@@ -314,7 +315,7 @@ export function AdminPollsClient({ userRole }: { userRole: string }) {
                   <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-admin-purple to-indigo-500 rounded-full transition-all duration-700"
-                      style={{ width: `${pct}%` }}
+                      ref={(el) => { if (el) el.style.width = `${pct}%` }}
                     />
                   </div>
                 </div>

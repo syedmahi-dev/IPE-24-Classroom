@@ -219,12 +219,14 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
             <button
               onClick={(e) => { e.stopPropagation(); openEdit(item) }}
               className="p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-admin-purple/10 text-slate-400 hover:text-admin-purple transition-all"
+              title="Edit exam"
             >
               <Pencil className="w-4 h-4" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setDeleteItem(item) }}
               className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
+              title="Delete exam"
             >
               <Trash2 className="w-4 h-4" />
             </button>

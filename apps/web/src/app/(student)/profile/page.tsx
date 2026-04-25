@@ -148,8 +148,9 @@ export default function ProfilePage() {
         <div className="space-y-6 max-w-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Display Name</label>
+              <label htmlFor="display-name" className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Display Name</label>
               <input 
+                id="display-name"
                 type="text" 
                 value={name} 
                 onChange={e => setName(e.target.value)}
@@ -157,8 +158,9 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Nick Name</label>
+              <label htmlFor="nick-name" className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Nick Name</label>
               <input 
+                id="nick-name"
                 type="text" 
                 value={nickname} 
                 onChange={e => setNickname(e.target.value)}
@@ -167,8 +169,9 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Phone Number</label>
+              <label htmlFor="phone-number" className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Phone Number</label>
               <input 
+                id="phone-number"
                 type="text" 
                 value={phone} 
                 onChange={e => setPhone(e.target.value)}
@@ -177,8 +180,9 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Date of Birth</label>
+              <label htmlFor="dob" className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Date of Birth</label>
               <input 
+                id="dob"
                 type="text" 
                 value={dob} 
                 onChange={e => setDob(e.target.value)}
@@ -187,8 +191,9 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Blood Group</label>
+              <label htmlFor="blood-group" className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Blood Group</label>
               <input 
+                id="blood-group"
                 type="text" 
                 value={bloodGroup} 
                 onChange={e => setBloodGroup(e.target.value)}
@@ -197,8 +202,9 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Gender</label>
+              <label htmlFor="gender" className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Gender</label>
               <select 
+                id="gender"
                 value={gender} 
                 onChange={e => setGender(e.target.value)}
                 className="w-full px-5 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-slate-500/10 focus:border-slate-400 font-bold text-slate-700 dark:text-slate-200 transition-all"
@@ -211,8 +217,9 @@ export default function ProfilePage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Bio / Status</label>
+            <label htmlFor="bio" className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Bio / Status</label>
             <textarea 
+              id="bio"
               value={bio} 
               onChange={e => setBio(e.target.value)}
               rows={3}
