@@ -54,7 +54,8 @@ export async function awaitCRApproval(params: {
 
       const result = await publishAnnouncement(classification, files, sourceUrl)
 
-      await previewMessage.edit({ embeds: [buildPublishedEmbed(classification, result).toJSON()] })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await previewMessage.edit({ embeds: [buildPublishedEmbed(classification, result) as any] })
       await previewMessage.reactions.removeAll()
 
       // React to the original Discord message to show it was published
@@ -67,7 +68,8 @@ export async function awaitCRApproval(params: {
       }
     } else {
       logger.info('reaction', 'CR rejected announcement', { title: classification.title })
-      await previewMessage.edit({ embeds: [buildDiscardedEmbed().toJSON()] })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await previewMessage.edit({ embeds: [buildDiscardedEmbed() as any] })
       await previewMessage.reactions.removeAll()
       await originalMessage.react('❌').catch(() => {})
       await releaseMessage(originalMessage.id) // allow re-processing if CR edits and tries again
@@ -80,9 +82,10 @@ export async function awaitCRApproval(params: {
     })
     await previewMessage.edit({
       embeds: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         buildDiscardedEmbed().setDescription(
           `Review timed out after ${Math.round(REACTION_TIMEOUT_MS / 60000)} minutes. Message was NOT published. To retry, delete and repost.`
-        ).toJSON(),
+        ) as any,
       ],
     })
     await previewMessage.reactions.removeAll()

@@ -169,7 +169,8 @@ async function handleReviewGate(
   }
 
   const previewEmbed = buildPreviewEmbed(classification, files, sourceChannelName)
-  const previewMessage = await reviewChannel.send({ embeds: [previewEmbed.toJSON()] })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const previewMessage = await reviewChannel.send({ embeds: [previewEmbed as any] })
 
   // Delegate to reaction handler — this awaits CR approval
   await awaitCRApproval({
