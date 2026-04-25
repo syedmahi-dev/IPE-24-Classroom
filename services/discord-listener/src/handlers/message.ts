@@ -1,7 +1,8 @@
 import { Message, TextChannel, GuildMember } from 'discord.js'
 import { getChannelConfig, ChannelConfig } from '../config'
 import { claimMessage } from '../lib/redis'
-import { classifyMessage, ClassificationResult } from '../services/classifier'
+import { classifyMessage, ClassificationResult, ImageInput } from '../services/classifier'
+import fetch from 'node-fetch'
 import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMetadata, isFolderUrl, listDriveFolderFiles } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
 import { buildPreviewEmbed } from '../services/preview'
@@ -60,6 +61,26 @@ export async function handleMessage(message: Message): Promise<void> {
     const messageText = message.content || '(no text — file attachment only)'
     const attachmentNames = [...message.attachments.values()].map((a) => a.name ?? 'file')
 
+    const images: ImageInput[] = []
+    let imageCount = 0
+    for (const attachment of message.attachments.values()) {
+      if (attachment.contentType?.startsWith('image/') && attachment.size <= 4 * 1024 * 1024 && imageCount < 3) {
+        try {
+          const res = await fetch(attachment.url)
+          if (res.ok) {
+            const buffer = await res.buffer()
+            images.push({
+              base64: buffer.toString('base64'),
+              mimeType: attachment.contentType
+            })
+            imageCount++
+          }
+        } catch (err) {
+          logger.warn('handler', 'failed to download image for AI', { url: attachment.url, error: String(err) })
+        }
+      }
+    }
+
     const classification: ClassificationResult = channelConfig.defaultAnnouncementType
       ? {
           type: channelConfig.defaultAnnouncementType,
@@ -69,7 +90,7 @@ export async function handleMessage(message: Message): Promise<void> {
           fileCategory: 'other' as const,
           detectedCourseCode: null,
         }
-      : await classifyMessage(messageText, attachmentNames)
+      : await classifyMessage(messageText, attachmentNames, images)
 
     logger.info('handler', 'classified', {
       type: classification.type,

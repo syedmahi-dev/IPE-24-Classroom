@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import fetch from 'node-fetch'
+import { logger } from './lib/logger'
 
 export const AnnouncementTypeSchema = z.enum([
   'general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update'
@@ -44,6 +46,7 @@ const ConfigSchema = z.object({
   TELEGRAM_BOT_URL: z.string().default('disabled'),
   REDIS_URL: z.string().default('redis://redis:6379'),
   REACTION_TIMEOUT_MS: z.coerce.number().default(30 * 60 * 1000), // 30 min
+  CONFIG_REFRESH_INTERVAL_MS: z.coerce.number().default(5 * 60 * 1000), // 5 min
   NODE_ENV: z.string().default('production'),
 })
 
@@ -63,4 +66,40 @@ export function getConfig(): AppConfig {
 export function getChannelConfig(channelId: string): ChannelConfig | null {
   const cfg = getConfig()
   return cfg.DISCORD_CHANNEL_CONFIGS.find((c) => c.channelId === channelId) ?? null
+}
+
+export async function refreshChannelConfigs(): Promise<void> {
+  const config = getConfig()
+  try {
+    const res = await fetch(`${config.INTERNAL_API_URL}/api/v1/internal/bot-config`, {
+      headers: {
+        'x-internal-secret': config.INTERNAL_API_SECRET,
+      },
+    })
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+
+    const data = await res.json()
+    const parsed = z.array(ChannelConfigSchema).safeParse(data)
+    
+    if (parsed.success) {
+      _config!.DISCORD_CHANNEL_CONFIGS = parsed.data
+      logger.info('config', 'refreshed channel configs from API', { count: parsed.data.length })
+    } else {
+      logger.error('config', 'invalid config received from API', { error: parsed.error.message })
+    }
+  } catch (err) {
+    logger.warn('config', 'failed to fetch configs from API, keeping existing', { error: String(err) })
+  }
+}
+
+export function startConfigRefresh() {
+  const interval = getConfig().CONFIG_REFRESH_INTERVAL_MS
+  setInterval(() => {
+    refreshChannelConfigs().catch(() => {})
+  }, interval)
+  // Run once immediately
+  refreshChannelConfigs().catch(() => {})
 }

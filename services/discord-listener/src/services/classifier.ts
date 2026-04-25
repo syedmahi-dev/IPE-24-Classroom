@@ -11,8 +11,15 @@ export interface ClassificationResult {
   detectedCourseCode: string | null
 }
 
+export interface ImageInput {
+  base64: string
+  mimeType: string
+}
+
 const CLASSIFY_PROMPT = `You are an intelligent assistant for a Bangladeshi university class CR (Class Representative) bot.
 Analyze the following Discord message from a class group and respond with ONLY a JSON object — no markdown, no explanation.
+
+If images are provided, carefully read any text visible in the image (OCR). Extract dates, room numbers, course codes, and any other announcement-relevant content from the images.
 
 Message: "{MESSAGE}"
 
@@ -69,7 +76,8 @@ Respond with this exact JSON structure:
 
 export async function classifyMessage(
   text: string,
-  attachmentNames: string[] = []
+  attachmentNames: string[] = [],
+  images: ImageInput[] = []
 ): Promise<ClassificationResult> {
   const genAI = new GoogleGenerativeAI(getConfig().GEMINI_API_KEY)
   const model = genAI.getGenerativeModel({
@@ -85,8 +93,19 @@ export async function classifyMessage(
     .replace('{MESSAGE}', text.slice(0, 2000))
     .replace('{FILE_CONTEXT}', fileContext)
 
+  const parts: Array<string | { inlineData: { data: string; mimeType: string } }> = [prompt]
+  
+  for (const img of images) {
+    parts.push({
+      inlineData: {
+        data: img.base64,
+        mimeType: img.mimeType
+      }
+    })
+  }
+
   try {
-    const result = await model.generateContent(prompt)
+    const result = await model.generateContent(parts as any)
     const raw = result.response.text().replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(raw)
 

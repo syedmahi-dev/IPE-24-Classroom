@@ -384,3 +384,20 @@ model ConnectedDrive {
 
   @@map("connected_drives")
 }
+
+model BotChannelConfig {
+  id                      String   @id @default(cuid())
+  channelId               String   @unique
+  mode                    String   // AUTO_PUBLISH | REVIEW_GATE
+  authorizedUserIds       String   // JSON string array
+  authorizedRoleIds       String?  // JSON string array
+  reviewChannelId         String?  // For REVIEW_GATE mode
+  defaultAnnouncementType String?  // Skip AI classification
+  label                   String?  // Human-readable label
+  courseCode              String?  // e.g. "IPE4208"
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("bot_channel_configs")
+}

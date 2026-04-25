@@ -1,6 +1,6 @@
 import { Client, Events, GatewayIntentBits, Partials } from 'discord.js'
 import http from 'http'
-import { getConfig } from './config'
+import { getConfig, startConfigRefresh } from './config'
 import { handleMessage } from './handlers/message'
 import { logger } from './lib/logger'
 
@@ -57,6 +57,9 @@ async function main() {
   process.on('SIGTERM', () => { client.destroy(); healthServer.close(); process.exit(0) })
 
   await client.login(config.DISCORD_BOT_TOKEN)
+  
+  // Start dynamic config polling
+  startConfigRefresh()
 }
 
 main().catch((err) => {
