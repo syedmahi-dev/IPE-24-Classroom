@@ -39,7 +39,7 @@ const ConfigSchema = z.object({
   GOOGLE_DRIVE_FOLDER_ID: z.string().min(1),
   INTERNAL_API_SECRET: z.string().min(1),
   INTERNAL_API_URL: z.string().url().default('http://web:3000'),
-  TELEGRAM_BOT_URL: z.string().url().default('http://telegram-bot:3004'),
+  TELEGRAM_BOT_URL: z.string().default('disabled'),
   REDIS_URL: z.string().default('redis://redis:6379'),
   REACTION_TIMEOUT_MS: z.coerce.number().default(30 * 60 * 1000), // 30 min
   NODE_ENV: z.string().default('production'),
