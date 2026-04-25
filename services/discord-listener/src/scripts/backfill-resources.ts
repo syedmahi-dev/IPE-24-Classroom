@@ -92,7 +92,7 @@ async function backfill() {
 
         // Classify the message to get fileCategory and courseCode
         let fileCategory = 'other'
-        let detectedCourseCode = channelInfo.courseCode || null
+        let detectedCourseCode: string | null = channelInfo.courseCode || null
 
         try {
           const classification = await classifyMessage(message.content || '', driveLinks.map(() => 'shared_file'))
