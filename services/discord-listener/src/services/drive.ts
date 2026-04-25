@@ -153,3 +153,67 @@ export function extractDriveLinks(text: string): string[] {
   const pattern = /https:\/\/(drive|docs)\.google\.com\/[^\s)>"]+/g
   return Array.from(text.matchAll(pattern), (m) => m[0])
 }
+
+/**
+ * Extract the Google Drive file ID from a Drive/Docs URL.
+ * Supports formats:
+ *   - https://drive.google.com/file/d/FILE_ID/view
+ *   - https://drive.google.com/open?id=FILE_ID
+ *   - https://docs.google.com/document/d/FILE_ID/edit
+ *   - https://docs.google.com/spreadsheets/d/FILE_ID/edit
+ *   - https://docs.google.com/presentation/d/FILE_ID/edit
+ */
+export function extractFileIdFromUrl(url: string): string | null {
+  // Pattern 1: /d/FILE_ID/
+  const dMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
+  if (dMatch) return dMatch[1]
+
+  // Pattern 2: ?id=FILE_ID
+  const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/)
+  if (idMatch) return idMatch[1]
+
+  return null
+}
+
+/**
+ * Fetch metadata for a shared Google Drive file.
+ * Returns a DriveUploadResult-compatible object if the file is accessible,
+ * or null if the file ID can't be extracted or the API call fails.
+ */
+export async function getDriveFileMetadata(driveUrl: string): Promise<DriveUploadResult | null> {
+  const fileId = extractFileIdFromUrl(driveUrl)
+  if (!fileId) {
+    logger.warn('drive', 'could not extract file ID from URL', { url: driveUrl.slice(0, 100) })
+    return null
+  }
+
+  try {
+    const auth = getAuthClient()
+    const drive = google.drive({ version: 'v3', auth })
+
+    const res = await drive.files.get({
+      fileId,
+      fields: 'id, name, mimeType, size, webViewLink, webContentLink',
+    })
+
+    const file = res.data
+    if (!file.id || !file.name) {
+      logger.warn('drive', 'drive file missing id or name', { fileId })
+      return null
+    }
+
+    logger.info('drive', 'fetched drive file metadata', { fileId, name: file.name })
+
+    return {
+      driveId: file.id,
+      driveUrl: file.webViewLink ?? driveUrl,
+      downloadUrl: file.webContentLink ?? null,
+      mimeType: file.mimeType ?? 'application/octet-stream',
+      sizeBytes: parseInt(file.size ?? '0', 10),
+      name: file.name,
+    }
+  } catch (err) {
+    logger.warn('drive', 'failed to fetch drive file metadata', { fileId, error: String(err) })
+    return null
+  }
+}

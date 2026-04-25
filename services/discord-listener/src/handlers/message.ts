@@ -2,7 +2,7 @@ import { Message, TextChannel, GuildMember } from 'discord.js'
 import { getChannelConfig, ChannelConfig } from '../config'
 import { claimMessage } from '../lib/redis'
 import { classifyMessage, ClassificationResult } from '../services/classifier'
-import { uploadUrlToDrive, DriveUploadResult } from '../services/drive'
+import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMetadata } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
 import { buildPreviewEmbed } from '../services/preview'
 import { awaitCRApproval } from './reaction'
@@ -116,10 +116,27 @@ export async function handleMessage(message: Message): Promise<void> {
       }
     }
 
-    // --- 4. Remove ⏳ reaction ---
+    // --- 4. Extract shared Google Drive links from message text ---
+    const driveLinks = extractDriveLinks(message.content || '')
+    if (driveLinks.length > 0) {
+      logger.info('handler', 'found shared Drive links', { count: driveLinks.length })
+      for (const link of driveLinks) {
+        try {
+          const metadata = await getDriveFileMetadata(link)
+          if (metadata) {
+            files.push(metadata)
+            logger.info('handler', 'added shared Drive file', { name: metadata.name, driveId: metadata.driveId })
+          }
+        } catch (err) {
+          logger.warn('handler', 'failed to fetch shared Drive file', { link: link.slice(0, 80), error: String(err) })
+        }
+      }
+    }
+
+    // --- 5. Remove ⏳ reaction ---
     await message.reactions.cache.get('⏳')?.users.remove().catch(() => {})
 
-    // --- 5. Dispatch by mode ---
+    // --- 6. Dispatch by mode ---
     const courseCode = channelConfig.courseCode || classification.detectedCourseCode || undefined
     const folderLabel = channelConfig.label
 
