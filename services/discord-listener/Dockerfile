@@ -2,11 +2,12 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
-# Retry npm install up to 3 times for flaky networks
 RUN npm install || npm install || npm install
 COPY tsconfig.json ./
 COPY src ./src
-RUN npx tsc
+# Cache bust: Docker sometimes caches stale tsc output
+ARG CACHEBUST=1
+RUN npx tsc && echo "Compiled files:" && find dist -name "*.js" | head -30
 
 # ── Production Stage ─────────────────────────────────────
 FROM node:20-alpine
