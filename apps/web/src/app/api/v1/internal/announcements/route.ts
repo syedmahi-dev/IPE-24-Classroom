@@ -1,7 +1,7 @@
 import { requireInternalSecret } from '@/lib/api-guards'
 import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
-import { broadcastPushNotification } from '@/lib/fcm'
+import { notifyAll } from '@/lib/notifications'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
 import { NextRequest } from 'next/server'
@@ -44,32 +44,14 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  // Fire FCM push notification (non-blocking)
-  await broadcastPushNotification(
+  // Create in-app notifications + FCM push for ALL users
+  await notifyAll({
     title,
-    `New announcement: ${title}`,
-    `/announcements`
-  ).catch((err) => console.error('[internal/announcements] FCM push failed:', err))
-
-  // Create in-app notifications for all students
-  try {
-    const students = await prisma.user.findMany({
-      where: { role: 'student' },
-      select: { id: true },
-    })
-    if (students.length > 0) {
-      await prisma.notification.createMany({
-        data: students.map((s) => ({
-          userId: s.id,
-          title,
-          body: `New ${type} announcement`,
-          link: `/announcements`,
-        })),
-      })
-    }
-  } catch (err) {
-    console.error('[internal/announcements] Notification creation failed:', err)
-  }
+    body: `New ${type} announcement`,
+    link: '/announcements',
+  }).catch((err) =>
+    console.error('[internal/announcements] notifyAll failed:', err)
+  )
 
   // Audit log
   await logAudit(authorId, 'CREATE', 'announcement', announcement.id, {
