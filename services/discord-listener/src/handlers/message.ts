@@ -169,7 +169,7 @@ async function handleReviewGate(
   }
 
   const previewEmbed = buildPreviewEmbed(classification, files, sourceChannelName)
-  const previewMessage = await reviewChannel.send({ embeds: [previewEmbed] })
+  const previewMessage = await reviewChannel.send({ embeds: [previewEmbed.toJSON()] })
 
   // Delegate to reaction handler — this awaits CR approval
   await awaitCRApproval({
