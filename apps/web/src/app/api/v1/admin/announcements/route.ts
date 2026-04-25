@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       },
     })
 
-    await logAudit(session.user.id, 'CREATE', 'announcement', announcement.id, { title, type })
+    await logAudit(session.user.id, 'CREATE', 'announcement', announcement.id, { title, type: finalType })
 
     // Persist notification records + push broadcast (non-blocking)
     if (isPublished) {
