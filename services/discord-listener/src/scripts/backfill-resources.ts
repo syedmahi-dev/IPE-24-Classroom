@@ -11,7 +11,7 @@
 
 import { Client, GatewayIntentBits, TextChannel } from 'discord.js'
 import { getConfig } from '../config'
-import { extractDriveLinks, getDriveFileMetadata } from '../services/drive'
+import { extractDriveLinks, getDriveFileMetadata, isFolderUrl, listDriveFolderFiles, DriveUploadResult } from '../services/drive'
 import { classifyMessage } from '../services/classifier'
 import { logger } from '../lib/logger'
 import fetch from 'node-fetch'
@@ -104,46 +104,58 @@ async function backfill() {
           console.log(`    ⚠️ Classification failed, using defaults`)
         }
 
-        // Process each Drive link
+        // Process each Drive link — handle folders and individual files
         for (const link of driveLinks) {
           try {
-            const metadata = await getDriveFileMetadata(link)
-            if (!metadata) {
-              console.log(`    ⚠️ Could not fetch metadata for: ${link.slice(0, 60)}`)
-              continue
+            let filesToRegister: DriveUploadResult[] = []
+
+            if (isFolderUrl(link)) {
+              // Folder link — list all files inside
+              console.log(`    📁 Expanding folder: ${link.slice(0, 60)}`)
+              filesToRegister = await listDriveFolderFiles(link)
+              console.log(`    📁 Found ${filesToRegister.length} files in folder`)
+            } else {
+              // Individual file link
+              const metadata = await getDriveFileMetadata(link)
+              if (metadata) {
+                filesToRegister = [metadata]
+              } else {
+                console.log(`    ⚠️ Could not fetch metadata for: ${link.slice(0, 60)}`)
+                continue
+              }
             }
 
-            // Create FileUpload record via internal API
-            const res = await fetch(`${config.INTERNAL_API_URL}/api/v1/internal/files`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-internal-secret': config.INTERNAL_API_SECRET,
-              },
-              body: JSON.stringify({
-                name: metadata.name,
-                driveId: metadata.driveId,
-                driveUrl: metadata.driveUrl,
-                downloadUrl: metadata.downloadUrl,
-                mimeType: metadata.mimeType,
-                sizeBytes: metadata.sizeBytes,
-                category: fileCategory,
-                courseCode: detectedCourseCode,
-                folderLabel: channelInfo.label,
-                source: 'discord',
-              }),
-            })
+            for (const metadata of filesToRegister) {
+              // Create FileUpload record via internal API
+              const res = await fetch(`${config.INTERNAL_API_URL}/api/v1/internal/files`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-internal-secret': config.INTERNAL_API_SECRET,
+                },
+                body: JSON.stringify({
+                  name: metadata.name,
+                  driveId: metadata.driveId,
+                  driveUrl: metadata.driveUrl,
+                  downloadUrl: metadata.downloadUrl,
+                  mimeType: metadata.mimeType,
+                  sizeBytes: metadata.sizeBytes,
+                  category: fileCategory,
+                  courseCode: detectedCourseCode,
+                  folderLabel: channelInfo.label,
+                  source: 'discord',
+                }),
+              })
 
-            if (res.ok) {
-              const data = await res.json() as any
-              const isNew = data?.data?.id ? true : false
-              console.log(`    ✅ ${isNew ? 'Created' : 'Already exists'}: ${metadata.name}`)
-              channelFilesCreated++
-              totalFilesCreated++
-            } else {
-              const text = await res.text()
-              console.log(`    ❌ API error: ${res.status} — ${text.slice(0, 100)}`)
-              totalErrors++
+              if (res.ok) {
+                console.log(`    ✅ Registered: ${metadata.name}`)
+                channelFilesCreated++
+                totalFilesCreated++
+              } else {
+                const text = await res.text()
+                console.log(`    ❌ API error: ${res.status} — ${text.slice(0, 100)}`)
+                totalErrors++
+              }
             }
           } catch (err) {
             console.log(`    ❌ Error: ${String(err).slice(0, 100)}`)

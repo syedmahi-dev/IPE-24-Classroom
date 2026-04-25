@@ -2,7 +2,7 @@ import { Message, TextChannel, GuildMember } from 'discord.js'
 import { getChannelConfig, ChannelConfig } from '../config'
 import { claimMessage } from '../lib/redis'
 import { classifyMessage, ClassificationResult } from '../services/classifier'
-import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMetadata } from '../services/drive'
+import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMetadata, isFolderUrl, listDriveFolderFiles } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
 import { buildPreviewEmbed } from '../services/preview'
 import { awaitCRApproval } from './reaction'
@@ -122,13 +122,24 @@ export async function handleMessage(message: Message): Promise<void> {
       logger.info('handler', 'found shared Drive links', { count: driveLinks.length })
       for (const link of driveLinks) {
         try {
-          const metadata = await getDriveFileMetadata(link)
-          if (metadata) {
-            files.push(metadata)
-            logger.info('handler', 'added shared Drive file', { name: metadata.name, driveId: metadata.driveId })
+          if (isFolderUrl(link)) {
+            // Folder link — list all files inside
+            logger.info('handler', 'expanding Drive folder link', { link: link.slice(0, 80) })
+            const folderFiles = await listDriveFolderFiles(link)
+            for (const f of folderFiles) {
+              files.push(f)
+              logger.info('handler', 'added file from folder', { name: f.name, driveId: f.driveId })
+            }
+          } else {
+            // Individual file link
+            const metadata = await getDriveFileMetadata(link)
+            if (metadata) {
+              files.push(metadata)
+              logger.info('handler', 'added shared Drive file', { name: metadata.name, driveId: metadata.driveId })
+            }
           }
         } catch (err) {
-          logger.warn('handler', 'failed to fetch shared Drive file', { link: link.slice(0, 80), error: String(err) })
+          logger.warn('handler', 'failed to fetch shared Drive link', { link: link.slice(0, 80), error: String(err) })
         }
       }
     }

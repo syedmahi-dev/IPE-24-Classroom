@@ -217,3 +217,71 @@ export async function getDriveFileMetadata(driveUrl: string): Promise<DriveUploa
     return null
   }
 }
+
+/**
+ * Check if a Drive URL is a folder link.
+ * e.g. https://drive.google.com/drive/folders/FOLDER_ID
+ */
+export function isFolderUrl(url: string): boolean {
+  return /drive\.google\.com\/drive\/folders\//.test(url)
+}
+
+/**
+ * Extract folder ID from a Drive folder URL.
+ * e.g. https://drive.google.com/drive/folders/1ABC123?usp=sharing → 1ABC123
+ */
+export function extractFolderIdFromUrl(url: string): string | null {
+  const match = url.match(/\/folders\/([a-zA-Z0-9_-]+)/)
+  return match ? match[1] : null
+}
+
+/**
+ * List all files inside a shared Google Drive folder.
+ * Returns metadata for each file (skips subfolders).
+ */
+export async function listDriveFolderFiles(folderUrl: string): Promise<DriveUploadResult[]> {
+  const folderId = extractFolderIdFromUrl(folderUrl)
+  if (!folderId) {
+    logger.warn('drive', 'could not extract folder ID from URL', { url: folderUrl.slice(0, 100) })
+    return []
+  }
+
+  try {
+    const auth = getAuthClient()
+    const drive = google.drive({ version: 'v3', auth })
+
+    const results: DriveUploadResult[] = []
+    let pageToken: string | undefined
+
+    // Paginate through all files in the folder
+    do {
+      const res = await drive.files.list({
+        q: `'${folderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`,
+        fields: 'nextPageToken, files(id, name, mimeType, size, webViewLink, webContentLink)',
+        pageSize: 100,
+        pageToken,
+      })
+
+      for (const file of res.data.files ?? []) {
+        if (!file.id || !file.name) continue
+
+        results.push({
+          driveId: file.id,
+          driveUrl: file.webViewLink ?? `https://drive.google.com/file/d/${file.id}/view`,
+          downloadUrl: file.webContentLink ?? null,
+          mimeType: file.mimeType ?? 'application/octet-stream',
+          sizeBytes: parseInt(file.size ?? '0', 10),
+          name: file.name,
+        })
+      }
+
+      pageToken = res.data.nextPageToken ?? undefined
+    } while (pageToken)
+
+    logger.info('drive', 'listed folder files', { folderId, count: results.length })
+    return results
+  } catch (err) {
+    logger.warn('drive', 'failed to list folder files', { folderId, error: String(err) })
+    return []
+  }
+}
