@@ -25,6 +25,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return new NextResponse('File not found', { status: 404 });
     }
 
+    // Bot-uploaded files (no connectedDrive) are public Drive links — redirect directly
+    if (!fileRecord.connectedDrive && fileRecord.driveUrl) {
+      return NextResponse.redirect(fileRecord.driveUrl);
+    }
+
     // Sanitize filename for Content-Disposition header
     const safeFileName = fileRecord.name.replace(/["\\]/g, '_');
 
