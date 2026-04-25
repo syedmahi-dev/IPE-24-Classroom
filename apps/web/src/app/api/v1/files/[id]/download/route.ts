@@ -33,14 +33,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     // Sanitize filename for Content-Disposition header
     const safeFileName = fileRecord.name.replace(/["\\]/g, '_');
 
-    // 300MB logic
-    const THRESHOLD = 300 * 1024 * 1024;
-    
-    // If over 300MB, it bypasses the proxy
-    if (fileRecord.sizeBytes > THRESHOLD && fileRecord.driveUrl) {
-      return NextResponse.redirect(fileRecord.driveUrl);
-    }
-
     // Perform proxy download for secure, private files
     const { stream, mimeType, size } = await downloadFileStream(
       fileRecord.driveId, 
