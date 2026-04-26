@@ -53,13 +53,13 @@ CR posts → bot detects → Gemini classifies → upload files → publish to s
 Use this for channels where the CR's posts are always publication-ready (e.g. a private `#cr-posts` channel with no casual chat).
 
 ### REVIEW_GATE
-The bot posts a preview embed in a review channel (or DMs) before publishing. The CR reacts to approve.
+The bot sends a preview message to the CR on Telegram before publishing. The CR clicks "✅ Publish" or "❌ Discard" in Telegram to approve.
 
 ```
-CR posts → bot detects → Gemini classifies → upload files → preview embed in #cr-review
+CR posts → bot detects → Gemini classifies → upload files → preview message sent to CR on Telegram
                                                           ↓
-                                           CR reacts ✅ → publish to site + WhatsApp
-                                           CR reacts ❌ → discard, react ❌ on original
+                                           CR clicks ✅ → publish to site + WhatsApp
+                                           CR clicks ❌ → discard, react ❌ on original
 ```
 
 Use this for channels where the CR may write drafts or casual messages alongside real announcements.

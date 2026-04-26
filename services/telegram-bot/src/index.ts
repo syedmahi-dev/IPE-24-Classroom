@@ -1,6 +1,7 @@
 import { Telegraf } from 'telegraf'
 import express from 'express'
 import axios from 'axios'
+import Redis from 'ioredis'
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!)
 const app = express()
@@ -9,6 +10,10 @@ app.use(express.json())
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL!
 const ALLOWED_CR_ID = process.env.CR_TELEGRAM_ID!
 const PORT = parseInt(process.env.PORT ?? '3004')
+const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379'
+
+const redis = new Redis(REDIS_URL)
+redis.on('error', (err) => console.error('[redis] error:', err.message))
 
 if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN required')
 if (!N8N_WEBHOOK_URL) throw new Error('N8N_WEBHOOK_URL required')
@@ -77,8 +82,29 @@ bot.on('voice', async (ctx) => {
 
 // ── Confirmation Handlers ───────────────────────────────────────────────────
 
-// These are handled by n8n via the Telegram API directly
-// The bot just forwards the raw messages
+bot.on('callback_query', async (ctx) => {
+  if (!isCR(ctx.from.id)) return
+
+  // @ts-ignore - telegraf types don't perfectly infer data for callbackQuery
+  const data = ctx.callbackQuery.data
+
+  if (data && data.startsWith('dl_')) {
+    const isApprove = data.startsWith('dl_approve_')
+    const messageId = data.replace('dl_approve_', '').replace('dl_discard_', '')
+
+    // Publish to redis so discord-listener picks it up
+    await redis.publish('discord_approvals', JSON.stringify({ messageId, approved: isApprove }))
+
+    // Update the message so buttons disappear
+    // @ts-ignore
+    const currentText = ctx.callbackQuery.message?.text || 'Announcement Preview'
+    await ctx.editMessageText(
+      currentText + `\n\n${isApprove ? '✅ Approved & Published' : '❌ Discarded'}`
+    ).catch((err) => console.error('Failed to edit message', err))
+
+    await ctx.answerCbQuery(isApprove ? 'Publishing...' : 'Discarded')
+  }
+})
 
 // ── Health Endpoint ─────────────────────────────────────────────────────────
 

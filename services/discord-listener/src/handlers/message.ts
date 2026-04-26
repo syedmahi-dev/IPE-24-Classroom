@@ -5,9 +5,10 @@ import { classifyMessage, ClassificationResult, ImageInput } from '../services/c
 import fetch from 'node-fetch'
 import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMetadata, isFolderUrl, listDriveFolderFiles } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
-import { buildPreviewEmbed } from '../services/preview'
-import { awaitCRApproval } from './reaction'
+import { buildTelegramPreviewText } from '../services/preview'
+import { awaitTelegramApproval } from './approval'
 import { logger } from '../lib/logger'
+import { getConfig } from '../config'
 
 const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
@@ -244,47 +245,55 @@ async function handleReviewGate(
   courseCode?: string,
   folderLabel?: string
 ): Promise<void> {
-  if (!channelConfig.reviewChannelId) {
-    logger.error('handler', 'REVIEW_GATE mode but no reviewChannelId configured', {
-      channelId: channelConfig.channelId,
-    })
+  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CR_CHAT_ID } = getConfig()
+
+  if (!TELEGRAM_CR_CHAT_ID || !TELEGRAM_BOT_TOKEN) {
+    logger.error('handler', 'REVIEW_GATE mode but no TELEGRAM_CR_CHAT_ID or TELEGRAM_BOT_TOKEN configured')
     await message.react('❓').catch(() => {})
     return
   }
 
-  // Fetch review channel from the client (not the guild) — supports cross-server review
-  let reviewChannel: TextChannel | undefined
+  const previewText = buildTelegramPreviewText(classification, files, message.url)
+
   try {
-    const fetched = await message.client.channels.fetch(channelConfig.reviewChannelId)
-    if (fetched?.isTextBased()) {
-      reviewChannel = fetched as TextChannel
-    }
-  } catch {
-    // channel not found or bot lacks access
-  }
-
-  if (!reviewChannel) {
-    logger.error('handler', 'review channel not found — ensure bot is invited to the review server', {
-      reviewChannelId: channelConfig.reviewChannelId,
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CR_CHAT_ID,
+        text: previewText,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '✅ Publish', callback_data: `dl_approve_${message.id}` },
+              { text: '❌ Discard', callback_data: `dl_discard_${message.id}` }
+            ]
+          ]
+        }
+      })
     })
+
+    if (!res.ok) {
+      const errText = await res.text()
+      logger.error('handler', 'Failed to send Telegram preview', { error: errText })
+      await message.react('❓').catch(() => {})
+      return
+    }
+
+    // Delegate to approval handler — this awaits Telegram reaction via Redis
+    await awaitTelegramApproval({
+      originalMessage: message,
+      channelConfig,
+      classification,
+      files,
+      courseCode,
+      folderLabel,
+    })
+  } catch (err) {
+    logger.error('handler', 'Error sending Telegram preview', { error: String(err) })
     await message.react('❓').catch(() => {})
-    return
   }
-
-  const previewEmbed = buildPreviewEmbed(classification, files, sourceChannelName)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const previewMessage = await reviewChannel.send({ embeds: [previewEmbed as any] })
-
-  // Delegate to reaction handler — this awaits CR approval
-  await awaitCRApproval({
-    previewMessage,
-    originalMessage: message,
-    channelConfig,
-    classification,
-    files,
-    courseCode,
-    folderLabel,
-  })
 }
 
 function isAuthorized(message: Message, config: ChannelConfig): boolean {

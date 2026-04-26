@@ -38,6 +38,7 @@ const ConfigSchema = z.object({
   }),
   // The CR's Telegram chat ID for DM fallback on errors
   TELEGRAM_CR_CHAT_ID: z.string().optional(),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
   GEMINI_API_KEY: z.string().min(1),
   GOOGLE_SERVICE_ACCOUNT_KEY: z.string().min(1),
   GOOGLE_DRIVE_FOLDER_ID: z.string().min(1),

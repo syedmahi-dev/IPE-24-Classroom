@@ -70,3 +70,19 @@ export function buildDiscardedEmbed(): EmbedBuilder {
     .setColor(Colors.Red)
     .setTimestamp()
 }
+
+export function buildTelegramPreviewText(
+  classification: ClassificationResult,
+  files: DriveUploadResult[],
+  sourceUrl: string
+): string {
+  let msg = `🚨 *Review Required* 🚨\n\n*Type:* ${TYPE_LABELS[classification.type] ?? 'General'}\n*Title:* ${classification.title}\n*Urgency:* ${classification.urgency}\n\n${classification.body}\n`
+  if (files.length > 0) {
+    msg += `\n*Files:*\n`
+    for (const f of files) {
+      msg += `• [${f.name}](${f.driveUrl})\n`
+    }
+  }
+  msg += `\n[View Original Discord Message](${sourceUrl})`
+  return msg.slice(0, 4096)
+}
