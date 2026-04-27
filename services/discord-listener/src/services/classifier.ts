@@ -52,14 +52,14 @@ Choose ONE of:
 - "event" → Seminars, workshops, club events, optional activities, field trips
 - "general" → Anything that does not fit the above categories
 
-PRIORITY RULE: If the message is both "urgent" AND fits a specific category (exam/routine_update/course_update), prefer the specific category and set urgency to "high" instead. Only use type "urgent" for truly uncategorizable critical notices.
+PRIORITY RULE: If the message contains multiple pieces of information (e.g., a general note AND a class time shift), ALWAYS prioritize the most critical category (e.g., 'routine_update', 'exam', or 'urgent') over 'general'. Never use 'general' if ANY part of the message fits a specific category.
 
 Step 3 — EXTRACT COURSE CODE:
 Look for patterns like: IPE4208, IPE 4208, ME4226, CHEM 4215, MATH4211, EEE4282, HUM4212, PHY4214
 Return in uppercase without spaces (e.g. IPE4208). Return null if none found.
 
 Step 4 — GENERATE TITLE AND BODY:
-- title: Max 60 chars. Concise, informative. Do NOT include the course code in the title.
+- title: Max 60 chars. MUST be highly specific, punchy, and highlight the exact core action or event (e.g., 'HUM HW & Chemistry Lab Time Change' instead of 'Update on Next Week Classes'). Avoid generic titles like 'Class Announcement' or 'Update'. Do NOT include the course code in the title.
 - body: Clean up the message. Fix grammar, remove excessive emojis and slang, preserve all important information (dates, times, room numbers, deadlines). Keep in formal English. If the original is in Bangla or Banglish, translate the key information to English.
 
 Respond with this exact JSON structure:
