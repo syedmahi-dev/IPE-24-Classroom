@@ -7,7 +7,6 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!)
 const app = express()
 app.use(express.json())
 
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL!
 const ALLOWED_CR_ID = process.env.CR_TELEGRAM_ID!
 const PORT = parseInt(process.env.PORT ?? '3004')
 const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379'
@@ -49,7 +48,6 @@ subRedis.on('message', async (channel, message) => {
 })
 
 if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN required')
-if (!N8N_WEBHOOK_URL) throw new Error('N8N_WEBHOOK_URL required')
 if (!ALLOWED_CR_ID) throw new Error('CR_TELEGRAM_ID required')
 
 // ── Guard: only CR can interact ─────────────────────────────────────────────
@@ -57,61 +55,6 @@ if (!ALLOWED_CR_ID) throw new Error('CR_TELEGRAM_ID required')
 function isCR(userId: number): boolean {
   return String(userId) === ALLOWED_CR_ID
 }
-
-// ── Text Message Handler ────────────────────────────────────────────────────
-
-bot.on('text', async (ctx) => {
-  if (!isCR(ctx.from.id)) {
-    return ctx.reply('⛔ Only the CR can use this bot.')
-  }
-
-  const text = ctx.message.text
-
-  // Forward to n8n for classification and processing
-  try {
-    await axios.post(N8N_WEBHOOK_URL, {
-      type: 'text',
-      content: text,
-      chatId: ctx.chat.id,
-      messageId: ctx.message.message_id,
-      timestamp: new Date().toISOString(),
-    })
-
-    await ctx.reply('📝 Processing your message...')
-  } catch (err: any) {
-    console.error('n8n webhook error:', err.message)
-    await ctx.reply('❌ Failed to process. Is n8n running?')
-  }
-})
-
-// ── Voice Message Handler ───────────────────────────────────────────────────
-
-bot.on('voice', async (ctx) => {
-  if (!isCR(ctx.from.id)) {
-    return ctx.reply('⛔ Only the CR can use this bot.')
-  }
-
-  try {
-    // Get file link from Telegram
-    const fileId = ctx.message.voice.file_id
-    const fileLink = await ctx.telegram.getFileLink(fileId)
-
-    // Forward voice file URL to n8n
-    await axios.post(N8N_WEBHOOK_URL, {
-      type: 'voice',
-      fileUrl: fileLink.href,
-      duration: ctx.message.voice.duration,
-      chatId: ctx.chat.id,
-      messageId: ctx.message.message_id,
-      timestamp: new Date().toISOString(),
-    })
-
-    await ctx.reply('🎙️ Transcribing your voice note...')
-  } catch (err: any) {
-    console.error('Voice processing error:', err.message)
-    await ctx.reply('❌ Failed to process voice note.')
-  }
-})
 
 // ── Confirmation Handlers ───────────────────────────────────────────────────
 
