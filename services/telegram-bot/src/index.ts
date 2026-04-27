@@ -7,7 +7,7 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!)
 const app = express()
 app.use(express.json())
 
-const ALLOWED_CR_ID = process.env.CR_TELEGRAM_ID!
+const ALLOWED_CR_ID = process.env.CR_TELEGRAM_ID || process.env.TELEGRAM_CR_CHAT_ID || ''
 const PORT = parseInt(process.env.PORT ?? '3004')
 const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379'
 
@@ -48,7 +48,7 @@ subRedis.on('message', async (channel, message) => {
 })
 
 if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN required')
-if (!ALLOWED_CR_ID) throw new Error('CR_TELEGRAM_ID required')
+if (!ALLOWED_CR_ID) throw new Error('CR_TELEGRAM_ID or TELEGRAM_CR_CHAT_ID required in .env file')
 
 // ── Guard: only CR can interact ─────────────────────────────────────────────
 
