@@ -71,18 +71,35 @@ export function buildDiscardedEmbed(): EmbedBuilder {
     .setTimestamp()
 }
 
-export function buildTelegramPreviewText(
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+export function buildTelegramPreviewHtml(
   classification: ClassificationResult,
   files: DriveUploadResult[],
   sourceUrl: string
 ): string {
-  let msg = `🚨 *Review Required* 🚨\n\n*Type:* ${TYPE_LABELS[classification.type] ?? 'General'}\n*Title:* ${classification.title}\n*Urgency:* ${classification.urgency}\n\n${classification.body}\n`
+  const typeLabel = TYPE_LABELS[classification.type] ?? 'General'
+  
+  let msg = `🚨 <b>Review Required</b> 🚨\n\n`
+  msg += `<b>Type:</b> ${escapeHtml(typeLabel)}\n`
+  msg += `<b>Title:</b> ${escapeHtml(classification.title)}\n`
+  msg += `<b>Urgency:</b> ${escapeHtml(classification.urgency)}\n\n`
+  msg += `${escapeHtml(classification.body)}\n`
+  
   if (files.length > 0) {
-    msg += `\n*Files:*\n`
+    msg += `\n<b>Files:</b>\n`
     for (const f of files) {
-      msg += `• [${f.name}](${f.driveUrl})\n`
+      msg += `• <a href="${escapeHtml(f.driveUrl)}">${escapeHtml(f.name)}</a>\n`
     }
   }
-  msg += `\n[View Original Discord Message](${sourceUrl})`
+  msg += `\n<a href="${escapeHtml(sourceUrl)}">View Original Discord Message</a>`
+  
   return msg.slice(0, 4096)
 }

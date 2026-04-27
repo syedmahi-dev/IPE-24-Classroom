@@ -15,6 +15,39 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379'
 const redis = new Redis(REDIS_URL)
 redis.on('error', (err) => console.error('[redis] error:', err.message))
 
+const subRedis = new Redis(REDIS_URL)
+subRedis.on('error', (err) => console.error('[subRedis] error:', err.message))
+
+subRedis.subscribe('telegram_send_preview', (err) => {
+  if (err) console.error('Failed to subscribe to telegram_send_preview:', err)
+  else console.log('✅ Subscribed to telegram_send_preview channel')
+})
+
+subRedis.on('message', async (channel, message) => {
+  if (channel === 'telegram_send_preview') {
+    try {
+      const payload = JSON.parse(message)
+      const { messageId, previewTextHtml } = payload
+      
+      await bot.telegram.sendMessage(ALLOWED_CR_ID, previewTextHtml, {
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '✅ Publish', callback_data: `dl_approve_${messageId}` },
+              { text: '❌ Discard', callback_data: `dl_discard_${messageId}` }
+            ]
+          ]
+        }
+      })
+      console.log(`Sent preview to CR for message ${messageId}`)
+    } catch (err: any) {
+      console.error('Failed to send preview via Telegram:', err.message)
+    }
+  }
+})
+
 if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN required')
 if (!N8N_WEBHOOK_URL) throw new Error('N8N_WEBHOOK_URL required')
 if (!ALLOWED_CR_ID) throw new Error('CR_TELEGRAM_ID required')
@@ -85,7 +118,7 @@ bot.on('voice', async (ctx) => {
 bot.on('callback_query', async (ctx) => {
   if (!isCR(ctx.from.id)) return
 
-  // @ts-ignore - telegraf types don't perfectly infer data for callbackQuery
+  // @ts-ignore
   const data = ctx.callbackQuery.data
 
   if (data && data.startsWith('dl_')) {

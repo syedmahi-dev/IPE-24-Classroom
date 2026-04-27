@@ -5,7 +5,7 @@ import { classifyMessage, ClassificationResult, ImageInput } from '../services/c
 import fetch from 'node-fetch'
 import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMetadata, isFolderUrl, listDriveFolderFiles } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
-import { buildTelegramPreviewText } from '../services/preview'
+import { buildTelegramPreviewHtml } from '../services/preview'
 import { awaitTelegramApproval } from './approval'
 import { logger } from '../lib/logger'
 import { getConfig } from '../config'
@@ -245,41 +245,19 @@ async function handleReviewGate(
   courseCode?: string,
   folderLabel?: string
 ): Promise<void> {
-  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CR_CHAT_ID } = getConfig()
-
-  if (!TELEGRAM_CR_CHAT_ID || !TELEGRAM_BOT_TOKEN) {
-    logger.error('handler', 'REVIEW_GATE mode but no TELEGRAM_CR_CHAT_ID or TELEGRAM_BOT_TOKEN configured')
-    await message.react('❓').catch(() => {})
-    return
-  }
-
-  const previewText = buildTelegramPreviewText(classification, files, message.url)
+  const previewTextHtml = buildTelegramPreviewHtml(classification, files, message.url)
 
   try {
-    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CR_CHAT_ID,
-        text: previewText,
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '✅ Publish', callback_data: `dl_approve_${message.id}` },
-              { text: '❌ Discard', callback_data: `dl_discard_${message.id}` }
-            ]
-          ]
-        }
-      })
-    })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      logger.error('handler', 'Failed to send Telegram preview', { error: errText })
-      await message.react('❓').catch(() => {})
-      return
+    const { getRedis } = await import('../lib/redis')
+    const redis = getRedis()
+    
+    const payload = {
+      messageId: message.id,
+      previewTextHtml
     }
+    
+    await redis.publish('telegram_send_preview', JSON.stringify(payload))
+    logger.info('handler', 'Published telegram_send_preview event to Redis', { messageId: message.id })
 
     // Delegate to approval handler — this awaits Telegram reaction via Redis
     await awaitTelegramApproval({
@@ -291,7 +269,7 @@ async function handleReviewGate(
       folderLabel,
     })
   } catch (err) {
-    logger.error('handler', 'Error sending Telegram preview', { error: String(err) })
+    logger.error('handler', 'Error requesting Telegram preview via Redis', { error: String(err) })
     await message.react('❓').catch(() => {})
   }
 }
