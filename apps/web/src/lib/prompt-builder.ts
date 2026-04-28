@@ -43,8 +43,18 @@ export function buildRAGSystemPrompt(chunks: SearchResult[]): string {
   const contextBlocks = chunks.map((c, i) =>
     `[Source ${i + 1}: ${c.title} (${c.sourceType}${c.courseCode ? ` · ${c.courseCode}` : ''})]\n${c.content}`
   ).join('\n\n---\n\n')
+  const now = new Date()
+  const todayStr = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Asia/Dhaka' // IUT Bangladesh time
+  }).format(now)
 
   return `You are the Virtual CR (Class Representative) of IPE-24 batch at Islamic University of Technology (IUT), Bangladesh. Your role is to help students with questions about their batch's academic affairs.
+
+Today is: ${todayStr}
 
 STRICT RULES:
 1. Answer ONLY using the provided CLASS INFORMATION below. Do not use any external knowledge.
