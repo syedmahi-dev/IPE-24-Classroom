@@ -3,10 +3,10 @@ import { prisma } from './prisma'
 export interface SearchResult {
   id: string
   content: string
-  document_id: string
+  documentId: string
   title: string
-  source_type: string
-  course_code: string | null
+  sourceType: string
+  courseCode: string | null
   similarity: number
 }
 
@@ -19,13 +19,13 @@ export async function searchKnowledge(queryEmbedding: number[], topK = 5): Promi
     SELECT
       kc.id,
       kc.content,
-      kc.document_id,
+      kc."documentId",
       kd.title,
-      kd.source_type,
-      kd.course_code,
+      kd."sourceType",
+      kd."courseCode",
       1 - (kc.embedding <=> ${queryEmbedding}::vector) AS similarity
     FROM knowledge_chunks kc
-    JOIN knowledge_documents kd ON kc.document_id = kd.id
+    JOIN knowledge_documents kd ON kc."documentId" = kd.id
     WHERE kc.embedding IS NOT NULL
     ORDER BY kc.embedding <=> ${queryEmbedding}::vector
     LIMIT ${topK}

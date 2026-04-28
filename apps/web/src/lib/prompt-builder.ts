@@ -41,7 +41,7 @@ Respond with ONLY one word: "on_topic" or "off_topic". Nothing else.`
  */
 export function buildRAGSystemPrompt(chunks: SearchResult[]): string {
   const contextBlocks = chunks.map((c, i) =>
-    `[Source ${i + 1}: ${c.title} (${c.source_type}${c.course_code ? ` · ${c.course_code}` : ''})]\n${c.content}`
+    `[Source ${i + 1}: ${c.title} (${c.sourceType}${c.courseCode ? ` · ${c.courseCode}` : ''})]\n${c.content}`
   ).join('\n\n---\n\n')
 
   return `You are the Virtual CR (Class Representative) of IPE-24 batch at Islamic University of Technology (IUT), Bangladesh. Your role is to help students with questions about their batch's academic affairs.
