@@ -9,11 +9,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
  */
 export async function getEmbedding(text: string): Promise<number[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-embedding-2' })
-  // @ts-ignore - outputDimensionality might not be in v0.17.1 typings but is supported by the API
   const result = await model.embedContent({
     content: { role: 'user', parts: [{ text }] },
     outputDimensionality: 768
-  })
+  } as any)
   return result.embedding.values
 }
 
