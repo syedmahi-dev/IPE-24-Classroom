@@ -171,8 +171,12 @@ export async function POST(req: NextRequest) {
       sourcesUsed: relevantChunks.length,
       filtered: false,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Chat] POST error:', error)
-    return ERRORS.INTERNAL()
+    return NextResponse.json({
+      success: false,
+      data: null,
+      error: { code: 'INTERNAL_ERROR', message: error?.message || 'Unknown error occurred' }
+    }, { status: 500 })
   }
 }

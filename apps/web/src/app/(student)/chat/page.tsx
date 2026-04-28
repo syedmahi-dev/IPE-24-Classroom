@@ -62,8 +62,8 @@ export default function ChatPage() {
       if (!data.success) throw new Error(data.error?.message)
 
       setMessages(prev => [...prev, { role: 'model', content: data.data.text }])
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', content: "Sorry, I'm having trouble connecting right now." }])
+    } catch (error: any) {
+      setMessages(prev => [...prev, { role: 'model', content: `Error: ${error.message}` }])
     } finally {
       setIsLoading(false)
     }
