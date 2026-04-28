@@ -4,6 +4,10 @@ export function ok<T>(data: T, meta?: Record<string, unknown>) {
   return NextResponse.json({ success: true, data, error: null, meta: meta ?? null })
 }
 
+export function paginated<T>(data: T[], meta: { page: number, limit: number, total: number }) {
+  return ok(data, meta)
+}
+
 export function err(code: string, message: string, status: number) {
   return NextResponse.json(
     { success: false, data: null, error: { code, message } },

@@ -131,7 +131,7 @@ export default function StudyGroupsPage() {
           <button
             key={f.value}
             type="button"
-            aria-pressed={groupFilter === f.value ? "true" : "false"}
+            aria-pressed={groupFilter === f.value}
             onClick={() => { setGroupFilter(f.value); setPage(1) }}
             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
               groupFilter === f.value

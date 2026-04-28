@@ -1,8 +1,9 @@
-import { Message } from 'discord.js'
+import { Message, TextChannel } from 'discord.js'
 import { ChannelConfig } from '../config'
 import { ClassificationResult } from '../services/classifier'
 import { DriveUploadResult } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
+import { ingestToKnowledgeBase } from '../services/knowledge-ingestor'
 import { releaseMessage } from '../lib/redis'
 import { logger } from '../lib/logger'
 import { getConfig } from '../config'
@@ -66,6 +67,16 @@ export async function awaitTelegramApproval(params: {
           content: `⚠️ Published with warnings:\n${result.errors.map((e) => `• ${e}`).join('\n')}`,
         }).catch(() => {})
       }
+
+      // Background: ingest into RAG knowledge base (non-blocking)
+      const channelName = (originalMessage.channel as TextChannel).name ?? originalMessage.channel.id
+      ingestToKnowledgeBase({
+        messageId: originalMessage.id,
+        channelName,
+        classification,
+        files,
+        courseCode,
+      }).catch(err => logger.warn('approval', 'KB ingestion failed (non-fatal)', { error: String(err) }))
     } else {
       logger.info('approval', 'CR rejected announcement via Telegram', { title: classification.title })
       await originalMessage.react('❌').catch(() => {})

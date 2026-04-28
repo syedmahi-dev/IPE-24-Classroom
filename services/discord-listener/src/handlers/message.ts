@@ -7,6 +7,7 @@ import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMet
 import { publishAnnouncement } from '../services/publisher'
 import { buildTelegramPreviewHtml } from '../services/preview'
 import { awaitTelegramApproval } from './approval'
+import { ingestToKnowledgeBase } from '../services/knowledge-ingestor'
 import { logger } from '../lib/logger'
 import { getConfig } from '../config'
 
@@ -235,6 +236,16 @@ async function handleAutoPublish(
       content: `⚠️ Published with warnings:\n${result.errors.map((e) => `• ${e}`).join('\n')}`,
     }).catch(() => {})
   }
+
+  // Background: ingest into RAG knowledge base (non-blocking)
+  const channelName = (message.channel as TextChannel).name ?? message.channel.id
+  ingestToKnowledgeBase({
+    messageId: message.id,
+    channelName,
+    classification,
+    files,
+    courseCode,
+  }).catch(err => logger.warn('handler', 'KB ingestion failed (non-fatal)', { error: String(err) }))
 }
 
 async function handleReviewGate(

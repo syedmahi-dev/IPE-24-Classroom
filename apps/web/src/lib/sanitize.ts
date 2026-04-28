@@ -8,11 +8,17 @@ export function sanitizeHtml(dirty: string): string {
 }
 
 export function sanitizeFilename(name: string): string {
-  return name
+  const sanitized = name
     .replace(/\.\./g, '') // Remove path traversal
     .replace(/[\/\\]/g, '') // Remove slashes
     .replace(/[^a-zA-Z0-9._-]/g, '_') // Only safe chars
     .slice(0, 200) // Max length
+
+  const windowsReserved = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i
+  if (windowsReserved.test(sanitized)) {
+    return '_' + sanitized
+  }
+  return sanitized
 }
 
 export function stripHtml(html: string): string {

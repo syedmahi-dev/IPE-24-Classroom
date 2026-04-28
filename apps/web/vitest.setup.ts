@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom/vitest'
-import { vi } from 'vitest'
+import { vi, beforeAll, afterAll, afterEach } from 'vitest'
+import { prisma } from '@/lib/prisma'
+
+// Use test database
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -23,21 +27,55 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }))
 
-// Helper for database truncation (used in integration tests)
-export const truncateDB = async (prisma: any) => {
-  const tablenames = await prisma.$queryRaw<
-    Array<{ tablename: string }>
-  >`SELECT tablename FROM pg_tables WHERE schemaname='public'`
+// Mock Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}))
 
-  const tables = tablenames
-    .map(({ tablename }: { tablename: string }) => tablename)
-    .filter((name: string) => name !== '_prisma_migrations')
-    .map((name: string) => `"public"."${name}"`)
-    .join(', ')
-
+beforeAll(async () => {
+  // Wipe tables before test run if possible
   try {
-    await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`)
+    if (process.env.TEST_DATABASE_URL) {
+      await prisma.$executeRaw`
+        TRUNCATE TABLE users, announcements, announcement_courses,
+          file_uploads, exams, polls, poll_votes, knowledge_documents,
+          knowledge_chunks, chat_logs, study_groups, study_group_members,
+          notifications, push_tokens, audit_logs, sessions, accounts CASCADE
+      `
+    }
+  } catch (e) {
+    console.warn('Database truncation skipped or failed. This is expected if Docker/Postgres is not running.')
+  }
+})
+
+afterAll(async () => {
+  await prisma.$disconnect()
+})
+
+// Helper for database truncation (used in individual integration tests)
+export const truncateDB = async (prismaInstance: any) => {
+  try {
+    const tablenames = await prismaInstance.$queryRaw<
+      Array<{ tablename: string }>
+    >`SELECT tablename FROM pg_tables WHERE schemaname='public'`
+
+    const tables = tablenames
+      .map(({ tablename }: { tablename: string }) => tablename)
+      .filter((name: string) => name !== '_prisma_migrations')
+      .map((name: string) => `"public"."${name}"`)
+      .join(', ')
+
+    await prismaInstance.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`)
   } catch (error) {
-    console.log({ error })
+    // Silently fail if DB is not available
   }
 }

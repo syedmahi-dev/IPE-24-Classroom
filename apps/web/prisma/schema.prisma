@@ -197,16 +197,19 @@ model PollVote {
 }
 
 model KnowledgeDocument {
-  id         String   @id @default(cuid())
-  title      String
-  sourceType String
-  courseCode String?
-  content    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  sourceType    String
+  courseCode    String?
+  content       String
+  sourceId      String?  @map("source_id")  // Discord message ID, file upload ID, etc.
+  sourceChannel String?  @map("source_channel")  // Discord channel name for audit trail
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   chunks KnowledgeChunk[]
 
+  @@unique([sourceType, sourceId])
   @@map("knowledge_documents")
 }
 
