@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     // ── Step 4: Guardrail — classify on-topic vs off-topic ──
     try {
       const guardModel = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         generationConfig: { temperature: 0, maxOutputTokens: 10 },
       })
       const guardResult = await guardModel.generateContent(buildGuardrailPrompt(question))
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       // Fallback: answer without RAG context
       try {
         const fallbackModel = genAI.getGenerativeModel({
-          model: 'gemini-2.0-flash',
+          model: 'gemini-2.5-flash',
           generationConfig: { maxOutputTokens: 400, temperature: 0.3 },
           systemInstruction: buildRAGSystemPrompt([]),
         })
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
 
     // ── Step 8: Generate response with Gemini ──
     const chatModel = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         maxOutputTokens: 800,
         temperature: 0.3,
