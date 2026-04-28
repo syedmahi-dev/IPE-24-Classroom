@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import { getConfig } from '../config'
-import { ClassificationResult } from './classifier'
+import { ClassificationResult, RoutineOverrideExtract } from './classifier'
 import { DriveUploadResult } from './drive'
 import { logger } from '../lib/logger'
 
@@ -8,6 +8,7 @@ export interface PublishResult {
   website: boolean
   telegram: boolean
   filesCreated: number
+  overridesCreated: number
   errors: string[]
 }
 
@@ -104,7 +105,35 @@ export async function publishAnnouncement(
     }
   }
 
-  // --- 3. Telegram Bot (forward message to class group) ---
+  // --- 3. Create Routine Overrides (if any were extracted by Gemini) ---
+  let overridesCreated = 0
+  if (classification.overrides && classification.overrides.length > 0) {
+    try {
+      const res = await fetch(`${INTERNAL_API_URL}/api/v1/internal/routine/overrides`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-secret': INTERNAL_API_SECRET,
+        },
+        body: JSON.stringify({ overrides: classification.overrides }),
+      })
+
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`)
+      }
+
+      const result = await res.json() as any
+      overridesCreated = result?.data?.created ?? classification.overrides.length
+      logger.info('publisher', 'routine overrides created', { count: overridesCreated })
+    } catch (err) {
+      const msg = `Routine override creation failed: ${String(err)}`
+      errors.push(msg)
+      logger.warn('publisher', msg)
+    }
+  }
+
+  // --- 4. Telegram Bot (forward message to class group) ---
   let telegramOk = false
   const telegramUrl = TELEGRAM_BOT_URL
   if (!telegramUrl || telegramUrl === 'disabled') {
@@ -134,7 +163,7 @@ export async function publishAnnouncement(
     }
   }
 
-  return { website: websiteOk, telegram: telegramOk, filesCreated, errors }
+  return { website: websiteOk, telegram: telegramOk, filesCreated, overridesCreated, errors }
 }
 
 function buildHtmlBody(

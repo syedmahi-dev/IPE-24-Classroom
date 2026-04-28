@@ -1,5 +1,5 @@
 import { EmbedBuilder, Colors } from 'discord.js'
-import { ClassificationResult } from './classifier'
+import { ClassificationResult, RoutineOverrideExtract } from './classifier'
 import { DriveUploadResult } from './drive'
 
 const TYPE_COLORS: Record<string, number> = {
@@ -99,7 +99,50 @@ export function buildTelegramPreviewHtml(
       msg += `• <a href="${escapeHtml(f.driveUrl)}">${escapeHtml(f.name)}</a>\n`
     }
   }
+
+  // Render routine overrides if present
+  if (classification.overrides && classification.overrides.length > 0) {
+    msg += `\n📅 <b>Routine Changes (auto-created on approval):</b>\n`
+    for (const ov of classification.overrides) {
+      msg += formatOverrideLine(ov)
+    }
+  }
+
   msg += `\n<a href="${escapeHtml(sourceUrl)}">View Original Discord Message</a>`
   
   return msg.slice(0, 4096)
+}
+
+const OVERRIDE_EMOJIS: Record<string, string> = {
+  CANCELLED: '❌',
+  MAKEUP: '➕',
+  ROOM_CHANGE: '🏠',
+  TIME_CHANGE: '⏰',
+}
+
+function formatOverrideLine(ov: RoutineOverrideExtract): string {
+  const emoji = OVERRIDE_EMOJIS[ov.type] || '📌'
+  const dateObj = new Date(ov.date + 'T00:00:00')
+  const dateStr = dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  
+  let line = `${emoji} <b>[${ov.type}]</b> ${escapeHtml(ov.courseCode)} on ${escapeHtml(dateStr)}`
+
+  if (ov.type === 'ROOM_CHANGE' && ov.room) {
+    line += ` → Room ${escapeHtml(ov.room)}`
+  }
+  if (ov.type === 'TIME_CHANGE' && ov.startTime) {
+    line += ` → ${escapeHtml(ov.startTime)}${ov.endTime ? '-' + escapeHtml(ov.endTime) : ''}`
+  }
+  if (ov.type === 'MAKEUP') {
+    if (ov.startTime) line += ` at ${escapeHtml(ov.startTime)}${ov.endTime ? '-' + escapeHtml(ov.endTime) : ''}`
+    if (ov.room) line += ` in ${escapeHtml(ov.room)}`
+  }
+  if (ov.targetGroup && ov.targetGroup !== 'ALL') {
+    line += ` (${ov.targetGroup} group)`
+  }
+  if (ov.reason) {
+    line += ` — ${escapeHtml(ov.reason)}`
+  }
+  line += '\n'
+  return line
 }

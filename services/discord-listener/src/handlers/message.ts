@@ -90,6 +90,7 @@ export async function handleMessage(message: Message): Promise<void> {
           urgency: 'medium' as const,
           fileCategory: 'other' as const,
           detectedCourseCode: null,
+          overrides: [],
         }
       : await classifyMessage(messageText, attachmentNames, images)
 
@@ -253,7 +254,8 @@ async function handleReviewGate(
     
     const payload = {
       messageId: message.id,
-      previewTextHtml
+      previewTextHtml,
+      overrides: classification.overrides || [],
     }
     
     await redis.publish('telegram_send_preview', JSON.stringify(payload))

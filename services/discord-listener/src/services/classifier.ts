@@ -2,6 +2,19 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getConfig, AnnouncementType } from '../config'
 import { logger } from '../lib/logger'
 
+export interface RoutineOverrideExtract {
+  type: 'CANCELLED' | 'MAKEUP' | 'ROOM_CHANGE' | 'TIME_CHANGE'
+  date: string           // YYYY-MM-DD
+  courseCode: string      // e.g. "CHEM4215"
+  courseName?: string
+  startTime?: string     // HH:mm
+  endTime?: string       // HH:mm
+  room?: string
+  teacher?: string
+  targetGroup?: 'ALL' | 'ODD' | 'EVEN'
+  reason?: string
+}
+
 export interface ClassificationResult {
   type: AnnouncementType
   title: string
@@ -9,6 +22,7 @@ export interface ClassificationResult {
   urgency: 'low' | 'medium' | 'high'
   fileCategory: 'lecture_notes' | 'assignment' | 'past_paper' | 'syllabus' | 'other'
   detectedCourseCode: string | null
+  overrides: RoutineOverrideExtract[]
 }
 
 export interface ImageInput {
@@ -20,6 +34,8 @@ const CLASSIFY_PROMPT = `You are an intelligent assistant for a Bangladeshi univ
 Analyze the following Discord message from a class group and respond with ONLY a JSON object — no markdown, no explanation.
 
 If images are provided, carefully read any text visible in the image (OCR). Extract dates, room numbers, course codes, and any other announcement-relevant content from the images.
+
+Today's date: {TODAY}
 
 Message: "{MESSAGE}"
 
@@ -62,6 +78,27 @@ Step 4 — GENERATE TITLE AND BODY:
 - title: Max 60 chars. MUST be highly specific, punchy, and highlight the exact core action or event (e.g., 'HUM HW & Chemistry Lab Time Change' instead of 'Update on Next Week Classes'). Avoid generic titles like 'Class Announcement' or 'Update'. Do NOT include the course code in the title.
 - body: Clean up the message. Fix grammar, remove excessive emojis and slang, preserve all important information (dates, times, room numbers, deadlines). Keep in formal English. If the original is in Bangla or Banglish, translate the key information to English.
 
+Step 5 — EXTRACT ROUTINE OVERRIDES:
+If the message mentions ANY schedule change, extract ALL of them as an "overrides" array. This includes:
+- Class cancellations ("no class", "cancelled", "class bondho", "off")
+- Room changes ("shifted to room X", "room changed")
+- Time changes ("class at 2pm instead of 10am", "time shifted")
+- Makeup classes ("extra class", "makeup class", "additional class")
+
+For EACH override:
+- "type": CANCELLED | MAKEUP | ROOM_CHANGE | TIME_CHANGE
+- "date": YYYY-MM-DD — resolve relative dates using today's date ({TODAY}). "tomorrow" = next day, "next Tuesday" = the upcoming Tuesday, etc.
+- "courseCode": uppercase, no spaces (e.g. "CHEM4215"). REQUIRED for each override.
+- "courseName": full course name if mentioned (optional)
+- "startTime": HH:mm format if a new time is mentioned (optional)
+- "endTime": HH:mm format (optional)
+- "room": new room if it's a room change or makeup (optional)
+- "teacher": teacher name if mentioned (optional)
+- "targetGroup": ALL | ODD | EVEN — default "ALL" unless the message specifies a lab group
+- "reason": short reason (optional)
+
+If there are NO schedule changes, set "overrides" to an empty array [].
+
 Respond with this exact JSON structure:
 {
   "type": "general|exam|file_update|routine_update|urgent|event|course_update",
@@ -69,10 +106,20 @@ Respond with this exact JSON structure:
   "body": "clean formatted announcement body",
   "urgency": "low|medium|high",
   "fileCategory": "lecture_notes|assignment|past_paper|syllabus|other",
-  "detectedCourseCode": "IPE4208 or null"
+  "detectedCourseCode": "IPE4208 or null",
+  "overrides": [
+    {
+      "type": "CANCELLED",
+      "date": "2026-05-12",
+      "courseCode": "CHEM4215",
+      "reason": "Teacher unavailable",
+      "targetGroup": "ALL"
+    }
+  ]
 }
 
-- fileCategory: only relevant if files are attached. lecture_notes (slides, class notes), assignment (homework, lab reports), past_paper (previous exams, question banks), syllabus (course outline), other. Default "other" if no files.`
+- fileCategory: only relevant if files are attached. lecture_notes (slides, class notes), assignment (homework, lab reports), past_paper (previous exams, question banks), syllabus (course outline), other. Default "other" if no files.
+- overrides: ALWAYS include this field. Empty array [] if no schedule changes detected.`
 
 export async function classifyMessage(
   text: string,
@@ -82,14 +129,18 @@ export async function classifyMessage(
   const genAI = new GoogleGenerativeAI(getConfig().GEMINI_API_KEY)
   const model = genAI.getGenerativeModel({
     model: 'gemini-flash-latest',
-    generationConfig: { temperature: 0.1, maxOutputTokens: 700 },
+    generationConfig: { temperature: 0.1, maxOutputTokens: 1200 },
   })
 
   const fileContext = attachmentNames.length > 0
     ? `Attached files: ${attachmentNames.join(', ')}`
     : 'No files attached.'
 
+  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+
   const prompt = CLASSIFY_PROMPT
+    .replaceAll('{TODAY}', `${today} (${dayName})`)
     .replace('{MESSAGE}', text.slice(0, 2000))
     .replace('{FILE_CONTEXT}', fileContext)
 
@@ -139,6 +190,42 @@ export async function classifyMessage(
       title: String(parsed.title).slice(0, 60),
     })
 
+    // Parse and validate overrides
+    const VALID_OVERRIDE_TYPES = ['CANCELLED', 'MAKEUP', 'ROOM_CHANGE', 'TIME_CHANGE']
+    const VALID_GROUPS = ['ALL', 'ODD', 'EVEN']
+    const overrides: RoutineOverrideExtract[] = []
+
+    if (Array.isArray(parsed.overrides)) {
+      for (const ov of parsed.overrides) {
+        if (
+          ov &&
+          VALID_OVERRIDE_TYPES.includes(ov.type) &&
+          typeof ov.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ov.date) &&
+          typeof ov.courseCode === 'string' && ov.courseCode.trim()
+        ) {
+          overrides.push({
+            type: ov.type as RoutineOverrideExtract['type'],
+            date: ov.date,
+            courseCode: ov.courseCode.toUpperCase().replace(/\s+/g, ''),
+            courseName: ov.courseName || undefined,
+            startTime: ov.startTime || undefined,
+            endTime: ov.endTime || undefined,
+            room: ov.room || undefined,
+            teacher: ov.teacher || undefined,
+            targetGroup: VALID_GROUPS.includes(ov.targetGroup) ? ov.targetGroup : 'ALL',
+            reason: ov.reason || undefined,
+          })
+        }
+      }
+    }
+
+    if (overrides.length > 0) {
+      logger.info('classifier', 'Extracted routine overrides', {
+        count: overrides.length,
+        overrides: overrides.map(o => `${o.type} ${o.courseCode} ${o.date}`),
+      })
+    }
+
     return {
       type: finalType,
       title: String(parsed.title).slice(0, 60),
@@ -146,6 +233,7 @@ export async function classifyMessage(
       urgency: finalUrgency,
       fileCategory,
       detectedCourseCode,
+      overrides,
     }
   } catch (err) {
     logger.warn('classifier', 'Gemini classification failed, using fallback', { error: String(err) })
@@ -157,6 +245,7 @@ export async function classifyMessage(
       urgency: 'medium',
       fileCategory: 'other',
       detectedCourseCode: null,
+      overrides: [],
     }
   }
 }
