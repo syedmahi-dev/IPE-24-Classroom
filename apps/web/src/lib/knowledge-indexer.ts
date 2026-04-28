@@ -80,7 +80,7 @@ export async function indexDocument(documentId: string): Promise<number> {
 
     if (embedding) {
       await prisma.$executeRaw`
-        INSERT INTO knowledge_chunks (id, document_id, chunk_index, content, embedding, created_at)
+        INSERT INTO knowledge_chunks (id, "documentId", "chunkIndex", content, embedding, "createdAt")
         VALUES (gen_random_uuid(), ${documentId}::text, ${i}, ${textChunks[i]}, ${embedding}::vector, NOW())
       `
     } else {
