@@ -136,17 +136,20 @@ export async function POST(req: NextRequest) {
 
     let totalChunks = 0
     for (const docData of docsToSync) {
-      const doc = await prisma.knowledgeDocument.upsert({
-        where: {
-          sourceType_sourceId: { sourceType: docData.sourceType, sourceId: docData.sourceId },
-        },
-        create: docData,
-        update: {
-          title: docData.title,
-          content: docData.content,
-          updatedAt: new Date(),
-        },
+      // Manual find + create/update (avoids compound unique constraint issues)
+      const existing = await prisma.knowledgeDocument.findFirst({
+        where: { sourceType: docData.sourceType, sourceId: docData.sourceId },
       })
+
+      let doc
+      if (existing) {
+        doc = await prisma.knowledgeDocument.update({
+          where: { id: existing.id },
+          data: { title: docData.title, content: docData.content },
+        })
+      } else {
+        doc = await prisma.knowledgeDocument.create({ data: docData })
+      }
 
       try {
         totalChunks += await indexDocument(doc.id)

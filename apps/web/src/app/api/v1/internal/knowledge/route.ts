@@ -20,14 +20,8 @@ const ingestSchema = z.object({
  * 
  * Called by the discord-listener to auto-ingest messages into the RAG knowledge base.
  * Authenticated via x-internal-secret header.
- * 
- * Features:
- * - Upserts by sourceType + sourceId (prevents duplicate ingestion)
- * - Auto-chunks and embeds the content
- * - Returns the number of chunks created
  */
 export async function POST(req: NextRequest) {
-  // Authenticate via internal secret
   const secret = req.headers.get('x-internal-secret')
   if (!secret || secret !== INTERNAL_SECRET) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
@@ -45,27 +39,34 @@ export async function POST(req: NextRequest) {
 
     const { title, content, sourceType, sourceId, sourceChannel, courseCode } = parsed.data
 
-    // Upsert: if this sourceType+sourceId already exists, update it
-    const doc = await prisma.knowledgeDocument.upsert({
-      where: {
-        sourceType_sourceId: { sourceType, sourceId },
-      },
-      create: {
-        title,
-        content,
-        sourceType,
-        sourceId,
-        sourceChannel: sourceChannel || null,
-        courseCode: courseCode || null,
-      },
-      update: {
-        title,
-        content,
-        sourceChannel: sourceChannel || null,
-        courseCode: courseCode || null,
-        updatedAt: new Date(),
-      },
+    // Manual find + create/update (avoids Prisma compound unique constraint issues)
+    const existing = await prisma.knowledgeDocument.findFirst({
+      where: { sourceType, sourceId },
     })
+
+    let doc
+    if (existing) {
+      doc = await prisma.knowledgeDocument.update({
+        where: { id: existing.id },
+        data: {
+          title,
+          content,
+          sourceChannel: sourceChannel || null,
+          courseCode: courseCode || null,
+        },
+      })
+    } else {
+      doc = await prisma.knowledgeDocument.create({
+        data: {
+          title,
+          content,
+          sourceType,
+          sourceId,
+          sourceChannel: sourceChannel || null,
+          courseCode: courseCode || null,
+        },
+      })
+    }
 
     // Auto-index: chunk and embed
     let chunkCount = 0
