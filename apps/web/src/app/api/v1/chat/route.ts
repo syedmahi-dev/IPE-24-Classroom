@@ -16,7 +16,7 @@ import {
 } from '@/lib/prompt-builder'
 import { z } from 'zod'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+export const maxDuration = 10
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -67,6 +67,7 @@ const chatSchema = z.object({
 }).refine(data => data.question || data.message, { message: 'question or message is required' })
 
 export async function POST(req: NextRequest) {
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
   try {
     const session = await auth()
     if (!session?.user) return ERRORS.UNAUTHORIZED()

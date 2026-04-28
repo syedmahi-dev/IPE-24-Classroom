@@ -1,13 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-
-/**
- * Generate a 768-dimensional embedding using Gemini's free text-embedding-004 model.
- * Works from both Vercel and VPS — no self-hosted dependency needed.
- * Free tier: 1,500 requests/min.
- */
 export async function getEmbedding(text: string): Promise<number[]> {
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
   const model = genAI.getGenerativeModel({ model: 'gemini-embedding-2' })
   const result = await model.embedContent({
     content: { role: 'user', parts: [{ text }] },
