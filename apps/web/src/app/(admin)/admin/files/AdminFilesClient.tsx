@@ -182,7 +182,7 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
       key: 'uploadedBy',
       label: 'Uploader',
       hideOnMobile: true,
-      render: (item) => <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.uploadedBy.name}</span>,
+      render: (item) => <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.uploadedBy?.name || 'Unknown User'}</span>,
     },
     {
       key: 'createdAt',
