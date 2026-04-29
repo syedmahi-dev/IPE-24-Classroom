@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { z } from 'zod'
 import fetch from 'node-fetch'
 import { logger } from './lib/logger'
@@ -17,8 +18,6 @@ export const ChannelConfigSchema = z.object({
   authorizedUserIds: z.array(z.string()),
   // Optional: role IDs that also grant publishing permission
   authorizedRoleIds: z.array(z.string()).optional().default([]),
-  // Where to send the preview embed (REVIEW_GATE only)
-  reviewChannelId: z.string().optional(),
   // Optional announcement type override — skip Gemini classification
   defaultAnnouncementType: AnnouncementTypeSchema.optional(),
   // Human-readable label for logs

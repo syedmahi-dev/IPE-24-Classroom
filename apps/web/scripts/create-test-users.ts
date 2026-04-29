@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -8,23 +8,23 @@ async function main() {
 
   const passwordHash = await bcrypt.hash('password123', 10)
 
-  const testUsers = [
+  const testUsers: { email: string; name: string; role: Role; studentId: string }[] = [
     {
       email: 'student@test.com',
       name: 'Test Student',
-      role: 'student',
+      role: Role.student,
       studentId: '123456789',
     },
     {
       email: 'admin@test.com',
       name: 'Test Admin (CR)',
-      role: 'admin',
+      role: Role.admin,
       studentId: '987654321',
     },
     {
       email: 'superadmin@test.com',
       name: 'Test Super Admin',
-      role: 'super_admin',
+      role: Role.super_admin,
       studentId: '000000000',
     }
   ]

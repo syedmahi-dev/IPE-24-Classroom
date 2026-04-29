@@ -5,11 +5,8 @@ import { classifyMessage, ClassificationResult, ImageInput } from '../services/c
 import fetch from 'node-fetch'
 import { uploadUrlToDrive, DriveUploadResult, extractDriveLinks, getDriveFileMetadata, isFolderUrl, listDriveFolderFiles } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
-import { buildTelegramPreviewHtml } from '../services/preview'
-import { awaitTelegramApproval } from './approval'
 import { ingestToKnowledgeBase } from '../services/knowledge-ingestor'
 import { logger } from '../lib/logger'
-import { getConfig } from '../config'
 
 const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
@@ -257,34 +254,31 @@ async function handleReviewGate(
   courseCode?: string,
   folderLabel?: string
 ): Promise<void> {
-  const previewTextHtml = buildTelegramPreviewHtml(classification, files, message.url)
+  // Review gate removed — all channels now auto-publish directly.
+  // Telegram notifications are handled downstream by the publisher if configured.
+  logger.info('handler', 'REVIEW_GATE channel auto-publishing (review gate removed)', {
+    channel: sourceChannelName,
+    title: classification.title,
+  })
 
-  try {
-    const { getRedis } = await import('../lib/redis')
-    const redis = getRedis()
-    
-    const payload = {
-      messageId: message.id,
-      previewTextHtml,
-      overrides: classification.overrides || [],
-    }
-    
-    await redis.publish('telegram_send_preview', JSON.stringify(payload))
-    logger.info('handler', 'Published telegram_send_preview event to Redis', { messageId: message.id })
+  const result = await publishAnnouncement(classification, files, message.url, courseCode, folderLabel)
+  await message.react('✅').catch(() => {})
 
-    // Delegate to approval handler — this awaits Telegram reaction via Redis
-    await awaitTelegramApproval({
-      originalMessage: message,
-      channelConfig,
-      classification,
-      files,
-      courseCode,
-      folderLabel,
-    })
-  } catch (err) {
-    logger.error('handler', 'Error requesting Telegram preview via Redis', { error: String(err) })
-    await message.react('❓').catch(() => {})
+  if (result.errors.length > 0) {
+    await message.reply({
+      content: `⚠️ Published with warnings:\n${result.errors.map((e) => `• ${e}`).join('\n')}`,
+    }).catch(() => {})
   }
+
+  // Background: ingest into RAG knowledge base (non-blocking)
+  const channelName = (message.channel as TextChannel).name ?? message.channel.id
+  ingestToKnowledgeBase({
+    messageId: message.id,
+    channelName,
+    classification,
+    files,
+    courseCode,
+  }).catch(err => logger.warn('handler', 'KB ingestion failed (non-fatal)', { error: String(err) }))
 }
 
 function isAuthorized(message: Message, config: ChannelConfig): boolean {

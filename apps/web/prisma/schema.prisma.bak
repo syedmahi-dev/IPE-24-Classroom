@@ -454,6 +454,7 @@ model BotChannelConfig {
   mode                    String
   authorizedUserIds       String
   authorizedRoleIds       String?
+  reviewChannelId         String?
   defaultAnnouncementType String?
   label                   String?
   courseCode              String?

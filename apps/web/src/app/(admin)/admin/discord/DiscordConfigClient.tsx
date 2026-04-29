@@ -14,8 +14,6 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
     mode: 'REVIEW_GATE',
     authorizedUserIds: '',
     authorizedRoleIds: '',
-    reviewChannelId: '',
-    defaultAnnouncementType: '',
     label: '',
     courseCode: '',
     isActive: true
@@ -31,7 +29,6 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
       mode: config.mode,
       authorizedUserIds: config.authorizedUserIds,
       authorizedRoleIds: config.authorizedRoleIds || '',
-      reviewChannelId: config.reviewChannelId || '',
       defaultAnnouncementType: config.defaultAnnouncementType || '',
       label: config.label || '',
       courseCode: config.courseCode || '',
@@ -127,18 +124,6 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
           />
         </div>
 
-        {formData.mode === 'REVIEW_GATE' && (
-          <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Review Channel ID *</label>
-            <input 
-              type="text" 
-              value={formData.reviewChannelId}
-              onChange={e => setFormData({...formData, reviewChannelId: e.target.value})}
-              className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800 dark:text-slate-200 font-mono text-sm"
-              placeholder="0987654321"
-            />
-          </div>
-        )}
 
         <div>
           <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Default Type (Overrides AI)</label>
@@ -262,9 +247,6 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
                   )}
                   {config.courseCode && (
                     <span className="flex items-center gap-1.5 font-mono bg-slate-100 dark:bg-slate-800 px-2 rounded">{config.courseCode}</span>
-                  )}
-                  {config.reviewChannelId && (
-                    <span className="flex items-center gap-1.5"><Shield className="w-4 h-4" /> Review: {config.reviewChannelId}</span>
                   )}
                   {config.defaultAnnouncementType && (
                     <span className="flex items-center gap-1.5"><Activity className="w-4 h-4" /> Force Type: {config.defaultAnnouncementType}</span>

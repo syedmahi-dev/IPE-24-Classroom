@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
         mode: config.mode,
         authorizedUserIds,
         authorizedRoleIds,
-        reviewChannelId: config.reviewChannelId || undefined,
         defaultAnnouncementType: config.defaultAnnouncementType || undefined,
         label: config.label || undefined,
         courseCode: config.courseCode || undefined,

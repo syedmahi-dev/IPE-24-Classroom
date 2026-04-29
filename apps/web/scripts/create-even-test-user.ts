@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -16,7 +16,7 @@ async function main() {
     create: {
       email: 'even@iut-dhaka.edu',
       name: 'Even Test Student',
-      role: 'student',
+      role: Role.student,
       studentId: 'IPE-24-002',
       passwordHash,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=even',
