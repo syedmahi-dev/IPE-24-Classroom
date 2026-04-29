@@ -182,6 +182,10 @@ export function PageTransition({
 /**
  * RevealOnScroll — reveals children when they enter the viewport.
  * Uses ScrollTrigger.batch() for efficient multi-element reveals.
+ * 
+ * IMPORTANT: Items are visible by default (no flash of invisible content).
+ * GSAP sets them hidden and then animates them in only after hydration.
+ * Items already in the viewport on mount are animated immediately.
  */
 export function RevealOnScroll({
   children,
@@ -214,8 +218,10 @@ export function RevealOnScroll({
     else if (from === 'left') fromProps.x = -distance
     else if (from === 'right') fromProps.x = distance
 
+    // Set initial hidden state
     gsap.set(items, fromProps)
 
+    // Use batch for scroll-triggered reveals
     ScrollTrigger.batch(items, {
       start: threshold,
       onEnter: (elements) => {
@@ -231,6 +237,9 @@ export function RevealOnScroll({
       },
       once: true,
     })
+
+    // Force a refresh so ScrollTrigger detects items already in viewport
+    ScrollTrigger.refresh()
   }, { scope: containerRef })
 
   return (
@@ -318,7 +327,7 @@ export function ParallaxFloat({
 
   return (
     <div ref={ref} className={className}>
-      <div className="gsap-parallax-inner">{children}</div>
+      <div className="gsap-parallax-inner will-change-transform">{children}</div>
     </div>
   )
 }
