@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Role, FileCategory } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -12,7 +12,7 @@ async function main() {
     create: {
       email: 'cr@iut-dhaka.edu',
       name: 'Class Representative',
-      role: 'super_admin',
+      role: Role.super_admin,
       studentId: '210041001',
     },
   })
@@ -95,7 +95,7 @@ async function main() {
       driveUrl: 'https://drive.google.com/file/d/mock-id-1',
       mimeType: 'application/pdf',
       sizeBytes: 2048576,
-      category: 'lecture_notes',
+      category: FileCategory.lecture_notes,
       courseId: courseRecords[0].id,
       uploadedById: superAdmin.id,
     },
@@ -105,7 +105,7 @@ async function main() {
       driveUrl: 'https://drive.google.com/file/d/mock-id-2',
       mimeType: 'application/pdf',
       sizeBytes: 1024000,
-      category: 'resource',
+      category: FileCategory.resource,
       courseId: courseRecords[1].id,
       uploadedById: superAdmin.id,
     }

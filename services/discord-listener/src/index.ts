@@ -63,6 +63,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('Fatal startup error:', err)
+  console.error('Fatal startup error:', err instanceof Error ? err.message : String(err))
+  if (err instanceof Error && err.stack) console.error(err.stack)
   process.exit(1)
 })
