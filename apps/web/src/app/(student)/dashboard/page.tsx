@@ -65,7 +65,7 @@ export default async function DashboardPage() {
               <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight mb-1 md:mb-2">
                 Good {getTimeOfDay()}, <br className="hidden md:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-purple-600 leading-tight">
-                  {session?.user?.name?.split(' ')[0]}
+                  {session?.user?.name?.split(' ')?.[0] || 'Student'}
                 </span>
               </h1>
               <p className="text-sm md:text-lg font-medium text-slate-500 dark:text-slate-400">
