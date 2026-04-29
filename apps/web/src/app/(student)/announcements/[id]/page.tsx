@@ -154,7 +154,7 @@ export default function AnnouncementDetailPage() {
             </div>
             <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-sm font-medium">
               <User className="w-4 h-4" />
-              {announcement.author.name}
+              {announcement.author?.name || 'Unknown Author'}
             </div>
           </div>
 
@@ -189,12 +189,12 @@ export default function AnnouncementDetailPage() {
         <div className="bg-slate-50/50 dark:bg-slate-800/30 px-8 md:px-14 py-6 border-t border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-300">
-              {announcement.author.name.charAt(0)}
+              {announcement.author?.name?.charAt(0) || 'U'}
             </div>
             <div>
-              <p className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none mb-1">{announcement.author.name}</p>
+              <p className="text-sm font-black text-slate-800 dark:text-slate-100 leading-none mb-1">{announcement.author?.name || 'Unknown Author'}</p>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                {announcement.author.role === 'super_admin' ? 'Super Admin' : 'Class Representative'}
+                {announcement.author?.role === 'super_admin' ? 'Super Admin' : 'Class Representative'}
               </p>
             </div>
           </div>

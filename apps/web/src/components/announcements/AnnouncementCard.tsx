@@ -63,15 +63,15 @@ export function AnnouncementCard({ announcement }: Props) {
             />
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100/50 dark:border-slate-800/50">
               <div className="w-5 h-5 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                {announcement.author.name.charAt(0)}
+                {announcement.author?.name?.charAt(0) || 'U'}
               </div>
               <div className="flex flex-col">
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  {announcement.author.name}
-                  {announcement.author.role === 'super_admin' && (
+                  {announcement.author?.name || 'Unknown Author'}
+                  {announcement.author?.role === 'super_admin' && (
                     <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Super Admin</span>
                   )}
-                  {announcement.author.role === 'admin' && (
+                  {announcement.author?.role === 'admin' && (
                     <span className="text-[9px] font-bold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded uppercase tracking-wider">CR</span>
                   )}
                 </p>

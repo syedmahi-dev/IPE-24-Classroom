@@ -187,7 +187,7 @@ export function AdminAnnouncementsClient({ courses }: { courses: Course[] }) {
       label: 'Author',
       hideOnMobile: true,
       render: (item) => (
-        <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.author.name}</span>
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.author?.name || 'Unknown Author'}</span>
       ),
     },
     {

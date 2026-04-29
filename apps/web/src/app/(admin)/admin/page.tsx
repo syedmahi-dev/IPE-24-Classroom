@@ -165,9 +165,9 @@ export default async function AdminPage() {
                   <p className="font-bold text-slate-800 dark:text-slate-200 group-hover:text-admin-purple transition-colors line-clamp-1">{ann.title}</p>
                   <div className="flex items-center gap-3 mt-3">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-admin-purple to-indigo-500 flex items-center justify-center text-[11px] font-black text-white shadow-sm">
-                      {ann.author.name.charAt(0)}
+                      {ann.author?.name?.charAt(0) || 'U'}
                     </div>
-                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{ann.author.name}</p>
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{ann.author?.name || 'Unknown Author'}</p>
                   </div>
                 </div>
               ))
