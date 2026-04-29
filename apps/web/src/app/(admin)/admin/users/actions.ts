@@ -2,6 +2,7 @@
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Role } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function addWhitelistedStudent(formData: FormData) {
@@ -27,7 +28,7 @@ export async function addWhitelistedStudent(formData: FormData) {
       data: {
         email,
         name: name || 'Student',
-        role: 'student',
+        role: Role.student,
       }
     })
 
@@ -64,7 +65,7 @@ export async function changeUserRole(userId: string, newRole: string) {
 
     await prisma.user.update({
       where: { id: userId },
-      data: { role: newRole }
+      data: { role: newRole as Role }
     })
 
     revalidatePath('/admin/users')
@@ -74,3 +75,4 @@ export async function changeUserRole(userId: string, newRole: string) {
     return { error: 'Failed to update role.' }
   }
 }
+

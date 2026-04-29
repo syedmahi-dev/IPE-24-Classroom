@@ -2,6 +2,7 @@ import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
+import { Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 
@@ -131,13 +132,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: profile.email.toLowerCase(),
             name: profile?.name ?? 'Anonymous',
             avatarUrl: (profile as any)?.picture ?? null,
-            role: isDefaultSuperAdmin ? 'super_admin' : 'student',
+            role: isDefaultSuperAdmin ? Role.super_admin : Role.student,
           },
           update: {
             name: profile?.name ?? undefined,
             avatarUrl: (profile as any)?.picture ?? undefined,
             lastLogin: new Date(),
-            ...(isDefaultSuperAdmin ? { role: 'super_admin' } : {})
+            ...(isDefaultSuperAdmin ? { role: Role.super_admin } : {})
           },
         })
       }

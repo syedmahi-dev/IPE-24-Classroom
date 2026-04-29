@@ -1,5 +1,6 @@
 import { requireInternalSecret } from '@/lib/api-guards'
 import { prisma } from '@/lib/prisma'
+import { Role } from '@prisma/client'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
@@ -96,7 +97,7 @@ async function getSystemUserId(): Promise<string> {
   if (_systemUserId) return _systemUserId
 
   const admin = await prisma.user.findFirst({
-    where: { role: 'super_admin' },
+    where: { role: Role.super_admin },
     select: { id: true },
   })
   if (!admin) {
