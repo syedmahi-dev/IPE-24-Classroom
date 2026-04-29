@@ -81,7 +81,7 @@ export default async function AdminPage() {
                 </span>
               </h1>
               <p className="text-lg font-medium text-slate-500 dark:text-slate-400">
-                Welcome back, {session?.user.name?.split(' ')[0]}. Manage your classroom effectively.
+                Welcome back, {session?.user?.name?.split(' ')?.[0] || 'Admin'}. Manage your classroom effectively.
               </p>
             </div>
           </div>

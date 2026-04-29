@@ -67,7 +67,7 @@ export function ProfileDropdown({ user }: { user: any }) {
           </div>
         </div>
         <div className="hidden sm:flex flex-col items-start">
-          <span className="text-sm font-black text-slate-800 dark:text-slate-100 leading-tight">{user?.name?.split(' ')[0] || 'User'}</span>
+          <span className="text-sm font-black text-slate-800 dark:text-slate-100 leading-tight">{user?.name?.split(' ')?.[0] || 'User'}</span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             {user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Class Rep' : 'Student'}
           </span>

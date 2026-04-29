@@ -198,7 +198,7 @@ export default function LandingPage() {
             session ? (
               <Link href="/dashboard" className="flex items-center gap-3 group">
                 <span className="hidden sm:block text-sm font-semibold text-slate-300 group-hover:text-white transition-colors">
-                  {session.user?.name?.split(' ')[0]}
+                  {session.user?.name?.split(' ')?.[0] || 'Student'}
                 </span>
                 <Image
                   src={session.user?.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(session.user?.name || 'U')}&backgroundColor=4f46e5&textColor=ffffff`}
