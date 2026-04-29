@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { FileCategory } from '@prisma/client'
 import { ok, ERRORS } from '@/lib/api-response'
 import { logAudit } from '@/lib/audit'
 import { notifyAll } from '@/lib/notifications'
@@ -107,7 +108,7 @@ export async function POST(req: Request) {
         downloadUrl: driveResult.webContentLink || null,
         mimeType: file.type,
         sizeBytes: sizeBytes,
-        category,
+        category: category as FileCategory,
         courseId: courseId || null,
         uploadedById: session.user.id,
         connectedDriveId: connectedDriveId || null,
