@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     ])
 
     const transformed = items.map((poll) => {
-      const options = JSON.parse(poll.options)
+      const options = JSON.parse(poll.options as string)
       const voteCounts = new Array(options.length).fill(0)
       
       poll.votes.forEach((vote) => {
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       return ERRORS.VALIDATION('Poll is closed')
     }
 
-    const options = JSON.parse(poll.options)
+    const options = JSON.parse(poll.options as string)
     if (optionIndex >= options.length) return ERRORS.VALIDATION('Invalid option')
 
     await prisma.pollVote.upsert({

@@ -19,7 +19,7 @@ describe('GET /api/v1/health', () => {
 
   it('TC-5.1.3: response time < 200ms', async () => {
     const start = Date.now()
-    await GET(new Request('http://localhost/api/v1/health'))
+    await GET()
     expect(Date.now() - start).toBeLessThan(200)
   })
 })

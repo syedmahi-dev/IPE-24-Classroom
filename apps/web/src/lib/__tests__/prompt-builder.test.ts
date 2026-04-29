@@ -37,7 +37,7 @@ describe('buildChatHistory', () => {
 describe('buildRAGSystemPrompt', () => {
   it('should include context blocks from search results', () => {
     const chunks = [
-      { id: '1', content: 'Chemistry class at 10am', document_id: 'd1', title: 'Routine', source_type: 'routine_sync', course_code: 'CHEM4215', similarity: 0.85 },
+      { id: '1', content: 'Chemistry class at 10am', documentId: 'd1', title: 'Routine', sourceType: 'routine_sync', courseCode: 'CHEM4215', similarity: 0.85 },
     ]
     const prompt = buildRAGSystemPrompt(chunks)
     
