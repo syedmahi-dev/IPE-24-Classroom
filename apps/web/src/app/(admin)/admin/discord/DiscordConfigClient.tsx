@@ -14,6 +14,7 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
     mode: 'REVIEW_GATE',
     authorizedUserIds: '',
     authorizedRoleIds: '',
+    defaultAnnouncementType: '',
     label: '',
     courseCode: '',
     isActive: true
