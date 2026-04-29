@@ -1,35 +1,66 @@
-// Temporary SQLite schema for local development
-// This is a quick workaround - switch back to schema.prisma with PostgreSQL for production
+// apps/web/prisma/schema.prisma
+// Merged PostgreSQL schema - String ID version for compatibility with CUID/UUID sessions
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [uuidOssp(map: "uuid-ossp"), vector]
 }
 
+enum Role {
+  student
+  admin
+  super_admin
+}
+
+enum AnnouncementType {
+  general
+  exam
+  file_update
+  routine_update
+  urgent
+  event
+  course_update
+}
+
+enum FileCategory {
+  lecture_notes
+  assignment
+  past_paper
+  syllabus
+  other
+  resource
+}
+
+// ==========================================
+// SECTION: Core Models (Auth & User)
+// ==========================================
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String
-  avatarUrl     String?
-  role          String    @default("student") // student, admin, super_admin
-  studentId     String?   @unique
-  phone         String?
-  bio           String?
-  nickname      String?
-  bloodGroup    String?
-  gender        String?
-  dob           String?
-  lastLogin     DateTime?
-  passwordHash  String?
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String
+  avatarUrl       String?
+  role            Role      @default(student)
+  studentId       String?   @unique
+  phone           String?
+  bio             String?
+  nickname        String?
+  bloodGroup      String?
+  gender          String?
+  dob             String?
+  lastLogin       DateTime?
+  passwordHash    String?
   twoFactorSecret String?
   twoFactorEnabled Boolean  @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   accounts       Account[]
   sessions       Session[]
@@ -62,18 +93,22 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@map("accounts")
 }
+
+// ==========================================
+// SECTION: Content Models (Courses & Announcements)
+// ==========================================
 
 model Course {
   id          String   @id @default(cuid())
@@ -95,8 +130,8 @@ model Course {
 model Announcement {
   id                 String           @id @default(cuid())
   title              String
-  body               String
-  type               String           @default("general") // general, exam, file_update, routine_update, urgent, event, course_update
+  body               String           @db.Text
+  type               AnnouncementType @default(general)
   source             String?          // 'telegram' | 'discord' | 'web' | null
   isPublished        Boolean          @default(false)
   publishedAt        DateTime?
@@ -131,7 +166,7 @@ model FileUpload {
   downloadUrl  String?
   mimeType     String
   sizeBytes    Int
-  category     String       @default("other") // lecture_notes, assignment, past_paper, syllabus, other
+  category     FileCategory @default(other)
   courseId     String?
   course       Course?      @relation(fields: [courseId], references: [id])
   uploadedById String
@@ -145,6 +180,10 @@ model FileUpload {
   @@map("file_uploads")
 }
 
+// ==========================================
+// SECTION: Academic Models (Exams & Polls)
+// ==========================================
+
 model Exam {
   id          String   @id @default(cuid())
   title       String
@@ -154,7 +193,7 @@ model Exam {
   examDate    DateTime
   duration    Int?
   room        String?
-  syllabus    String?
+  syllabus    String?  @db.Text
   isActive    Boolean  @default(true)
   archivedAt  DateTime?
   createdAt   DateTime @default(now())
@@ -169,7 +208,7 @@ model Exam {
 model Poll {
   id          String    @id @default(cuid())
   question    String
-  options     String   // JSON as string for SQLite
+  options     Json
   isAnonymous Boolean   @default(true)
   isClosed    Boolean   @default(false)
   closesAt    DateTime?
@@ -196,14 +235,18 @@ model PollVote {
   @@map("poll_votes")
 }
 
+// ==========================================
+// SECTION: RAG & System Models (Knowledge & Logs)
+// ==========================================
+
 model KnowledgeDocument {
   id            String   @id @default(cuid())
   title         String
   sourceType    String
   courseCode    String?
-  content       String
-  sourceId      String?  @map("source_id")  // Discord message ID, file upload ID, etc.
-  sourceChannel String?  @map("source_channel")  // Discord channel name for audit trail
+  content       String   @db.Text
+  sourceId      String?  @map("source_id")
+  sourceChannel String?  @map("source_channel")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -214,12 +257,13 @@ model KnowledgeDocument {
 }
 
 model KnowledgeChunk {
-  id         String            @id @default(cuid())
+  id         String                      @id @default(cuid())
   documentId String
-  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document   KnowledgeDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
   chunkIndex Int
-  content    String
-  createdAt  DateTime          @default(now())
+  content    String                      @db.Text
+  embedding  Unsupported("vector(768)")?
+  createdAt  DateTime                    @default(now())
 
   @@index([documentId])
   @@map("knowledge_chunks")
@@ -229,8 +273,8 @@ model ChatLog {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  question  String
-  answer    String
+  question  String   @db.Text
+  answer    String   @db.Text
   thumbsUp  Boolean?
   createdAt DateTime @default(now())
 
@@ -238,6 +282,10 @@ model ChatLog {
   @@index([createdAt])
   @@map("chat_logs")
 }
+
+// ==========================================
+// SECTION: Social & Notifications
+// ==========================================
 
 model StudyGroup {
   id          String   @id @default(cuid())
@@ -248,7 +296,7 @@ model StudyGroup {
   meetTime    String?
   location    String?
   isOpen      Boolean  @default(true)
-  targetGroup String   @default("ALL") // ALL, ODD, EVEN — lab group filter
+  targetGroup String   @default("ALL")
   archivedAt  DateTime?
   createdAt   DateTime @default(now())
 
@@ -258,7 +306,7 @@ model StudyGroup {
 }
 
 model StudyGroupMember {
-  groupId  String     @default(cuid())
+  groupId  String
   userId   String
   group    StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user     User       @relation(fields: [userId], references: [id])
@@ -293,6 +341,10 @@ model PushToken {
   @@map("push_tokens")
 }
 
+// ==========================================
+// SECTION: Admin & Infrastructure
+// ==========================================
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String
@@ -300,7 +352,7 @@ model AuditLog {
   action     String
   targetType String
   targetId   String
-  metadata   String?
+  metadata   Json?
   createdAt  DateTime @default(now())
 
   @@index([actorId])
@@ -316,21 +368,25 @@ model SystemConfig {
   @@map("system_configs")
 }
 
+// ==========================================
+// SECTION: Routine System (Working-Week A/B)
+// ==========================================
+
 model BaseRoutine {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   courseCode  String
   courseName  String?
-  dayOfWeek   String                    // "Monday", "Tuesday", etc.
-  startTime   String                    // "08:00"
-  endTime     String                    // "09:30"
+  dayOfWeek   String
+  startTime   String
+  endTime     String
   room        String
   teacher     String?
-  targetGroup String   @default("ALL")  // "ALL", "ODD", "EVEN"
-  weekParity  String   @default("ALL")  // "ALL" = every week, "ODD" = odd weeks, "EVEN" = even weeks
-  isLab       Boolean  @default(false)
-  semester    String?                   // e.g. "Spring 2026"
+  targetGroup String    @default("ALL")
+  weekParity  String    @default("ALL")
+  isLab       Boolean   @default(false)
+  semester    String?
   archivedAt  DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   overrides RoutineOverride[]
 
@@ -339,8 +395,8 @@ model BaseRoutine {
 
 model RoutineOverride {
   id             String       @id @default(cuid())
-  date           DateTime                           // The specific date
-  type           String                             // CANCELLED, MAKEUP, ROOM_CHANGE, TIME_CHANGE
+  date           DateTime
+  type           String
   baseRoutineId  String?
   baseRoutine    BaseRoutine? @relation(fields: [baseRoutineId], references: [id], onDelete: SetNull)
   courseCode     String?
@@ -360,12 +416,12 @@ model RoutineOverride {
 
 model RoutineWeek {
   id                String    @id @default(cuid())
-  calendarWeekStart DateTime  @unique               // Monday of this calendar week (date only)
-  workingWeekNumber Int?                             // null = skipped week, sequential counter
-  weekType          String?                          // "A" or "B" or null (skipped), derived from workingWeekNumber
+  calendarWeekStart DateTime  @unique
+  workingWeekNumber Int?
+  weekType          String?
   isSkipped         Boolean   @default(false)
-  skippedReason     String?                          // "Mid-semester break", "Eid vacation", etc.
-  markedById        String?                          // userId of admin/CR who marked it
+  skippedReason     String?
+  markedById        String?
   markedAt          DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -375,10 +431,14 @@ model RoutineWeek {
   @@map("routine_weeks")
 }
 
+// ==========================================
+// SECTION: Integration & Bot Configs
+// ==========================================
+
 model ConnectedDrive {
   id           String       @id @default(cuid())
-  label        String       // Optional user-friendly name
-  email        String       // Google account email
+  label        String
+  email        String
   refreshToken String
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
@@ -391,13 +451,13 @@ model ConnectedDrive {
 model BotChannelConfig {
   id                      String   @id @default(cuid())
   channelId               String   @unique
-  mode                    String   // AUTO_PUBLISH | REVIEW_GATE
-  authorizedUserIds       String   // JSON string array
-  authorizedRoleIds       String?  // JSON string array
-  reviewChannelId         String?  // For REVIEW_GATE mode
-  defaultAnnouncementType String?  // Skip AI classification
-  label                   String?  // Human-readable label
-  courseCode              String?  // e.g. "IPE4208"
+  mode                    String
+  authorizedUserIds       String
+  authorizedRoleIds       String?
+  reviewChannelId         String?
+  defaultAnnouncementType String?
+  label                   String?
+  courseCode              String?
   isActive                Boolean  @default(true)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
