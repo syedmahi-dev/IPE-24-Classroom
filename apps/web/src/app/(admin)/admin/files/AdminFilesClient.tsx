@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { FolderOpen, Upload, Trash2, ExternalLink, FileText, FileSpreadsheet, FileImage, File, FolderPlus } from 'lucide-react'
+import { FolderOpen, Upload, Trash2, ExternalLink, FileText, FileSpreadsheet, FileImage, File, FolderPlus, Link as LinkIcon } from 'lucide-react'
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { EXTERNAL_FOLDERS } from '@/config/resources'
 import { AdminDataTable, Column } from '@/components/admin/AdminDataTable'
 import { AdminModal } from '@/components/admin/AdminModal'
 import { AdminFormField } from '@/components/admin/AdminFormField'
@@ -207,6 +208,39 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
         onAction={openUpload}
         badge={`${total} files`}
       />
+
+      {/* Quick Access Folders */}
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">Drive Folders</h3>
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+          {EXTERNAL_FOLDERS.map((folder, i) => (
+            <a
+              key={i}
+              href={folder.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-sm transition-all group"
+            >
+              <LinkIcon className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+              {folder.name}
+            </a>
+          ))}
+          {courses.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => { setFilterCourse(c.id === filterCourse ? '' : c.id); setPage(1) }}
+              className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl border ${
+                filterCourse === c.id 
+                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300' 
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-indigo-500 dark:hover:border-indigo-500'
+              } text-sm font-bold hover:shadow-sm transition-all group`}
+            >
+              <FolderOpen className={`w-4 h-4 ${filterCourse === c.id ? 'text-indigo-500' : 'text-indigo-400 group-hover:text-indigo-500'}`} />
+              {c.code}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <AdminDataTable
         columns={columns}

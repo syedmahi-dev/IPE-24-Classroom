@@ -11,7 +11,7 @@ export default async function AdminDrivesPage() {
   const dbUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } })
   const actualRole = dbUser ? dbUser.role : session.user.role
 
-  if (actualRole !== 'super_admin') {
+  if (actualRole !== 'super_admin' && actualRole !== 'admin') {
     redirect('/admin')
   }
 
@@ -34,7 +34,7 @@ export default async function AdminDrivesPage() {
           <div className="flex items-center gap-3 mb-2">
             <span className="bg-brand-100/50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-brand-200/50 dark:border-brand-500/20 flex items-center gap-1.5">
               <Sparkles className="w-3 h-3" />
-              Superadmin Only
+              Admin Only
             </span>
           </div>
           <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-3">

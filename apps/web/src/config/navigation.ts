@@ -25,7 +25,7 @@ export const ADMIN_NAV = [
   { href: '/admin/audit',           label: 'Audit Log',       icon: 'ScrollText', section: 'Admin', superAdminOnly: true },
   { href: '/admin/telegram',        label: 'Telegram Bot',    icon: 'MessageCircle', section: 'Admin', superAdminOnly: true },
   { href: '/admin/discord',         label: 'Discord Bot',     icon: 'MessageCircle', section: 'Admin', superAdminOnly: true },
-  { href: '/admin/drives',          label: 'Drives',          icon: 'HardDrive', section: 'Admin', superAdminOnly: true },
+  { href: '/admin/drives',          label: 'Drives',          icon: 'HardDrive', section: 'Admin' },
 
   // STUDENT FEATURES (accessible to admin as well)
   { href: '/announcements',         label: 'View Announcements', icon: 'Megaphone', section: 'Student Access' },

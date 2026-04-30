@@ -24,7 +24,14 @@ const querySchema = z.object({
 export async function GET(req: Request) {
   const session = await auth() as any
   if (!session?.user) return ERRORS.UNAUTHORIZED()
-  if (!['admin', 'super_admin'].includes(session.user.role)) return ERRORS.FORBIDDEN()
+  
+  let role = session.user.role
+  if (!['admin', 'super_admin'].includes(role)) {
+    const dbUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } })
+    if (dbUser) role = dbUser.role
+  }
+
+  if (!['admin', 'super_admin'].includes(role)) return ERRORS.FORBIDDEN()
 
   try {
     const url = new URL(req.url)
@@ -69,7 +76,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const session = await auth() as any
   if (!session?.user) return ERRORS.UNAUTHORIZED()
-  if (!['admin', 'super_admin'].includes(session.user.role)) return ERRORS.FORBIDDEN()
+
+  let role = session.user.role
+  if (!['admin', 'super_admin'].includes(role)) {
+    const dbUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } })
+    if (dbUser) role = dbUser.role
+  }
+
+  if (!['admin', 'super_admin'].includes(role)) return ERRORS.FORBIDDEN()
 
   try {
     const formData = await req.formData()
