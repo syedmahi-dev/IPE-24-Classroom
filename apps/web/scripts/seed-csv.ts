@@ -89,7 +89,8 @@ async function main() {
       console.log(`✅ Upserted ${cleanEmail} (${role})`);
       successCount++;
     } catch (err) {
-      console.error(`❌ Failed to upsert ${cleanEmail}:`, err.message);
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`❌ Failed to upsert ${cleanEmail}:`, message);
     }
   }
 
