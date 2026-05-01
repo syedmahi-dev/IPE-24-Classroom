@@ -30,7 +30,7 @@ function getMonday(d: Date): Date {
   const day = date.getDay()
   const diff = date.getDate() - day + (day === 0 ? -6 : 1)
   date.setDate(diff)
-  date.setHours(0, 0, 0, 0)
+  date.setUTCHours(0, 0, 0, 0)
   return date
 }
 
@@ -154,12 +154,12 @@ export async function GET(req: NextRequest) {
 
       // Determine date range
       const startDate = new Date(monday)
-      startDate.setHours(0, 0, 0, 0)
+      startDate.setUTCHours(0, 0, 0, 0)
       const endDate = new Date(monday)
       if (week) {
         endDate.setDate(endDate.getDate() + 4) // Monday to Friday
       }
-      endDate.setHours(23, 59, 59, 999)
+      endDate.setUTCHours(23, 59, 59, 999)
 
       // Get days to query
       const days: string[] = []

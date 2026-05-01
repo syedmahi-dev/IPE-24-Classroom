@@ -13,7 +13,7 @@ function getMonday(d: Date): Date {
   const day = date.getDay()
   const diff = date.getDate() - day + (day === 0 ? -6 : 1)
   date.setDate(diff)
-  date.setHours(0, 0, 0, 0)
+  date.setUTCHours(0, 0, 0, 0)
   return date
 }
 
@@ -92,9 +92,9 @@ export async function POST(req: NextRequest) {
     const session = await auth() as any
     if (!session?.user) return ERRORS.UNAUTHORIZED()
 
-    // Only admin/super_admin/CR can manage week skips
+    // admin, super_admin, and CR can manage week skips
     const role = session.user.role as string
-    if (role !== 'admin' && role !== 'super_admin') {
+    if (role !== 'admin' && role !== 'super_admin' && role !== 'cr') {
       return ERRORS.FORBIDDEN()
     }
 
