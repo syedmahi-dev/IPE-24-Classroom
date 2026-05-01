@@ -5,6 +5,14 @@ import { prisma } from './prisma'
 import { Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
+// Test accounts allowed to use credentials login in production for real-life testing
+const TEST_ACCOUNT_EMAILS = new Set([
+  'even@iut-dhaka.edu',
+  'student@test.com',
+  'admin@test.com',
+  'superadmin@test.com',
+])
+
 
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -49,8 +57,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return null
           }
 
-          // Check if user is Admin/CR
-          if (user.role === 'student' && process.env.NODE_ENV === 'production') {
+          // Check if user is Admin/CR or a whitelisted test account
+          const isTestAccount = TEST_ACCOUNT_EMAILS.has(email)
+          if (user.role === 'student' && !isTestAccount && process.env.NODE_ENV === 'production') {
             console.warn(`[Auth] Student attempted credential login: ${email}`)
             throw new Error('Please login with Google')
           }
