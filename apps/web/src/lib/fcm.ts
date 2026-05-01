@@ -1,15 +1,41 @@
 import admin from 'firebase-admin'
 import { prisma } from './prisma'
 
-if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert(
-        JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString())
-      ),
-    })
-  } catch (err) {
-    console.error('[FCM] Failed to initialize Firebase Admin:', err)
+function getFirebaseServiceAccount(): admin.ServiceAccount | null {
+  const base64 = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+  if (base64) {
+    try {
+      return JSON.parse(Buffer.from(base64, 'base64').toString())
+    } catch (err) {
+      console.error('[FCM] Invalid FIREBASE_SERVICE_ACCOUNT_KEY:', err)
+    }
+  }
+
+  const projectId = process.env.FIREBASE_PROJECT_ID
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
+  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY
+
+  if (projectId && clientEmail && privateKeyRaw) {
+    return {
+      projectId,
+      clientEmail,
+      privateKey: privateKeyRaw.replace(/\\n/g, '\n'),
+    }
+  }
+
+  return null
+}
+
+if (!admin.apps.length) {
+  const serviceAccount = getFirebaseServiceAccount()
+  if (serviceAccount) {
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      })
+    } catch (err) {
+      console.error('[FCM] Failed to initialize Firebase Admin:', err)
+    }
   }
 }
 

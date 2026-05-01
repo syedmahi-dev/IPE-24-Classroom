@@ -3,6 +3,7 @@ import { getConfig } from '../config'
 import { ClassificationResult } from './classifier'
 import { DriveUploadResult } from './drive'
 import { logger } from '../lib/logger'
+import { requestInternalApi } from '../lib/internal-api'
 
 /**
  * Auto-ingest a classified Discord message into the RAG knowledge base.
@@ -20,7 +21,7 @@ export async function ingestToKnowledgeBase(params: {
   files: DriveUploadResult[]
   courseCode?: string
 }): Promise<void> {
-  const { INTERNAL_API_URL, INTERNAL_API_SECRET } = getConfig()
+  const { INTERNAL_API_SECRET } = getConfig()
   const { messageId, channelName, classification, files, courseCode } = params
 
   // Build knowledge text from classified content + file metadata
@@ -50,7 +51,7 @@ export async function ingestToKnowledgeBase(params: {
   const sourceType = `discord_${classification.type}`
 
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/api/v1/internal/knowledge`, {
+    const res = await requestInternalApi('/api/v1/internal/knowledge', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +65,7 @@ export async function ingestToKnowledgeBase(params: {
         sourceChannel: channelName,
         courseCode: courseCode || classification.detectedCourseCode || undefined,
       }),
-    })
+    }, { logScope: 'knowledge-ingestor' })
 
     if (!res.ok) {
       const text = await res.text()

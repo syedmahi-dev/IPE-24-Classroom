@@ -30,16 +30,31 @@ export async function notifyAll({ title, body, link, targetUserIds }: NotifyAllO
 
   if (userIds.length === 0) return
 
-  // Bulk-insert notification rows (one per user) — skip on conflict to be safe
-  await prisma.notification.createMany({
-    data: userIds.map((userId) => ({
-      userId,
-      title,
-      body,
-      link: link ?? null,
-    })),
-    skipDuplicates: true,
-  })
+  const records = userIds.map((userId) => ({
+    userId,
+    title,
+    body,
+    link: link ?? null,
+  }))
+
+  // Fast path: bulk insert notifications.
+  // Fallback keeps delivery working if createMany fails due DB/provider quirks.
+  try {
+    await prisma.notification.createMany({ data: records })
+  } catch (err) {
+    console.error('[notifyAll] createMany failed, falling back to per-user creates:', err)
+
+    for (const record of records) {
+      try {
+        await prisma.notification.create({ data: record })
+      } catch (innerErr) {
+        console.error('[notifyAll] per-user notification create failed:', {
+          userId: record.userId,
+          error: String(innerErr),
+        })
+      }
+    }
+  }
 
   // Also broadcast a real-time push notification
   broadcastPushNotification(title, body, link).catch((err) =>

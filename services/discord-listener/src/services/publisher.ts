@@ -3,6 +3,7 @@ import { getConfig } from '../config'
 import { ClassificationResult, RoutineOverrideExtract } from './classifier'
 import { DriveUploadResult } from './drive'
 import { logger } from '../lib/logger'
+import { requestInternalApi } from '../lib/internal-api'
 
 export interface PublishResult {
   website: boolean
@@ -42,14 +43,14 @@ export async function publishAnnouncement(
       source: 'discord', // tag the source for audit/dedup
     }
 
-    const res = await fetch(`${INTERNAL_API_URL}/api/v1/internal/announcements`, {
+    const res = await requestInternalApi('/api/v1/internal/announcements', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-internal-secret': INTERNAL_API_SECRET,
       },
       body: JSON.stringify(body),
-    })
+    }, { logScope: 'publisher' })
 
     if (!res.ok) {
       const text = await res.text()
@@ -71,7 +72,7 @@ export async function publishAnnouncement(
 
     for (const file of files) {
       try {
-        const res = await fetch(`${INTERNAL_API_URL}/api/v1/internal/files`, {
+        const res = await requestInternalApi('/api/v1/internal/files', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -89,7 +90,7 @@ export async function publishAnnouncement(
             folderLabel: folderLabel,
             source: 'discord',
           }),
-        })
+        }, { logScope: 'publisher' })
 
         if (!res.ok) {
           const text = await res.text()
@@ -109,14 +110,14 @@ export async function publishAnnouncement(
   let overridesCreated = 0
   if (classification.overrides && classification.overrides.length > 0) {
     try {
-      const res = await fetch(`${INTERNAL_API_URL}/api/v1/internal/routine/overrides`, {
+      const res = await requestInternalApi('/api/v1/internal/routine/overrides', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-internal-secret': INTERNAL_API_SECRET,
         },
         body: JSON.stringify({ overrides: classification.overrides }),
-      })
+      }, { logScope: 'publisher' })
 
       if (!res.ok) {
         const text = await res.text()
