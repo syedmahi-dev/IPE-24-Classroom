@@ -314,10 +314,13 @@ async function handleReviewGate(
   }).catch(() => null)
 
   if (!previewMessage) {
-    logger.warn('handler', 'failed to send preview message, falling back to auto-publish', {
+    logger.warn('handler', 'failed to send preview message, publishing blocked', {
       messageId: message.id,
     })
-    await handleAutoPublish(message, classification, files, courseCode, folderLabel)
+
+    await message.react('⚠️').catch(() => {})
+    await message.reply('⚠️ Could not open approval gate. Routine override was not published. Please fix bot channel permissions and retry.').catch(() => {})
+    await releaseMessage(message.id)
     return
   }
 
@@ -325,6 +328,18 @@ async function handleReviewGate(
   await previewMessage.react('❌').catch(() => {})
 
   const decision = await waitForReviewDecision(previewMessage, message, channelConfig, timeoutMs)
+
+  if (decision === 'timed_out') {
+    logger.warn('handler', 'review decision: timed_out or collector_error, publishing blocked', {
+      messageId: message.id,
+      title: classification.title,
+    })
+
+    await message.react('⏸️').catch(() => {})
+    await previewMessage.reply('⏸️ No valid approval captured. This routine override was not published.').catch(() => {})
+    await releaseMessage(message.id)
+    return
+  }
 
   if (decision === 'discarded') {
     logger.info('handler', 'review decision: discarded', {

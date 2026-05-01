@@ -230,7 +230,7 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
       {/* Quick Access Folders */}
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">Drive Folders</h3>
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex flex-wrap items-center gap-3">
           {EXTERNAL_FOLDERS.map((folder, i) => (
             <a
               key={i}
