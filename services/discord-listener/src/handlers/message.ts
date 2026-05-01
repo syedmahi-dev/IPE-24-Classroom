@@ -221,13 +221,6 @@ export async function handleMessage(message: Message): Promise<void> {
 
     const courseCode = defaultCourseCode
     const folderLabel = channelConfig.label
-    const requiresRoutineConfirmation = classification.overrides.length > 0
-    const shouldUseReviewGate = requiresRoutineConfirmation
-
-    if (!shouldUseReviewGate) {
-      await handleAutoPublish(message, classification, files, courseCode, folderLabel)
-      return
-    }
 
     await handleReviewGate(message, channelConfig, classification, files, channelName, courseCode, folderLabel)
   } catch (err) {
@@ -300,12 +293,14 @@ async function handleReviewGate(
   courseCode?: string,
   folderLabel?: string
 ): Promise<void> {
-  const timeoutMs: number | undefined = undefined
+  const requiresRoutineConfirmation = classification.overrides.length > 0
+  const timeoutMs: number | undefined = requiresRoutineConfirmation ? undefined : getConfig().REACTION_TIMEOUT_MS
   logger.info('handler', 'review gate awaiting confirmation', {
     channel: sourceChannelName,
     title: classification.title,
-    mode: 'routine_override_only',
-    timeoutMs: null,
+    mode: 'all_messages',
+    timeoutMs: timeoutMs ?? null,
+    requiresRoutineConfirmation,
   })
 
   const previewMessage = await message.reply({
@@ -330,14 +325,21 @@ async function handleReviewGate(
   const decision = await waitForReviewDecision(previewMessage, message, channelConfig, timeoutMs)
 
   if (decision === 'timed_out') {
-    logger.warn('handler', 'review decision: timed_out or collector_error, publishing blocked', {
+    logger.warn('handler', 'review decision: timed_out or collector_error', {
       messageId: message.id,
       title: classification.title,
+      requiresRoutineConfirmation,
     })
 
-    await message.react('⏸️').catch(() => {})
-    await previewMessage.reply('⏸️ No valid approval captured. This routine override was not published.').catch(() => {})
-    await releaseMessage(message.id)
+    if (requiresRoutineConfirmation) {
+      await message.react('⏸️').catch(() => {})
+      await previewMessage.reply('⏸️ No valid approval captured. This routine override was discarded.').catch(() => {})
+      await releaseMessage(message.id)
+      return
+    }
+
+    await previewMessage.reply('⌛ No review action received within 2 hours. Auto-publishing this non-routine post.').catch(() => {})
+    await handleAutoPublish(message, classification, files, courseCode, folderLabel)
     return
   }
 
