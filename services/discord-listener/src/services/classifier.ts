@@ -237,10 +237,18 @@ export async function classifyMessage(
     }
   } catch (err) {
     logger.warn('classifier', 'Gemini classification failed, using fallback', { error: String(err) })
+    const attachmentBasedTitle = attachmentNames.length > 0
+      ? attachmentNames[0].replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim()
+      : ''
+    const firstLine = text
+      .split(/[.\n]/)[0]
+      .replace('No text caption was provided', '')
+      .trim()
+
     // Fallback: use raw message as body, general type
     return {
       type: 'general',
-      title: text.split(/[.\n]/)[0].slice(0, 60) || 'Class Announcement',
+      title: (firstLine || attachmentBasedTitle || 'Class Announcement').slice(0, 60),
       body: text.slice(0, 4000),
       urgency: 'medium',
       fileCategory: 'other',

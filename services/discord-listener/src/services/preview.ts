@@ -23,7 +23,8 @@ const TYPE_LABELS: Record<string, string> = {
 export function buildPreviewEmbed(
   classification: ClassificationResult,
   files: DriveUploadResult[],
-  sourceChannelName: string
+  sourceChannelName: string,
+  timeoutMs?: number
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setTitle(`[${TYPE_LABELS[classification.type] ?? 'General'}] ${classification.title}`)
@@ -39,9 +40,21 @@ export function buildPreviewEmbed(
     })
   }
 
+  if (classification.overrides.length > 0) {
+    embed.addFields({
+      name: 'Detected Routine Overrides',
+      value: classification.overrides
+        .map((ov) => `${ov.type} ${ov.courseCode} on ${ov.date}`)
+        .join('\n')
+        .slice(0, 1024),
+    })
+  }
+
   embed.addFields({
     name: 'Review',
-    value: 'React ✅ to **publish** to website + Telegram\nReact ❌ to **discard**',
+    value: timeoutMs
+      ? `React ✅ to **publish** to website + Telegram\nReact ❌ to **discard**\nNo discard in ${Math.max(1, Math.floor(timeoutMs / (60 * 60 * 1000)))}h => auto-publish`
+      : 'React ✅ to **publish** to website + Telegram\nReact ❌ to **discard**\nRoutine override posts stay pending until explicit decision',
   })
 
   return embed

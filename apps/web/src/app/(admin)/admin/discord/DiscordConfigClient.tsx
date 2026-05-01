@@ -14,6 +14,7 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
     mode: 'REVIEW_GATE',
     authorizedUserIds: '',
     authorizedRoleIds: '',
+    allowedCourseCodes: '',
     defaultAnnouncementType: '',
     label: '',
     courseCode: '',
@@ -30,6 +31,7 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
       mode: config.mode,
       authorizedUserIds: config.authorizedUserIds,
       authorizedRoleIds: config.authorizedRoleIds || '',
+      allowedCourseCodes: config.allowedCourseCodes || '',
       defaultAnnouncementType: config.defaultAnnouncementType || '',
       label: config.label || '',
       courseCode: config.courseCode || '',
@@ -122,6 +124,17 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
             onChange={e => setFormData({...formData, authorizedRoleIds: e.target.value})}
             className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800 dark:text-slate-200 font-mono text-sm"
             placeholder='["789"]'
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Allowed Course Codes (JSON Array)</label>
+          <input 
+            type="text" 
+            value={formData.allowedCourseCodes}
+            onChange={e => setFormData({...formData, allowedCourseCodes: e.target.value})}
+            className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800 dark:text-slate-200 font-mono text-sm"
+            placeholder='["CHEM4215", "MATH4211"]'
           />
         </div>
 
@@ -248,6 +261,11 @@ export default function DiscordConfigClient({ initialConfigs }: { initialConfigs
                   )}
                   {config.courseCode && (
                     <span className="flex items-center gap-1.5 font-mono bg-slate-100 dark:bg-slate-800 px-2 rounded">{config.courseCode}</span>
+                  )}
+                  {config.allowedCourseCodes && (
+                    <span className="flex items-center gap-1.5 font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 rounded">
+                      Allowed: {config.allowedCourseCodes}
+                    </span>
                   )}
                   {config.defaultAnnouncementType && (
                     <span className="flex items-center gap-1.5"><Activity className="w-4 h-4" /> Force Type: {config.defaultAnnouncementType}</span>

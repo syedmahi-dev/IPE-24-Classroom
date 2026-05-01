@@ -18,6 +18,8 @@ export const ChannelConfigSchema = z.object({
   authorizedUserIds: z.array(z.string()),
   // Optional: role IDs that also grant publishing permission
   authorizedRoleIds: z.array(z.string()).optional().default([]),
+  // Optional allow-list: if set, only these course codes can be used for file routing
+  allowedCourseCodes: z.array(z.string()).optional().default([]),
   // Optional announcement type override — skip Gemini classification
   defaultAnnouncementType: AnnouncementTypeSchema.optional(),
   // Human-readable label for logs
@@ -45,7 +47,7 @@ const ConfigSchema = z.object({
   INTERNAL_API_URL: z.string().url().default('http://web:3000'),
   TELEGRAM_BOT_URL: z.string().default('disabled'),
   REDIS_URL: z.string().default('redis://redis:6379'),
-  REACTION_TIMEOUT_MS: z.coerce.number().default(30 * 60 * 1000), // 30 min
+  REACTION_TIMEOUT_MS: z.coerce.number().default(2 * 60 * 60 * 1000), // 2 hours
   CONFIG_REFRESH_INTERVAL_MS: z.coerce.number().default(5 * 60 * 1000), // 5 min
   NODE_ENV: z.string().default('production'),
 })

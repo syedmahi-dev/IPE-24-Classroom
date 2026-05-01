@@ -22,6 +22,7 @@ type FileRecord = {
   courseId: string | null
   course: { id: string; code: string; name: string } | null
   uploadedBy: { id: string; name: string }
+  uploadSource?: 'discord' | 'telegram' | 'web'
   createdAt: string
 }
 
@@ -42,6 +43,12 @@ const CATEGORY_COLORS: Record<string, string> = {
   past_paper: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300',
   syllabus: 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300',
   other: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+}
+
+const SOURCE_COLORS: Record<string, string> = {
+  discord: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
+  telegram: 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300',
+  web: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
 }
 
 function getFileIcon(mimeType: string) {
@@ -65,6 +72,7 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [filterCourse, setFilterCourse] = useState('')
+  const [filterSource, setFilterSource] = useState<'all' | 'bot' | 'discord' | 'telegram' | 'web'>('all')
 
   const [modalOpen, setModalOpen] = useState(false)
   const [deleteItem, setDeleteItem] = useState<FileRecord | null>(null)
@@ -85,6 +93,7 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
         limit: '15',
         ...(search && { search }),
         ...(filterCourse && { courseId: filterCourse }),
+        ...(filterSource !== 'all' && { source: filterSource }),
       })
       const res = await fetch(`/api/v1/admin/files?${params}`)
       const result = await res.json()
@@ -95,7 +104,7 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
       }
     } catch { toast.error('Failed to load files') }
     finally { setLoading(false) }
-  }, [page, search, filterCourse])
+  }, [page, search, filterCourse, filterSource])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -176,6 +185,15 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
       render: (item) => (
         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${CATEGORY_COLORS[item.category] || 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
           {item.category.replace('_', ' ')}
+        </span>
+      ),
+    },
+    {
+      key: 'uploadSource',
+      label: 'Source',
+      render: (item) => (
+        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${SOURCE_COLORS[item.uploadSource || 'web']}`}>
+          {item.uploadSource || 'web'}
         </span>
       ),
     },
@@ -279,17 +297,32 @@ export function AdminFilesClient({ courses, connectedDrives }: { courses: Course
           </>
         )}
         filterBar={
-          <select
-            value={filterCourse}
-            onChange={(e) => { setFilterCourse(e.target.value); setPage(1) }}
-            title="Filter by course"
-            className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
-          >
-            <option value="">All Courses</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
-            ))}
-          </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={filterCourse}
+              onChange={(e) => { setFilterCourse(e.target.value); setPage(1) }}
+              title="Filter by course"
+              className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
+            >
+              <option value="">All Courses</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
+              ))}
+            </select>
+
+            <select
+              value={filterSource}
+              onChange={(e) => { setFilterSource(e.target.value as typeof filterSource); setPage(1) }}
+              title="Filter by upload source"
+              className="px-4 py-3 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer outline-none focus:ring-4 focus:ring-admin-purple/10 transition-all"
+            >
+              <option value="all">All Sources</option>
+              <option value="bot">Bot Uploads</option>
+              <option value="discord">Discord Bot</option>
+              <option value="telegram">Telegram Bot</option>
+              <option value="web">Manual Web Upload</option>
+            </select>
+          </div>
         }
       />
 

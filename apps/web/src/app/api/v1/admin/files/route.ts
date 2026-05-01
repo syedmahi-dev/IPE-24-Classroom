@@ -14,6 +14,7 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
   courseId: z.string().optional(),
   category: z.enum(['lecture_notes', 'assignment', 'past_paper', 'syllabus', 'other']).optional(),
+  source: z.enum(['all', 'bot', 'discord', 'telegram', 'web']).default('all'),
   search: z.string().optional(),
 })
 
@@ -38,10 +39,41 @@ export async function GET(req: Request) {
     const parsed = querySchema.safeParse(Object.fromEntries(url.searchParams))
     if (!parsed.success) return ERRORS.VALIDATION('Invalid query parameters')
 
-    const { page, limit, courseId, category, search } = parsed.data
+    const { page, limit, courseId, category, source, search } = parsed.data
     const skip = (page - 1) * limit
 
+    let filteredIdsBySource: string[] | null = null
+    if (source !== 'all') {
+      const sourceLogs = await prisma.auditLog.findMany({
+        where: {
+          targetType: 'file',
+          ...(source === 'bot'
+            ? {
+                OR: [
+                  { metadata: { path: ['source'], equals: 'discord' } },
+                  { metadata: { path: ['source'], equals: 'telegram' } },
+                ],
+              }
+            : source === 'web'
+              ? {
+                  NOT: [
+                    { metadata: { path: ['source'], equals: 'discord' } },
+                    { metadata: { path: ['source'], equals: 'telegram' } },
+                  ],
+                }
+              : { metadata: { path: ['source'], equals: source } }),
+        },
+        select: { targetId: true },
+      })
+
+      filteredIdsBySource = Array.from(new Set(sourceLogs.map((l) => l.targetId))).filter(Boolean)
+      if (filteredIdsBySource.length === 0) {
+        return ok([], { page, limit, total: 0, totalPages: 0 })
+      }
+    }
+
     const where: any = {
+      ...(filteredIdsBySource ? { id: { in: filteredIdsBySource } } : {}),
       ...(courseId ? { courseId } : {}),
       ...(category ? { category } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
@@ -61,7 +93,35 @@ export async function GET(req: Request) {
       prisma.fileUpload.count({ where }),
     ])
 
-    return ok(items, { page, limit, total, totalPages: Math.ceil(total / limit) })
+    const itemIds = items.map((item) => item.id)
+    const itemAuditLogs = itemIds.length > 0
+      ? await prisma.auditLog.findMany({
+          where: {
+            targetType: 'file',
+            targetId: { in: itemIds },
+          },
+          select: { targetId: true, metadata: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        })
+      : []
+
+    const sourceByTargetId = new Map<string, 'discord' | 'telegram' | 'web'>()
+    for (const log of itemAuditLogs) {
+      if (sourceByTargetId.has(log.targetId)) continue
+      const sourceValue = (log.metadata as any)?.source
+      if (sourceValue === 'discord' || sourceValue === 'telegram' || sourceValue === 'web') {
+        sourceByTargetId.set(log.targetId, sourceValue)
+      } else {
+        sourceByTargetId.set(log.targetId, 'web')
+      }
+    }
+
+    const enrichedItems = items.map((item) => ({
+      ...item,
+      uploadSource: sourceByTargetId.get(item.id) ?? 'web',
+    }))
+
+    return ok(enrichedItems, { page, limit, total, totalPages: Math.ceil(total / limit) })
   } catch (error) {
     console.error('[Admin Files] GET error:', error)
     return ERRORS.INTERNAL()

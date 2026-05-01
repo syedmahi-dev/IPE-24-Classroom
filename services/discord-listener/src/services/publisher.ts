@@ -68,10 +68,12 @@ export async function publishAnnouncement(
   let filesCreated = 0
   if (files.length > 0) {
     // Determine the effective course code: explicit from channel config, or AI-detected
-    const effectiveCourseCode = courseCode || classification.detectedCourseCode || undefined
+    const fallbackCourseCode = courseCode || classification.detectedCourseCode || undefined
 
     for (const file of files) {
       try {
+        const effectiveCourseCode = file.courseCode || fallbackCourseCode
+
         const res = await requestInternalApi('/api/v1/internal/files', {
           method: 'POST',
           headers: {
@@ -97,7 +99,10 @@ export async function publishAnnouncement(
           throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`)
         }
         filesCreated++
-        logger.info('publisher', 'file record created', { name: file.name, courseCode: effectiveCourseCode })
+        logger.info('publisher', 'file record created', {
+          name: file.name,
+          courseCode: effectiveCourseCode ?? null,
+        })
       } catch (err) {
         const msg = `File record creation failed for ${file.name}: ${String(err)}`
         errors.push(msg)

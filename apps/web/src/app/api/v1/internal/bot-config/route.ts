@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     const formattedConfigs = configs.map(config => {
       let authorizedUserIds = []
       let authorizedRoleIds = []
+      let allowedCourseCodes = []
 
       try {
         authorizedUserIds = JSON.parse(config.authorizedUserIds)
@@ -30,11 +31,20 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      if (config.allowedCourseCodes) {
+        try {
+          allowedCourseCodes = JSON.parse(config.allowedCourseCodes)
+        } catch (e) {
+          console.error('Invalid JSON in allowedCourseCodes for channel', config.channelId)
+        }
+      }
+
       return {
         channelId: config.channelId,
         mode: config.mode,
         authorizedUserIds,
         authorizedRoleIds,
+        allowedCourseCodes,
         defaultAnnouncementType: config.defaultAnnouncementType || undefined,
         label: config.label || undefined,
         courseCode: config.courseCode || undefined,

@@ -11,6 +11,7 @@ export interface DriveUploadResult {
   mimeType: string
   sizeBytes: number
   name: string
+  courseCode?: string | null
 }
 
 function getAuthClient() {

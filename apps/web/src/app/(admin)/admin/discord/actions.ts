@@ -31,12 +31,17 @@ export async function upsertDiscordConfig(data: any) {
     ? JSON.stringify(data.authorizedRoleIds) 
     : data.authorizedRoleIds
 
+  const allowedCourseCodes = Array.isArray(data.allowedCourseCodes)
+    ? JSON.stringify(data.allowedCourseCodes)
+    : data.allowedCourseCodes
+
   const config = await prisma.botChannelConfig.upsert({
     where: { channelId: data.channelId },
     update: {
       mode: data.mode,
       authorizedUserIds,
       authorizedRoleIds: authorizedRoleIds || null,
+      allowedCourseCodes: allowedCourseCodes || null,
       defaultAnnouncementType: data.defaultAnnouncementType || null,
       label: data.label || null,
       courseCode: data.courseCode || null,
@@ -47,6 +52,7 @@ export async function upsertDiscordConfig(data: any) {
       mode: data.mode,
       authorizedUserIds,
       authorizedRoleIds: authorizedRoleIds || null,
+      allowedCourseCodes: allowedCourseCodes || null,
       defaultAnnouncementType: data.defaultAnnouncementType || null,
       label: data.label || null,
       courseCode: data.courseCode || null,
