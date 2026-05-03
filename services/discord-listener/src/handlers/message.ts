@@ -108,6 +108,21 @@ export async function handleMessage(message: Message): Promise<void> {
         }
       : await classifyMessage(messageText, attachmentNames, images)
 
+    // Channel-name based classification fallback
+    if (!classification.detectedCourseCode) {
+      const courseFromChannel = detectCourseCodeFromText(channelName)
+      if (courseFromChannel) {
+        classification.detectedCourseCode = courseFromChannel
+        logger.info('handler', 'classified course from channel name', { channelName, courseCode: courseFromChannel })
+      }
+    }
+
+    // Auto-promote 'general' to 'course_update' if course code is present
+    if (classification.type === 'general' && classification.detectedCourseCode) {
+      classification.type = 'course_update'
+      logger.info('handler', 'promoted general to course_update based on course code presence')
+    }
+
     logger.info('handler', 'classified', {
       type: classification.type,
       title: classification.title,
@@ -322,6 +337,21 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
           overrides: [],
         }
       : await classifyMessage(messageText, attachmentNames, images)
+
+    // Channel-name based classification fallback
+    if (!classification.detectedCourseCode) {
+      const courseFromChannel = detectCourseCodeFromText(channelName)
+      if (courseFromChannel) {
+        classification.detectedCourseCode = courseFromChannel
+        logger.info('handler', 'classified course from channel name (batch)', { channelName, courseCode: courseFromChannel })
+      }
+    }
+
+    // Auto-promote 'general' to 'course_update' if course code is present
+    if (classification.type === 'general' && classification.detectedCourseCode) {
+      classification.type = 'course_update'
+      logger.info('handler', 'promoted general to course_update based on course code presence (batch)')
+    }
 
     logger.info('handler', 'classified (batch)', {
       type: classification.type,

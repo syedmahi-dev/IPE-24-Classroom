@@ -42,9 +42,10 @@ vi.mock('next/navigation', () => ({
 }))
 
 beforeAll(async () => {
-  // Wipe tables before test run if possible
+  // SAFETY: Only truncate if TEST_DATABASE_URL is set AND it's NOT a production URL
   try {
-    if (process.env.TEST_DATABASE_URL) {
+    const testUrl = process.env.TEST_DATABASE_URL || '';
+    if (testUrl && !testUrl.includes('supabase.com')) {
       await prisma.$executeRaw`
         TRUNCATE TABLE users, announcements, announcement_courses,
           file_uploads, exams, polls, poll_votes, knowledge_documents,
@@ -63,6 +64,12 @@ afterAll(async () => {
 
 // Helper for database truncation (used in individual integration tests)
 export const truncateDB = async (prismaInstance: any) => {
+  // SAFETY: Block truncation if DATABASE_URL points to production
+  const dbUrl = process.env.DATABASE_URL || '';
+  if (dbUrl.includes('supabase.com') || dbUrl.includes('pooler.supabase.com')) {
+    throw new Error('🚨 SAFETY: Cannot truncate production database. Use TEST_DATABASE_URL.');
+  }
+
   try {
     const tablenames = await prismaInstance.$queryRaw<
       Array<{ tablename: string }>

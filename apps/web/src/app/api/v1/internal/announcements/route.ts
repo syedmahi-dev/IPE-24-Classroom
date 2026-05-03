@@ -12,6 +12,7 @@ const bodySchema = z.object({
   body: z.string().min(1).max(50000),
   type: z.enum(['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update']).default('general'),
   source: z.enum(['telegram', 'discord', 'web']).nullable().optional(),
+  courseCode: z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -28,10 +29,22 @@ export async function POST(req: NextRequest) {
   const parsed = bodySchema.safeParse(rawBody)
   if (!parsed.success) return ERRORS.VALIDATION(parsed.error.message)
 
-  const { title, body: htmlBody, type, source } = parsed.data
+  const { title, body: htmlBody, type, source, courseCode } = parsed.data
 
   // Get system user ID (the super_admin who "owns" automated posts)
   const authorId = await getSystemUserId()
+
+  // Resolve courseCode -> courseId
+  let courseId: string | null = null
+  if (courseCode) {
+    const course = await prisma.course.findUnique({
+      where: { code: courseCode.toUpperCase() },
+      select: { id: true },
+    })
+    if (course) {
+      courseId = course.id
+    }
+  }
 
   const announcement = await prisma.announcement.create({
     data: {
@@ -42,6 +55,14 @@ export async function POST(req: NextRequest) {
       isPublished: true,
       publishedAt: new Date(),
       authorId,
+      // Link to course if resolved
+      ...(courseId ? {
+        courses: {
+          create: {
+            courseId
+          }
+        }
+      } : {})
     },
   })
 

@@ -40,6 +40,7 @@ export async function publishAnnouncement(
       body: buildHtmlBody(classification.body, files, sourceMessageUrl),
       type: classification.type,
       source: 'discord', // tag the source for audit/dedup
+      courseCode, // Pass the course code for categorization
     }
 
     const res = await requestInternalApi('/api/v1/internal/announcements', {
