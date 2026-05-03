@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
 import { STUDENT_NAV, ADMIN_NAV } from "@/config/navigation"
 import { LayoutDashboard, Calendar, CalendarClock, FolderOpen, FileText, BarChart2, Users, MessageCircle, User, Megaphone, Upload, BookOpen, Vote, Brain, ScrollText, Settings, HardDrive, X } from "lucide-react"
 import gsap from 'gsap'
@@ -48,11 +48,30 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
     }
   }, [mobileOpen])
 
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (typeof document === 'undefined' || !mobileOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [mobileOpen])
+
+  useEffect(() => {
+    if (!mobileOpen || !onMobileClose) return
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onMobileClose()
+    }
+    window.addEventListener('keydown', onEscape)
+    return () => window.removeEventListener('keydown', onEscape)
+  }, [mobileOpen, onMobileClose])
+
   const sidebarContent = (
     <>
-      <div className="h-24 flex items-center px-8 border-b border-white/40 relative z-10">
+      <div className="h-20 md:h-24 flex items-center px-5 md:px-8 border-b border-white/40 relative z-10">
         <Link href="/dashboard" className="flex items-center gap-4 group cursor-pointer">
-          <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden shadow-xl shadow-brand-500/20 dark:shadow-brand-500/10 transform group-hover:scale-105 transition-all duration-300 bg-white dark:bg-slate-800 p-1">
+          <div className="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-xl overflow-hidden shadow-xl shadow-brand-500/20 dark:shadow-brand-500/10 transform group-hover:scale-105 transition-all duration-300 bg-white dark:bg-slate-800 p-1">
             <Image 
               src="/iut-logo.svg"
               unoptimized 
@@ -63,7 +82,7 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
             />
           </div>
           <div>
-            <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 tracking-tight leading-tight group-hover:text-brand-500 transition-colors">
+            <h2 className="text-lg md:text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-300 tracking-tight leading-tight group-hover:text-brand-500 transition-colors">
               IPE-24
             </h2>
             <div className="text-[10px] font-bold text-brand-600 uppercase tracking-widest">Classroom</div>
@@ -73,7 +92,7 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
         {onMobileClose && (
           <button 
             onClick={onMobileClose}
-            className="ml-auto md:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+            className="ml-auto md:hidden p-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
@@ -81,7 +100,7 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-8 px-5 space-y-1 relative z-10 scrollbar-hide">
+      <nav className="flex-1 overflow-y-auto py-6 md:py-8 px-4 md:px-5 space-y-1 relative z-10 scrollbar-hide">
         {(() => {
           // Group navigation items by section (for admin with student features)
           const groupedLinks: { [key: string]: typeof links } = {}
@@ -114,7 +133,7 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
                     aria-disabled={isLocked}
                     aria-current={isActive ? 'page' : undefined}
                     tabIndex={isLocked ? -1 : 0}
-                    className={`flex items-center px-4 py-3.5 text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none cursor-pointer ${
+                    className={`flex items-center px-3.5 md:px-4 py-3 text-sm md:text-[15px] font-bold rounded-2xl transition-all duration-300 relative group overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none cursor-pointer ${
                       isLocked 
                         ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50 bg-slate-50/50 dark:bg-slate-900/30 grayscale' 
                         : isActive
@@ -143,8 +162,8 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
       </nav>
 
       {/* Footer Area */}
-      <div className="h-20 border-t border-white/40 bg-gradient-to-b from-transparent to-white/30 flex items-center justify-between px-8 relative z-10">
-         <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Developed By Hunterlog2</span>
+      <div className="h-16 md:h-20 border-t border-white/40 bg-gradient-to-b from-transparent to-white/30 flex items-center justify-between px-5 md:px-8 relative z-10">
+        <span className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest">Developed By Hunterlog2</span>
          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" title="System Online" />
       </div>
     </>
@@ -169,7 +188,7 @@ export function Sidebar({ role, mobileOpen, onMobileClose }: { role: string; mob
             onClick={onMobileClose}
           />
           {/* Drawer */}
-          <aside ref={mobileDrawerRef} role="dialog" aria-modal="true" className="fixed inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl -translate-x-full">
+          <aside ref={mobileDrawerRef} role="dialog" aria-modal="true" aria-label="Navigation menu" className="fixed inset-y-0 left-0 w-80 max-w-[90vw] pt-safe flex flex-col z-50 md:hidden bg-slate-50 dark:bg-slate-900 shadow-2xl -translate-x-full overscroll-contain">
             <div className="absolute inset-0 bg-mesh opacity-30 pointer-events-none" />
             {sidebarContent}
           </aside>

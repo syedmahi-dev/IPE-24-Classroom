@@ -209,8 +209,15 @@ export function RevealOnScroll({
   useGSAP(() => {
     if (prefersReducedMotion()) return
 
-    const items = gsap.utils.toArray<HTMLElement>('.gsap-reveal-item', containerRef.current!)
+    const container = containerRef.current
+    if (!container) return
+
+    const items = gsap.utils.toArray<HTMLElement>('.gsap-reveal-item', container)
     if (!items.length) return
+
+    const scroller = container.closest('main') as HTMLElement | null
+    let revealed = false
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null
 
     const fromProps: gsap.TweenVars = { opacity: 0 }
     if (from === 'bottom') fromProps.y = distance
@@ -223,8 +230,22 @@ export function RevealOnScroll({
 
     // Use batch for scroll-triggered reveals
     ScrollTrigger.batch(items, {
+      ...(scroller ? { scroller } : {}),
       start: threshold,
       onEnter: (elements) => {
+        revealed = true
+        gsap.to(elements, {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          duration,
+          stagger,
+          ease: 'power3.out',
+          overwrite: true,
+        })
+      },
+      onEnterBack: (elements) => {
+        revealed = true
         gsap.to(elements, {
           opacity: 1,
           x: 0,
@@ -238,8 +259,26 @@ export function RevealOnScroll({
       once: true,
     })
 
+    // Fallback: never leave content invisible if a trigger misses on mobile/webview.
+    fallbackTimer = setTimeout(() => {
+      if (revealed) return
+      gsap.to(items, {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        duration: 0.35,
+        stagger: 0.04,
+        ease: 'power2.out',
+        overwrite: true,
+      })
+    }, 1200)
+
     // Force a refresh so ScrollTrigger detects items already in viewport
     ScrollTrigger.refresh()
+
+    return () => {
+      if (fallbackTimer) clearTimeout(fallbackTimer)
+    }
   }, { scope: containerRef })
 
   return (

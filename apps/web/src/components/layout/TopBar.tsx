@@ -6,13 +6,27 @@ import { useRouter } from "next/navigation"
 
 export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unreadCount?: number, onMenuClick?: () => void }) {
   const [query, setQuery] = useState("")
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const mobileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  const submitSearch = () => {
+    const term = query.trim()
+    if (!term) return
+    router.push(`/search?q=${encodeURIComponent(term)}`)
+    setMobileSearchOpen(false)
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
+        if (window.matchMedia('(max-width: 639px)').matches) {
+          setMobileSearchOpen(true)
+          requestAnimationFrame(() => mobileInputRef.current?.focus())
+          return
+        }
         inputRef.current?.focus()
       }
     }
@@ -21,10 +35,11 @@ export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unre
   }, [])
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+    if (e.key === 'Enter') {
+      submitSearch()
     }
   }
+
   return (
     <header className="h-16 md:h-24 glass mt-3 md:mt-6 mx-3 md:mx-8 rounded-2xl md:rounded-[2.5rem] flex items-center justify-between px-4 md:px-8 z-30 sticky top-3 md:top-6 shadow-xl md:shadow-2xl shadow-brand-900/5">
       {/* Ambient background blur inside the topbar */}
@@ -87,6 +102,18 @@ export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unre
         )}
         
         <div className="h-8 md:h-10 w-px bg-slate-200/50 dark:bg-slate-700/50 hidden sm:block"></div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMobileSearchOpen((prev) => !prev)
+            requestAnimationFrame(() => mobileInputRef.current?.focus())
+          }}
+          aria-label="Search"
+          className="sm:hidden relative p-2.5 rounded-xl bg-white/60 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 border border-white/60 dark:border-white/10 shadow-sm transition-all active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none"
+        >
+          <Search className="w-5 h-5" />
+        </button>
         
         <Link href="/notifications" aria-label="Notifications" className="relative p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-white/60 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 border border-white/60 dark:border-white/10 shadow-sm transition-all hover:scale-105 active:scale-95 group cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none">
            <Bell className="w-5 h-5 group-hover:animate-[wiggle_1s_ease-in-out_infinite]" />
@@ -100,6 +127,31 @@ export function TopBar({ user, unreadCount = 0, onMenuClick }: { user: any, unre
 
         <ProfileDropdown user={user} />
       </div>
+
+      {mobileSearchOpen && (
+        <div className="sm:hidden absolute left-2 right-2 top-[calc(100%+0.5rem)] glass rounded-2xl p-2 z-40">
+          <div className="relative">
+            <input
+              ref={mobileInputRef}
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleSearch}
+              aria-label="Search class materials"
+              className="block w-full pl-4 pr-12 py-3 border border-white/60 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-900/80 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 dark:focus:border-brand-700 text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all duration-200"
+              placeholder="Search class materials..."
+            />
+            <button
+              type="button"
+              onClick={submitSearch}
+              aria-label="Submit search"
+              className="absolute inset-y-1 right-1 px-3 rounded-lg text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

@@ -1,5 +1,29 @@
 # Frontend Implementation — IPE-24 Class Portal
 
+## Mobile UI Optimization Update (2026-05-03)
+
+### Purpose
+- Improve usability on phone screens by tightening spacing, preserving safe-area insets, and keeping core actions reachable with thumb-friendly targets.
+- Reduce mobile friction in shared shells so updates affect both student and admin routes consistently.
+
+### Frontend Changes
+- Updated dashboard content container spacing in `DashboardShell` for better phone viewport fit and reliable bottom navigation clearance.
+- Enhanced `TopBar` mobile behavior with an inline mobile search panel and stronger focus/touch states.
+- Refined `Sidebar` mobile drawer with better compact spacing, safe-area top inset support, Escape-to-close, and body scroll lock while open.
+- Optimized `MobileBottomNav` layout using adaptive grid columns (`5` student, `6` admin) and corrected the resources icon mapping.
+
+### Schema Modifications
+- None.
+
+### New API Endpoints
+- None.
+
+### Local Testing Instructions
+1. Run `cd apps/web`.
+2. Run `npm run dev`.
+3. Verify on mobile viewport widths (e.g., `320px`, `375px`, `390px`, `430px`) for `/dashboard`, `/announcements`, and admin pages.
+4. Confirm: mobile drawer opens/closes smoothly, bottom nav does not overlap content, top bar search works on phones, and no horizontal overflow appears.
+
 ## Design System
 
 ### Colors (Tailwind config extension)

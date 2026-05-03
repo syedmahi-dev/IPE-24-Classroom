@@ -36,8 +36,8 @@ import Link from 'next/link'
 
 export function AnnouncementCard({ announcement }: Props) {
   return (
-    <Link href={`/announcements/${announcement.id}`} className="block h-full no-underline">
-      <div className="glass rounded-2xl p-5 hover:shadow-glass-hover hover:-translate-y-0.5 transition-all duration-300 ease-smooth group cursor-pointer relative overflow-hidden will-change-transform h-full">
+    <Link href={`/announcements/${announcement.id}`} className="block no-underline">
+      <div className="glass rounded-2xl p-5 hover:shadow-glass-hover hover:-translate-y-0.5 transition-all duration-300 ease-smooth group cursor-pointer relative overflow-hidden will-change-transform">
         {/* Decorative side accent based on urgent status */}
         {announcement.type === 'urgent' && (
           <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-red-500"></div>
@@ -56,9 +56,9 @@ export function AnnouncementCard({ announcement }: Props) {
                   : 'Draft'}
               </span>
             </div>
-            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">{announcement.title}</h3>
+            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 leading-snug">{announcement.title}</h3>
             <div 
-               className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2 leading-relaxed"
+              className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-3 md:line-clamp-2 leading-relaxed"
                dangerouslySetInnerHTML={{ __html: sanitizeHtml(announcement.body) }}
             />
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100/50 dark:border-slate-800/50">

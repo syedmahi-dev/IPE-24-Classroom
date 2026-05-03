@@ -77,7 +77,7 @@ export default function AnnouncementsPage() {
   ]
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-6 md:pb-20 min-w-0">
+    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-8 lg:space-y-10 pb-12 md:pb-20 min-w-0">
       {/* Premium Hero Section */}
       <div className="relative group overflow-hidden rounded-2xl md:rounded-[2.5rem]">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-600 to-indigo-600 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-700" />
