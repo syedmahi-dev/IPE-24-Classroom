@@ -1,7 +1,8 @@
-import { Message, TextChannel, GuildMember, MessageReaction, User } from 'discord.js'
+import { Message, TextChannel, GuildMember, MessageReaction, User, Collection, Attachment } from 'discord.js'
 import fetch from 'node-fetch'
 import { ChannelConfig, getChannelConfig, getConfig } from '../config'
 import { claimMessage, releaseMessage } from '../lib/redis'
+import { mergeBatch, MergedBatch } from '../lib/batcher'
 import { classifyMessage, ClassificationResult, ImageInput } from '../services/classifier'
 import {
   uploadUrlToDrive,
@@ -226,6 +227,190 @@ export async function handleMessage(message: Message): Promise<void> {
   } catch (err) {
     logger.error('handler', 'unhandled error in message handler', { error: String(err) })
     await message.react('💥').catch(() => {})
+  }
+}
+
+/**
+ * Handle a batch of messages from the same user in the same channel.
+ * Merges them into one combined announcement and processes it as a single unit.
+ */
+export async function handleBatchedMessages(messages: Message[]): Promise<void> {
+  if (messages.length === 0) return
+  if (messages.length === 1) {
+    await handleMessage(messages[0])
+    return
+  }
+
+  const batch = mergeBatch(messages)
+  const anchor = batch.anchor
+  const channelConfig = getChannelConfig(anchor.channel.id)
+  if (!channelConfig) return
+
+  if (!isAuthorized(anchor, channelConfig)) return
+
+  // Claim ALL message IDs for dedup
+  for (const msg of batch.messages) {
+    const claimed = await claimMessage(msg.id)
+    if (!claimed) {
+      logger.warn('handler', 'duplicate message in batch skipped', { messageId: msg.id })
+    }
+  }
+
+  const channelName = (anchor.channel as TextChannel).name ?? anchor.channel.id
+  logger.info('handler', 'processing BATCHED messages as one announcement', {
+    batchSize: batch.messages.length,
+    messageIds: batch.messages.map((m) => m.id),
+    channel: channelName,
+    mode: channelConfig.mode,
+    author: anchor.author.username,
+  })
+
+  try {
+    // React on the first message to indicate processing
+    await anchor.react('⏳').catch(() => {})
+
+    // Combine all attachments from all messages
+    const allAttachmentValues = [...batch.allAttachments.values()]
+    const attachmentNames = allAttachmentValues.map((a) => a.name ?? 'file')
+    const attachmentSummaries = allAttachmentValues.map((a) => {
+      const type = a.contentType ?? 'unknown'
+      return `${a.name ?? 'file'} (${type})`
+    })
+
+    // Extract text snippets from ALL messages' text-like attachments
+    const textSnippets: string[] = []
+    for (const msg of batch.messages) {
+      const snippets = await extractTextSnippetsFromAttachments(msg)
+      textSnippets.push(...snippets)
+    }
+
+    const messageText = buildClassificationInput(batch.mergedContent, attachmentSummaries, textSnippets)
+
+    // Collect images from ALL messages
+    const images: ImageInput[] = []
+    let imageCount = 0
+    for (const attachment of batch.allAttachments.values()) {
+      if (!attachment.contentType?.startsWith('image/')) continue
+      if (attachment.size > MAX_IMAGE_AI_SIZE || imageCount >= MAX_IMAGE_AI_COUNT) continue
+
+      try {
+        const res = await fetch(attachment.url)
+        if (!res.ok) continue
+
+        const buffer = await res.buffer()
+        images.push({
+          base64: buffer.toString('base64'),
+          mimeType: attachment.contentType,
+        })
+        imageCount++
+      } catch (err) {
+        logger.warn('handler', 'failed to download image for AI (batch)', {
+          url: attachment.url,
+          error: String(err),
+        })
+      }
+    }
+
+    const classification: ClassificationResult = channelConfig.defaultAnnouncementType
+      ? {
+          type: channelConfig.defaultAnnouncementType,
+          title: messageText.split(/[.\n]/)[0].slice(0, 60) || 'Class Announcement',
+          body: messageText,
+          urgency: 'medium',
+          fileCategory: 'other',
+          detectedCourseCode: null,
+          overrides: [],
+        }
+      : await classifyMessage(messageText, attachmentNames, images)
+
+    logger.info('handler', 'classified (batch)', {
+      type: classification.type,
+      title: classification.title,
+      urgency: classification.urgency,
+      batchSize: batch.messages.length,
+    })
+
+    const allowedCourseCodes = new Set(
+      (channelConfig.allowedCourseCodes ?? []).map((c) => normalizeCourseCode(c)).filter(Boolean)
+    )
+    const fallbackSubFolderName = resolveFallbackSubFolderName(channelConfig)
+    const defaultCourseCode = resolveAllowedCourseCode(
+      channelConfig.courseCode || classification.detectedCourseCode || undefined,
+      allowedCourseCodes
+    )
+    const defaultSubFolderName = defaultCourseCode || fallbackSubFolderName
+
+    // Upload files from ALL messages
+    const files: DriveUploadResult[] = []
+    for (const attachment of batch.allAttachments.values()) {
+      if (!ALLOWED_MIME_TYPES.has(attachment.contentType ?? '')) continue
+      if (attachment.size > MAX_FILE_SIZE) continue
+
+      try {
+        const fileCourseCode = resolveAllowedCourseCode(
+          detectCourseCodeFromText(`${attachment.name ?? ''} ${batch.mergedContent}`) || defaultCourseCode,
+          allowedCourseCodes
+        )
+        const targetFolder = fileCourseCode ?? defaultSubFolderName
+
+        const result = await uploadUrlToDrive(
+          attachment.url,
+          attachment.name ?? 'attachment',
+          attachment.contentType ?? 'application/octet-stream',
+          attachment.size,
+          targetFolder
+        )
+        files.push({ ...result, courseCode: fileCourseCode ?? null })
+      } catch (err) {
+        logger.error('handler', 'file upload failed (batch)', {
+          name: attachment.name,
+          error: String(err),
+        })
+      }
+    }
+
+    // Extract Drive links from ALL messages
+    for (const msg of batch.messages) {
+      const driveLinks = extractDriveLinks(msg.content || '')
+      for (const link of driveLinks) {
+        try {
+          if (isFolderUrl(link)) {
+            const folderFiles = await listDriveFolderFiles(link)
+            for (const f of folderFiles) {
+              const linkCourseCode = resolveAllowedCourseCode(
+                detectCourseCodeFromText(f.name) || defaultCourseCode,
+                allowedCourseCodes
+              )
+              files.push({ ...f, courseCode: linkCourseCode ?? null })
+            }
+          } else {
+            const metadata = await getDriveFileMetadata(link)
+            if (metadata) {
+              const linkCourseCode = resolveAllowedCourseCode(
+                detectCourseCodeFromText(metadata.name) || defaultCourseCode,
+                allowedCourseCodes
+              )
+              files.push({ ...metadata, courseCode: linkCourseCode ?? null })
+            }
+          }
+        } catch (err) {
+          logger.warn('handler', 'failed to fetch shared Drive link (batch)', {
+            link: link.slice(0, 80),
+            error: String(err),
+          })
+        }
+      }
+    }
+
+    await anchor.reactions.cache.get('⏳')?.users.remove().catch(() => {})
+
+    const courseCode = defaultCourseCode
+    const folderLabel = channelConfig.label
+
+    await handleReviewGate(anchor, channelConfig, classification, files, channelName, courseCode, folderLabel)
+  } catch (err) {
+    logger.error('handler', 'unhandled error in batched message handler', { error: String(err) })
+    await anchor.react('💥').catch(() => {})
   }
 }
 

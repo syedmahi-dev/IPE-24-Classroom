@@ -1,7 +1,8 @@
 import { Client, Events, GatewayIntentBits, Partials } from 'discord.js'
 import http from 'http'
-import { getConfig, startConfigRefresh } from './config'
-import { handleMessage } from './handlers/message'
+import { getConfig, getChannelConfig, startConfigRefresh } from './config'
+import { handleBatchedMessages, handleMessage } from './handlers/message'
+import { enqueueMessage, clearAllBatches } from './lib/batcher'
 import { logger } from './lib/logger'
 
 async function main() {
@@ -27,7 +28,28 @@ async function main() {
 
   client.on(Events.MessageCreate, async (message) => {
     try {
-      await handleMessage(message)
+      // Skip bots and DMs early
+      if (message.author.bot || !message.guild) return
+
+      // Only batch messages from watched & authorized channels
+      const channelConfig = getChannelConfig(message.channel.id)
+      if (!channelConfig) return
+
+      // Enqueue into the batcher — it will debounce rapid-fire messages
+      // from the same user in the same channel and flush them as one batch.
+      enqueueMessage(message, async (messages) => {
+        try {
+          if (messages.length === 1) {
+            // Single message — use the original handler directly
+            await handleMessage(messages[0])
+          } else {
+            // Multiple messages batched — merge and process as one
+            await handleBatchedMessages(messages)
+          }
+        } catch (err) {
+          logger.error('bot', 'error processing batched messages', { error: String(err) })
+        }
+      })
     } catch (err) {
       logger.error('bot', 'top-level error in messageCreate', { error: String(err) })
     }
@@ -53,8 +75,8 @@ async function main() {
   })
 
   // Graceful shutdown
-  process.on('SIGINT',  () => { client.destroy(); healthServer.close(); process.exit(0) })
-  process.on('SIGTERM', () => { client.destroy(); healthServer.close(); process.exit(0) })
+  process.on('SIGINT',  () => { clearAllBatches(); client.destroy(); healthServer.close(); process.exit(0) })
+  process.on('SIGTERM', () => { clearAllBatches(); client.destroy(); healthServer.close(); process.exit(0) })
 
   await client.login(config.DISCORD_BOT_TOKEN)
   

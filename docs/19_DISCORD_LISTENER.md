@@ -1199,3 +1199,45 @@ curl -X POST http://localhost:3000/api/v1/internal/announcements \
 **Bot restart recovery**: The `dl:msg:{id}` Redis key with 24-hour TTL prevents double-processing. If the bot restarts within 24 hours, the same message is not reprocessed.
 
 **Multiple CRs**: Add all authorized user IDs to `authorizedUserIds`. Each channel config can have its own list, so different deputies can be authorized on different channels.
+
+---
+
+## Message Batching (Multi-Message Debounce)
+
+### Problem
+When someone sends 3-4 individual Discord messages in quick succession, the bot used to treat **each** as a separate announcement — firing classification, file upload, review gate, and publishing for every single message.
+
+### Solution
+A **debounce batcher** (`src/lib/batcher.ts`) buffers incoming messages per `channelId:authorId` key. Instead of processing immediately, it waits for a quiet period before flushing all buffered messages as one combined announcement.
+
+### How It Works
+
+1. Message arrives from User X in Channel Y → buffer it, start a 30-second debounce timer.
+2. Another message from same user in same channel within 30s → add to buffer, **reset** the timer.
+3. Timer fires (30s of silence) → flush the batch: merge text (joined with `\n`), combine all attachments, then run the normal classify → upload → review gate pipeline **once**.
+4. Hard deadline of 2 minutes prevents infinite batching if someone types continuously.
+
+### Key Parameters
+
+| Parameter | Default | Location |
+|---|---|---|
+| `DEBOUNCE_MS` | 30 seconds | `src/lib/batcher.ts` |
+| `MAX_BATCH_WINDOW_MS` | 2 minutes | `src/lib/batcher.ts` |
+
+### Behavior
+
+- **Single message**: Processed exactly as before — no delay, no behavior change.
+- **Multiple messages within 30s**: Debounced and merged into one announcement.
+- **Different users**: Always separate batches, even in the same channel.
+- **Attachments**: All attachments from all messages in the batch are combined and uploaded.
+- **Reactions**: The ⏳/✅/❌ reactions are applied to the **first** message in the batch (the "anchor").
+- **Dedup**: All message IDs in the batch are claimed in Redis to prevent reprocessing.
+- **Shutdown**: `clearAllBatches()` cancels all pending timers on SIGINT/SIGTERM.
+
+### Files
+
+| File | Role |
+|---|---|
+| `src/lib/batcher.ts` | Debounce engine — `enqueueMessage()`, `mergeBatch()`, `clearAllBatches()` |
+| `src/index.ts` | Routes `MessageCreate` through batcher instead of direct `handleMessage()` |
+| `src/handlers/message.ts` | New `handleBatchedMessages()` export — merges batch, then runs standard pipeline |
