@@ -6,8 +6,6 @@ import { rateLimit } from '@/lib/rate-limit'
 import { stripHtml } from '@/lib/sanitize'
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { getEmbedding } from '@/lib/embeddings'
-import { searchKnowledge } from '@/lib/vector-search'
 import {
   buildRAGSystemPrompt,
   buildChatHistory,
@@ -97,47 +95,23 @@ export async function POST(req: NextRequest) {
       return ok({ text, filtered: true })
     }
 
-    // ── Step 3: Fetch live context from DB (fast, read-only) ──
-    // Skip embedding/vector search — live context already has routine, exams, announcements, Discord
+    // ── Step 3: Fetch live context from DB ──
+    // Give it 5s — first request on cold start needs Prisma init time
     let liveCtx = null
     try {
       liveCtx = await Promise.race([
         fetchLiveContext(),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
       ])
     } catch {
-      // Non-fatal
+      // Non-fatal — will proceed without live context
     }
 
-    // ── Step 4: Optionally do vector search (only if live context succeeded fast) ──
-    let relevantChunks: any[] = []
-    if (liveCtx) {
-      // We have time budget left — try embedding + vector search with tight timeout
-      try {
-        const embedding = await Promise.race([
-          getEmbedding(question),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-        ])
-        if (embedding) {
-          relevantChunks = await searchKnowledge(embedding, 3)
-        }
-      } catch {
-        // Non-fatal — live context is sufficient
-      }
-    }
-
-    // ── Step 5: Build grounded system prompt with live context ──
+    // ── Step 4: Build system prompt (works with or without live context) ──
     const liveContextStr = liveCtx ? formatLiveContext(liveCtx) : undefined
-    const systemPrompt = buildRAGSystemPrompt(relevantChunks, liveContextStr)
+    const systemPrompt = buildRAGSystemPrompt([], liveContextStr)
 
-    // If we have neither vector results nor live context, still try Gemini with basic prompt
-    if (relevantChunks.length === 0 && !liveCtx) {
-      const text = "I'm having trouble accessing the class database right now. Please try again in a moment."
-      await prisma.chatLog.create({ data: { userId: session.user.id, question, answer: text } }).catch(() => {})
-      return ok({ text, filtered: false, sourcesUsed: 0 })
-    }
-
-    // ── Step 6: Generate response with Gemini ──
+    // ── Step 5: Generate response with Gemini ──
     const chatModel = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
       generationConfig: {
@@ -152,15 +126,14 @@ export async function POST(req: NextRequest) {
     const result = await chat.sendMessage(question)
     const text = result.response.text()
 
-    // ── Step 9: Log to database ──
+    // ── Step 6: Log to database ──
     const logged = await prisma.chatLog.create({
       data: { userId: session.user.id, question, answer: text }
-    })
+    }).catch(() => null)
 
     return ok({
       text,
-      logId: logged.id,
-      sourcesUsed: relevantChunks.length,
+      logId: logged?.id ?? null,
       hasLiveContext: !!liveCtx,
       filtered: false,
       rateLimit: { remaining: rl.remaining, limit: 20 },
