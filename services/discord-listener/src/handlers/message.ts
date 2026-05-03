@@ -546,24 +546,7 @@ async function handleReviewGate(
     timeoutMs: timeoutMs ?? 'none (requires explicit approval)',
   })
 
-  // Send preview to Telegram for CR review (ALL channels)
-  try {
-    const { buildTelegramPreviewHtml } = await import('../services/preview')
-    const Redis = (await import('ioredis')).default
-    const { REDIS_URL } = getConfig()
-    const redis = new Redis(REDIS_URL)
-    const previewHtml = buildTelegramPreviewHtml(classification, files, message.url)
-    await redis.publish('telegram_send_preview', JSON.stringify({
-      messageId: message.id,
-      previewTextHtml: previewHtml
-    }))
-    redis.quit()
-    logger.info('handler', 'Sent preview to Telegram for approval')
-  } catch (e) {
-    logger.warn('handler', 'failed to send telegram preview', { error: String(e) })
-  }
-
-  // Also post Discord embed preview as a reply
+  // ── 1. Post Discord embed preview as a reply ──────────────────────────────
   const previewContent = isScheduleUpdate
     ? '📅 Schedule update detected. Approval is required before publishing. React ✅ to publish or ❌ to discard.'
     : '📋 New announcement detected. Sent to CR for review. Auto-publishes in 2hrs if no response.'
@@ -586,7 +569,30 @@ async function handleReviewGate(
   await previewMessage.react('✅').catch(() => {})
   await previewMessage.react('❌').catch(() => {})
 
-  const decision = await waitForReviewDecision(previewMessage, message, channelConfig, timeoutMs)
+  // ── 2. Start listening for approval BEFORE sending Telegram preview ───────
+  // This prevents a race condition where the CR clicks approve on Telegram
+  // before we start listening, causing the approval to be lost.
+  const reviewPromise = waitForReviewDecision(previewMessage, message, channelConfig, timeoutMs)
+
+  // ── 3. NOW send preview to Telegram (safe — we're already listening) ──────
+  try {
+    const { buildTelegramPreviewHtml } = await import('../services/preview')
+    const Redis = (await import('ioredis')).default
+    const { REDIS_URL } = getConfig()
+    const redis = new Redis(REDIS_URL)
+    const previewHtml = buildTelegramPreviewHtml(classification, files, message.url)
+    await redis.publish('telegram_send_preview', JSON.stringify({
+      messageId: message.id,
+      previewTextHtml: previewHtml
+    }))
+    redis.quit()
+    logger.info('handler', 'Sent preview to Telegram for approval')
+  } catch (e) {
+    logger.warn('handler', 'failed to send telegram preview', { error: String(e) })
+  }
+
+  // ── 4. Wait for the decision ──────────────────────────────────────────────
+  const decision = await reviewPromise
 
   if (decision === 'superseded') {
     logger.info('handler', 'review gate superseded by fix request', { messageId: message.id })
@@ -641,6 +647,17 @@ async function waitForReviewDecision(
   let subscriber: any = null
   let timeoutHandle: any = null
 
+  // Set up Redis subscriber FIRST — must be ready before any approval can arrive
+  const redisReady = new Promise<void>((resolveReady) => {
+    subscriber = new Redis(REDIS_URL)
+    subscriber.subscribe('discord_approvals', 'discord_fix_requests', () => {
+      resolveReady() // Signal that we're subscribed and listening
+    })
+  })
+
+  // Wait for Redis subscription to be active before proceeding
+  await redisReady
+
   const discordPromise = previewMessage.awaitReactions({
     filter: async (reaction: import('discord.js').MessageReaction, user: import('discord.js').User) => {
       if (user.bot) return false
@@ -656,15 +673,12 @@ async function waitForReviewDecision(
   }).catch(() => 'timed_out' as const)
 
   const redisPromise = new Promise<'approved' | 'discarded' | 'timed_out' | 'superseded'>((resolve) => {
-    subscriber = new Redis(REDIS_URL)
-    
     if (timeoutMs) {
       timeoutHandle = setTimeout(() => {
         resolve('timed_out')
       }, timeoutMs)
     }
 
-    subscriber.subscribe('discord_approvals', 'discord_fix_requests', () => {})
     subscriber.on('message', (channel: string, message: string) => {
       if (channel === 'discord_approvals') {
         try {
