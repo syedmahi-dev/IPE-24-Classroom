@@ -104,48 +104,44 @@ export async function POST(req: NextRequest) {
       return ok({ text: "I'm receiving too many questions right now. Please try again in a minute! ⏳", filtered: true })
     }
 
-    // ── Step 4: Guardrail — classify on-topic vs off-topic ──
-    try {
-      const guardModel = genAI.getGenerativeModel({
-        model: 'gemini-flash-latest',
-        generationConfig: { temperature: 0, maxOutputTokens: 10 },
-      })
-      const guardResult = await guardModel.generateContent(buildGuardrailPrompt(question))
-      const topicCheck = guardResult.response.text().trim().toLowerCase()
+    // ── Step 4: Run guardrail, embedding, and live context ALL IN PARALLEL ──
+    // This saves ~3-4s vs running them serially
+    const [guardrailResult, embeddingResult, liveCtx] = await Promise.all([
+      // Guardrail: classify on-topic vs off-topic
+      (async () => {
+        try {
+          const guardModel = genAI.getGenerativeModel({
+            model: 'gemini-flash-latest',
+            generationConfig: { temperature: 0, maxOutputTokens: 10 },
+          })
+          const guardResult = await guardModel.generateContent(buildGuardrailPrompt(question))
+          return guardResult.response.text().trim().toLowerCase()
+        } catch {
+          return 'on_topic' // Fail open
+        }
+      })(),
+      // Embedding
+      getEmbedding(question).catch(() => null),
+      // Live context with 3s timeout
+      Promise.race([
+        fetchLiveContext(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+      ]).catch(() => null),
+    ])
 
-      if (topicCheck.includes('off_topic')) {
-        const text = "I can only help with class-related questions — routine, exams, announcements, class notes, and file locations. For other questions, try Google or ChatGPT! 😊"
-        await prisma.chatLog.create({ data: { userId: session.user.id, question, answer: text } })
-        return ok({ text, filtered: true })
-      }
-    } catch (err) {
-      console.warn('[Chat] Guardrail check failed, proceeding:', err)
+    // Check guardrail result
+    if (guardrailResult.includes('off_topic')) {
+      const text = "I can only help with class-related questions — routine, exams, announcements, class notes, and file locations. For other questions, try Google or ChatGPT! 😊"
+      await prisma.chatLog.create({ data: { userId: session.user.id, question, answer: text } })
+      return ok({ text, filtered: true })
     }
 
-    // ── Step 5: Fetch live context from DB (READ-ONLY) + embed question in parallel ──
-    // Race with a 4s timeout so live context doesn't consume all function time
-    const liveContextPromise = Promise.race([
-      fetchLiveContext(),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
-    ]).catch((err) => {
-      console.warn('[Chat] Live context fetch failed:', err)
-      return null
-    })
-
-    let queryEmbedding: number[] | null = null
-    try {
-      queryEmbedding = await getEmbedding(question)
-    } catch (err) {
-      console.error('[Chat] Embedding failed, will use live context only:', err)
-    }
-
-    // ── Step 6: Vector search — retrieve top-5 relevant chunks ──
-    const relevantChunks = queryEmbedding
-      ? await searchKnowledge(queryEmbedding, 5)
+    // ── Step 5: Vector search — retrieve top-5 relevant chunks ──
+    const relevantChunks = embeddingResult
+      ? await searchKnowledge(embeddingResult, 5)
       : []
 
-    // ── Step 7: Build grounded system prompt with live context ──
-    const liveCtx = await liveContextPromise
+    // ── Step 6: Build grounded system prompt with live context ──
     const liveContextStr = liveCtx ? formatLiveContext(liveCtx) : undefined
     const systemPrompt = buildRAGSystemPrompt(relevantChunks, liveContextStr)
 
