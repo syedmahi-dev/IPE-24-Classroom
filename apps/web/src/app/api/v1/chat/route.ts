@@ -97,51 +97,52 @@ export async function POST(req: NextRequest) {
       return ok({ text, filtered: true })
     }
 
-    // ── Step 3: Fetch embedding + live context IN PARALLEL ──
-    // No separate guardrail Gemini call — system prompt + detectPromptInjection handle it
-    const [embeddingResult, liveCtx] = await Promise.all([
-      // Embedding
-      getEmbedding(question).catch(() => null),
-      // Live context with 2s timeout (non-blocking)
-      Promise.race([
+    // ── Step 3: Fetch live context from DB (fast, read-only) ──
+    // Skip embedding/vector search — live context already has routine, exams, announcements, Discord
+    let liveCtx = null
+    try {
+      liveCtx = await Promise.race([
         fetchLiveContext(),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
-      ]).catch(() => null),
-    ])
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+      ])
+    } catch {
+      // Non-fatal
+    }
 
-    // ── Step 4: Vector search — retrieve top-5 relevant chunks ──
-    const relevantChunks = embeddingResult
-      ? await searchKnowledge(embeddingResult, 5)
-      : []
+    // ── Step 4: Optionally do vector search (only if live context succeeded fast) ──
+    let relevantChunks: any[] = []
+    if (liveCtx) {
+      // We have time budget left — try embedding + vector search with tight timeout
+      try {
+        const embedding = await Promise.race([
+          getEmbedding(question),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+        ])
+        if (embedding) {
+          relevantChunks = await searchKnowledge(embedding, 3)
+        }
+      } catch {
+        // Non-fatal — live context is sufficient
+      }
+    }
 
     // ── Step 5: Build grounded system prompt with live context ──
     const liveContextStr = liveCtx ? formatLiveContext(liveCtx) : undefined
     const systemPrompt = buildRAGSystemPrompt(relevantChunks, liveContextStr)
 
-    // If we have neither embeddings nor live context, return gracefully
+    // If we have neither vector results nor live context, still try Gemini with basic prompt
     if (relevantChunks.length === 0 && !liveCtx) {
-      try {
-        const fallbackModel = genAI.getGenerativeModel({
-          model: 'gemini-flash-latest',
-          generationConfig: { maxOutputTokens: 400, temperature: 0.3 },
-          systemInstruction: systemPrompt,
-        })
-        const fallbackResult = await fallbackModel.generateContent(question)
-        const text = fallbackResult.response.text()
-        await prisma.chatLog.create({ data: { userId: session.user.id, question, answer: text } })
-        return ok({ text, filtered: false, sourcesUsed: 0, rateLimit: { remaining: rl.remaining, limit: 20 } })
-      } catch {
-        return ok({ text: "I'm having trouble processing your question right now. Please try again in a moment.", filtered: false })
-      }
+      const text = "I'm having trouble accessing the class database right now. Please try again in a moment."
+      await prisma.chatLog.create({ data: { userId: session.user.id, question, answer: text } }).catch(() => {})
+      return ok({ text, filtered: false, sourcesUsed: 0 })
     }
 
-    // ── Step 8: Generate response with Gemini ──
+    // ── Step 6: Generate response with Gemini ──
     const chatModel = genAI.getGenerativeModel({
-      model: 'gemini-flash-latest',
+      model: 'gemini-2.0-flash',
       generationConfig: {
-        maxOutputTokens: 800,
+        maxOutputTokens: 600,
         temperature: 0.3,
-        topP: 0.8,
       },
       systemInstruction: systemPrompt,
     })
