@@ -10,7 +10,6 @@ import { getEmbedding } from '@/lib/embeddings'
 import { searchKnowledge } from '@/lib/vector-search'
 import {
   buildRAGSystemPrompt,
-  buildGuardrailPrompt,
   buildChatHistory,
   detectPromptInjection,
 } from '@/lib/prompt-builder'
@@ -98,50 +97,24 @@ export async function POST(req: NextRequest) {
       return ok({ text, filtered: true })
     }
 
-    // ── Step 3: Gemini rate limit (12 requests/min global) ──
-    const geminiRl = await rateLimit('gemini:global', 12, 60)
-    if (!geminiRl.success) {
-      return ok({ text: "I'm receiving too many questions right now. Please try again in a minute! ⏳", filtered: true })
-    }
-
-    // ── Step 4: Run guardrail, embedding, and live context ALL IN PARALLEL ──
-    // This saves ~3-4s vs running them serially
-    const [guardrailResult, embeddingResult, liveCtx] = await Promise.all([
-      // Guardrail: classify on-topic vs off-topic
-      (async () => {
-        try {
-          const guardModel = genAI.getGenerativeModel({
-            model: 'gemini-flash-latest',
-            generationConfig: { temperature: 0, maxOutputTokens: 10 },
-          })
-          const guardResult = await guardModel.generateContent(buildGuardrailPrompt(question))
-          return guardResult.response.text().trim().toLowerCase()
-        } catch {
-          return 'on_topic' // Fail open
-        }
-      })(),
+    // ── Step 3: Fetch embedding + live context IN PARALLEL ──
+    // No separate guardrail Gemini call — system prompt + detectPromptInjection handle it
+    const [embeddingResult, liveCtx] = await Promise.all([
       // Embedding
       getEmbedding(question).catch(() => null),
-      // Live context with 3s timeout
+      // Live context with 2s timeout (non-blocking)
       Promise.race([
         fetchLiveContext(),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
       ]).catch(() => null),
     ])
 
-    // Check guardrail result
-    if (guardrailResult.includes('off_topic')) {
-      const text = "I can only help with class-related questions — routine, exams, announcements, class notes, and file locations. For other questions, try Google or ChatGPT! 😊"
-      await prisma.chatLog.create({ data: { userId: session.user.id, question, answer: text } })
-      return ok({ text, filtered: true })
-    }
-
-    // ── Step 5: Vector search — retrieve top-5 relevant chunks ──
+    // ── Step 4: Vector search — retrieve top-5 relevant chunks ──
     const relevantChunks = embeddingResult
       ? await searchKnowledge(embeddingResult, 5)
       : []
 
-    // ── Step 6: Build grounded system prompt with live context ──
+    // ── Step 5: Build grounded system prompt with live context ──
     const liveContextStr = liveCtx ? formatLiveContext(liveCtx) : undefined
     const systemPrompt = buildRAGSystemPrompt(relevantChunks, liveContextStr)
 
