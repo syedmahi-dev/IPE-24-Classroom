@@ -35,5 +35,42 @@ This document is the **single source of truth** for all AI agents, assistants, a
 - **Component Pattern**: `(student)`, `(admin)`, `(auth)` route groups matching `components/[feature]/`.
 - **Testing Categories**: Vitest (Unit), Vitest + Testing Library (Component), Vitest + Supertest (API), Playwright (E2E).
 
+## 5. Deployment & Infrastructure
+
+### Where Things Run
+| Component | Hosting | Notes |
+|---|---|---|
+| **Next.js Web App** (`apps/web`) | **Vercel** | Auto-deploys from `main` branch. All student/admin pages and API routes live here. |
+| **Discord Listener** (`services/discord-listener`) | **Personal VPS** (Docker) | Processes Discord messages, classifies with Gemini, sends previews to Telegram for CR review. |
+| **Telegram Bot** (`services/telegram-bot`) | **Personal VPS** (Docker) | CR's review interface — approve, discard, or request fixes on announcements. NOT a broadcasting channel. |
+| **Discord Bot** (`services/discord-bot`) | **Personal VPS** (Docker) | Posts formatted embeds to Discord channels. |
+| **Transcriber** (`services/transcriber`) | **Personal VPS** (Docker) | Python FastAPI + faster-whisper for voice-to-text. |
+| **Redis 7** | **Personal VPS** (Docker) | Runs alongside bot services. Used for message dedup, Telegram ↔ Discord approval pub/sub, and caching. |
+| **PostgreSQL 16 + pgvector** | **Supabase** (cloud) | Managed database. Accessed by both Vercel (web app) and VPS (bots via `INTERNAL_API_URL`). Connection uses Supabase Pooler (port 6543 for pooled, port 5432 for direct/migrations). |
+
+### Critical Rules for AI Agents
+- **NEVER** attempt to build, deploy, `npm install`, or run `apps/web` on the VPS. Vercel handles all web deployments.
+- **NEVER** attempt to install Prisma, run migrations, or execute seed scripts on the VPS. Prisma is managed locally or via Vercel only. The VPS has no `node_modules` for `apps/web`.
+- **NEVER** run `docker compose` from the repo root. The compose file is at `services/discord-listener/docker-compose.portainer.yml` and is managed via Portainer on the VPS.
+- The bots communicate with the web app's internal API endpoints (`/api/v1/internal/*`) via the `INTERNAL_API_URL` env var, which points to the Vercel deployment URL (not `localhost`).
+- Database schema changes (Prisma migrations) are done **locally** and deployed to Supabase via `npx prisma db push` or `npx prisma migrate deploy` from the developer's machine or Vercel's build step.
+
+### How to Deploy Bot Changes
+```bash
+# 1. Push changes from local machine
+git push origin <branch-name>
+
+# 2. SSH into VPS
+ssh user@your-vps
+
+# 3. Pull and rebuild
+cd ~/IPE-24-Classroom
+git pull origin <branch-name>
+docker compose -f services/discord-listener/docker-compose.portainer.yml up -d --build
+```
+
+### How to Deploy Web Changes
+Push to `main` branch → Vercel auto-deploys. That's it.
+
 ---
 *Created by merging AI_SAFETY_POLICY.md, .cursorrules, .windsurfrules, and .github/copilot-instructions.md*
