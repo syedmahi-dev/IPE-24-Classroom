@@ -43,6 +43,12 @@ enum ExamType {
   ASSIGNMENT
 }
 
+enum CourseType {
+  THEORY
+  LAB
+  SESSIONAL
+}
+
 // ==========================================
 // SECTION: Core Models (Auth & User)
 // ==========================================
@@ -117,14 +123,15 @@ model Account {
 // ==========================================
 
 model Course {
-  id          String   @id @default(cuid())
-  code        String   @unique
+  id          String      @id @default(cuid())
+  code        String      @unique
   name        String
   creditHours Float
+  courseType   CourseType?
   teacherName String?
   semester    Int
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
 
   fileUploads   FileUpload[]
   exams         Exam[]

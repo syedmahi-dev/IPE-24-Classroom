@@ -29,6 +29,7 @@ interface Props {
     type: keyof typeof TYPE_STYLES
     publishedAt: Date | null
     author: { name: string; role?: string }
+    courses?: { course: { code: string; name: string; courseType?: string | null } }[]
   }
 }
 
@@ -50,6 +51,25 @@ export function AnnouncementCard({ announcement }: Props) {
               <span className={`text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-xl border font-semibold ${TYPE_STYLES[announcement.type]}`}>
                 {TYPE_LABELS[announcement.type]}
               </span>
+              {/* Show course code + lab/theory for course_update type */}
+              {announcement.type === 'course_update' && announcement.courses && announcement.courses.length > 0 && (
+                <>
+                  <span className="text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-xl border font-semibold bg-brand-50/80 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 border-brand-200/50 dark:border-brand-900/50">
+                    {announcement.courses[0].course.code}
+                  </span>
+                  {announcement.courses[0].course.courseType && (
+                    <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-lg border font-bold ${
+                      announcement.courses[0].course.courseType === 'LAB'
+                        ? 'bg-emerald-50/80 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/50'
+                        : announcement.courses[0].course.courseType === 'SESSIONAL'
+                        ? 'bg-orange-50/80 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200/50 dark:border-orange-900/50'
+                        : 'bg-sky-50/80 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-200/50 dark:border-sky-900/50'
+                    }`}>
+                      {announcement.courses[0].course.courseType === 'LAB' ? 'Lab' : announcement.courses[0].course.courseType === 'SESSIONAL' ? 'Sessional' : 'Theory'}
+                    </span>
+                  )}
+                </>
+              )}
               <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
                 {announcement.publishedAt
                   ? formatDistanceToNow(new Date(announcement.publishedAt), { addSuffix: true })
