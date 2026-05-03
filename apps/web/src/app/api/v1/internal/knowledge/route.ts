@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { indexDocument } from '@/lib/knowledge-indexer'
+import { upsertVirtualCrKnowledge } from '@/lib/virtual-cr-sandbox'
 import { z } from 'zod'
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || ''
@@ -75,6 +76,20 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error('[Internal Knowledge] Indexing failed (document saved without embeddings):', err)
     }
+
+    await upsertVirtualCrKnowledge({
+      sourceType,
+      sourceId,
+      title,
+      content,
+      sourceChannel: sourceChannel || null,
+      courseCode: courseCode || null,
+      payload: {
+        source: 'discord-listener',
+        mainKnowledgeDocumentId: doc.id,
+        chunkCount,
+      },
+    })
 
     return NextResponse.json({
       success: true,

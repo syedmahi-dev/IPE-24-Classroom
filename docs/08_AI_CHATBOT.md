@@ -1,8 +1,10 @@
-# AI Virtual CR — RAG Implementation
+# AI Virtual CR — RAG Implementation (VPS Hosted)
 
 ## Overview
 
 The Virtual CR is a Retrieval-Augmented Generation (RAG) chatbot powered by Google Gemini 1.5 Flash (free tier). It answers student questions by searching a structured knowledge base of class documents, then generating a grounded, citation-aware response.
+
+Deployment model: the full RAG pipeline (knowledge ingestion, chunking, vector storage, retrieval, and chat response) runs on your VPS stack using Docker services and PostgreSQL + pgvector.
 
 RAG prevents hallucination: the model ONLY answers from retrieved context, and explicitly says "I don't know" when context is missing.
 

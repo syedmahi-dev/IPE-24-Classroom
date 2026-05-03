@@ -16,6 +16,7 @@ interface InternalApiRequestOptions {
   attemptsPerBase?: number
   retryDelayMs?: number
   logScope?: string
+  explicitBaseUrls?: string[]
 }
 
 function sleep(ms: number): Promise<void> {
@@ -72,7 +73,12 @@ export async function requestInternalApi(
   const attemptsPerBase = options.attemptsPerBase ?? 3
   const retryDelayMs = options.retryDelayMs ?? 500
   const logScope = options.logScope ?? 'internal-api'
-  const baseUrls = getBaseUrls()
+  const configuredExplicit = (options.explicitBaseUrls ?? [])
+    .map((u) => normalizeBaseUrl(u))
+    .filter(Boolean)
+  const baseUrls = configuredExplicit.length > 0
+    ? Array.from(new Set(configuredExplicit))
+    : getBaseUrls()
 
   let lastError: unknown = null
 

@@ -124,7 +124,8 @@ Respond with this exact JSON structure:
 export async function classifyMessage(
   text: string,
   attachmentNames: string[] = [],
-  images: ImageInput[] = []
+  images: ImageInput[] = [],
+  fixText?: string
 ): Promise<ClassificationResult> {
   const genAI = new GoogleGenerativeAI(getConfig().GEMINI_API_KEY)
   const model = genAI.getGenerativeModel({
@@ -139,10 +140,14 @@ export async function classifyMessage(
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
   const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
-  const prompt = CLASSIFY_PROMPT
+  let prompt = CLASSIFY_PROMPT
     .replaceAll('{TODAY}', `${today} (${dayName})`)
     .replace('{MESSAGE}', text.slice(0, 2000))
     .replace('{FILE_CONTEXT}', fileContext)
+
+  if (fixText) {
+    prompt += `\n\n=== CR FIX REQUEST ===\nThe class representative reviewed your previous output and requested the following correction: "${fixText}". Please strictly apply this correction in your JSON output. Do NOT include anything else.`
+  }
 
   const parts: Array<string | { inlineData: { data: string; mimeType: string } }> = [prompt]
   

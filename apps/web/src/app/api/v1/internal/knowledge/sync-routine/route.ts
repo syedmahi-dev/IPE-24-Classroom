@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { indexDocument } from '@/lib/knowledge-indexer'
+import { upsertVirtualCrKnowledge } from '@/lib/virtual-cr-sandbox'
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || ''
 
@@ -156,7 +157,35 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         console.error(`[Routine Sync] Failed to index ${docData.sourceId}:`, err)
       }
+
+      await upsertVirtualCrKnowledge({
+        sourceType: docData.sourceType,
+        sourceId: docData.sourceId,
+        title: docData.title,
+        content: docData.content,
+        sourceChannel: 'website-routine-sync',
+        payload: {
+          source: 'website',
+          mainKnowledgeDocumentId: doc.id,
+        },
+      })
     }
+
+    await upsertVirtualCrKnowledge({
+      sourceType: 'routine_sync',
+      sourceId: 'raw-routine-state',
+      title: 'Raw Routine State Snapshot',
+      content: `Routine entries: ${routines.length}\nOverrides: ${overrides.length}\nCourses: ${courses.length}\nExams: ${exams.length}\nFiles: ${files.length}`,
+      sourceChannel: 'website-routine-sync',
+      payload: {
+        source: 'website',
+        routines,
+        overrides,
+        courses,
+        exams,
+        files,
+      },
+    })
 
     return NextResponse.json({
       success: true,

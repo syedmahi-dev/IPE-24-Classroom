@@ -45,6 +45,10 @@ const ConfigSchema = z.object({
   GOOGLE_DRIVE_FOLDER_ID: z.string().min(1),
   INTERNAL_API_SECRET: z.string().min(1),
   INTERNAL_API_URL: z.string().url().default('http://web:3000'),
+  // Dedicated VPS-hosted Virtual CR RAG endpoint (can be same as INTERNAL_API_URL)
+  VIRTUAL_CR_API_URL: z.string().url().optional(),
+  // Optional comma-separated fallback base URLs for Virtual CR API
+  VIRTUAL_CR_API_FALLBACK_URLS: z.string().optional(),
   TELEGRAM_BOT_URL: z.string().default('disabled'),
   REDIS_URL: z.string().default('redis://redis:6379'),
   REACTION_TIMEOUT_MS: z.coerce.number().default(2 * 60 * 60 * 1000), // 2 hours

@@ -28,7 +28,7 @@ subRedis.on('message', async (channel, message) => {
       const payload = JSON.parse(message)
       const { messageId, previewTextHtml } = payload
       
-      await bot.telegram.sendMessage(ALLOWED_CR_ID, previewTextHtml, {
+      const sentMsg = await bot.telegram.sendMessage(ALLOWED_CR_ID, previewTextHtml, {
         parse_mode: 'HTML',
         link_preview_options: { is_disabled: true },
         reply_markup: {
@@ -40,6 +40,7 @@ subRedis.on('message', async (channel, message) => {
           ]
         }
       })
+      await redis.setex(`tg_msg_map_${sentMsg.message_id}`, 7200, messageId)
       console.log(`Sent preview to CR for message ${messageId}`)
     } catch (err: any) {
       console.error('Failed to send preview via Telegram:', err.message)
@@ -57,6 +58,23 @@ function isCR(userId: number): boolean {
 }
 
 // ── Confirmation Handlers ───────────────────────────────────────────────────
+
+bot.on('text', async (ctx) => {
+  if (!isCR(ctx.from.id)) return
+  if (!ctx.message.reply_to_message) return
+
+  const tgMessageId = ctx.message.reply_to_message.message_id
+  const discordMessageId = await redis.get(`tg_msg_map_${tgMessageId}`)
+
+  if (discordMessageId) {
+    const fixText = ctx.message.text
+    await redis.publish('discord_fix_requests', JSON.stringify({
+      messageId: discordMessageId,
+      fixText
+    }))
+    await ctx.reply('🔄 Fix request sent to AI. Wait for a revised preview...')
+  }
+})
 
 bot.on('callback_query', async (ctx) => {
   if (!isCR(ctx.from.id)) return

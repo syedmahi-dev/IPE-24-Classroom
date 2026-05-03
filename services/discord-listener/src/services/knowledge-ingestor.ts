@@ -9,7 +9,7 @@ import { requestInternalApi } from '../lib/internal-api'
  * Auto-ingest a classified Discord message into the RAG knowledge base.
  * This runs in the background after publish/approval — failures are non-fatal.
  * 
- * The internal knowledge API on Vercel handles:
+ * The Virtual CR API on VPS handles:
  * - Deduplication (via messageId as sourceId)
  * - Chunking and embedding
  * - Storage cap enforcement
@@ -21,8 +21,21 @@ export async function ingestToKnowledgeBase(params: {
   files: DriveUploadResult[]
   courseCode?: string
 }): Promise<void> {
-  const { INTERNAL_API_SECRET } = getConfig()
+  const {
+    INTERNAL_API_SECRET,
+    INTERNAL_API_URL,
+    VIRTUAL_CR_API_URL,
+    VIRTUAL_CR_API_FALLBACK_URLS,
+  } = getConfig()
   const { messageId, channelName, classification, files, courseCode } = params
+
+  const virtualCrBaseUrls = [
+    VIRTUAL_CR_API_URL || INTERNAL_API_URL,
+    ...(VIRTUAL_CR_API_FALLBACK_URLS || '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean),
+  ]
 
   // Build knowledge text from classified content + file metadata
   let content = classification.body
@@ -65,7 +78,10 @@ export async function ingestToKnowledgeBase(params: {
         sourceChannel: channelName,
         courseCode: courseCode || classification.detectedCourseCode || undefined,
       }),
-    }, { logScope: 'knowledge-ingestor' })
+    }, {
+      logScope: 'knowledge-ingestor',
+      explicitBaseUrls: virtualCrBaseUrls,
+    })
 
     if (!res.ok) {
       const text = await res.text()

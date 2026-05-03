@@ -258,6 +258,65 @@ function resolveAllowedCourseCode(candidate: string | undefined, allowedCodes: S
   return allowedCodes.has(normalized) ? normalized : undefined
 }
 
+export async function handleMessageWithFix(message: Message, fixText: string): Promise<void> {
+  const channelConfig = getChannelConfig(message.channel.id)
+  if (!channelConfig) return
+  
+  const channelName = (message.channel as TextChannel).name ?? message.channel.id
+  
+  logger.info('handler', 'processing message with fix', {
+    messageId: message.id,
+    fixText,
+  })
+
+  try {
+    const attachmentNames = [...message.attachments.values()].map((a) => a.name ?? 'file')
+    const attachmentSummaries = [...message.attachments.values()].map((a) => {
+      const type = a.contentType ?? 'unknown'
+      return `${a.name ?? 'file'} (${type})`
+    })
+
+    const textSnippets = await extractTextSnippetsFromAttachments(message)
+    const messageText = buildClassificationInput(message.content ?? '', attachmentSummaries, textSnippets)
+
+    const images: import('../services/classifier').ImageInput[] = []
+    let imageCount = 0
+    for (const attachment of message.attachments.values()) {
+      if (!attachment.contentType?.startsWith('image/')) continue
+      if (attachment.size > MAX_IMAGE_AI_SIZE || imageCount >= MAX_IMAGE_AI_COUNT) continue
+
+      try {
+        const fetch = (await import('node-fetch')).default
+        const res = await fetch(attachment.url)
+        if (!res.ok) continue
+
+        const buffer = await res.buffer()
+        images.push({
+          base64: buffer.toString('base64'),
+          mimeType: attachment.contentType,
+        })
+        imageCount++
+      } catch (err) {}
+    }
+
+    const classification = await classifyMessage(messageText, attachmentNames, images, fixText)
+
+    // For fixes, we assume files were already uploaded in the original run
+    const allowedCourseCodes = new Set(
+      (channelConfig.allowedCourseCodes ?? []).map((c) => normalizeCourseCode(c)).filter(Boolean)
+    )
+    const fallbackSubFolderName = resolveFallbackSubFolderName(channelConfig)
+    const defaultCourseCode = resolveAllowedCourseCode(
+      channelConfig.courseCode || classification.detectedCourseCode || undefined,
+      allowedCourseCodes
+    )
+
+    await handleReviewGate(message, channelConfig, classification, [], channelName, defaultCourseCode, fallbackSubFolderName)
+  } catch (err) {
+    logger.error('handler', 'unhandled error in fix handler', { error: String(err) })
+  }
+}
+
 async function handleAutoPublish(
   message: Message,
   classification: ClassificationResult,
@@ -308,6 +367,24 @@ async function handleReviewGate(
     embeds: [buildPreviewEmbed(classification, files, sourceChannelName, timeoutMs).toJSON() as any],
   }).catch(() => null)
 
+  if (requiresRoutineConfirmation) {
+    try {
+      const { buildTelegramPreviewHtml } = await import('../services/preview')
+      const Redis = (await import('ioredis')).default
+      const { REDIS_URL } = getConfig()
+      const redis = new Redis(REDIS_URL)
+      const previewHtml = buildTelegramPreviewHtml(classification, files, message.url)
+      await redis.publish('telegram_send_preview', JSON.stringify({
+        messageId: message.id,
+        previewTextHtml: previewHtml
+      }))
+      redis.quit()
+      logger.info('handler', 'Sent preview to Telegram for approval')
+    } catch (e) {
+      logger.warn('handler', 'failed to send telegram preview', { error: String(e) })
+    }
+  }
+
   if (!previewMessage) {
     logger.warn('handler', 'failed to send preview message, publishing blocked', {
       messageId: message.id,
@@ -323,6 +400,13 @@ async function handleReviewGate(
   await previewMessage.react('❌').catch(() => {})
 
   const decision = await waitForReviewDecision(previewMessage, message, channelConfig, timeoutMs)
+
+  if (decision === 'superseded') {
+    logger.info('handler', 'review gate superseded by fix request', { messageId: message.id })
+    await previewMessage.reply('🔄 Fix request received. Generating revised preview...').catch(() => {})
+    // The fix listener will pick up the request and spawn a new handleMessageWithFix.
+    return
+  }
 
   if (decision === 'timed_out') {
     logger.warn('handler', 'review decision: timed_out or collector_error', {
@@ -363,24 +447,67 @@ async function waitForReviewDecision(
   sourceMessage: Message,
   channelConfig: ChannelConfig,
   timeoutMs?: number
-): Promise<'approved' | 'discarded' | 'timed_out'> {
-  try {
-    const collected = await previewMessage.awaitReactions({
-      filter: async (reaction: MessageReaction, user: User) => {
-        if (user.bot) return false
-        const emoji = reaction.emoji.name
-        if (emoji !== '✅' && emoji !== '❌') return false
-        return isReviewer(user.id, sourceMessage, channelConfig)
-      },
-      max: 1,
-      ...(timeoutMs ? { time: timeoutMs, errors: ['time'] as const } : {}),
-    })
+): Promise<'approved' | 'discarded' | 'timed_out' | 'superseded'> {
+  const { REDIS_URL } = getConfig()
+  const Redis = (await import('ioredis')).default
 
+  let subscriber: any = null
+  let timeoutHandle: any = null
+
+  const discordPromise = previewMessage.awaitReactions({
+    filter: async (reaction: import('discord.js').MessageReaction, user: import('discord.js').User) => {
+      if (user.bot) return false
+      const emoji = reaction.emoji.name
+      if (emoji !== '✅' && emoji !== '❌') return false
+      return isReviewer(user.id, sourceMessage, channelConfig)
+    },
+    max: 1,
+    ...(timeoutMs ? { time: timeoutMs, errors: ['time'] as const } : {}),
+  }).then(collected => {
     const decisionReaction = collected.first()
     return decisionReaction?.emoji.name === '❌' ? 'discarded' : 'approved'
-  } catch {
-    return 'timed_out'
+  }).catch(() => 'timed_out' as const)
+
+  const redisPromise = new Promise<'approved' | 'discarded' | 'timed_out' | 'superseded'>((resolve) => {
+    subscriber = new Redis(REDIS_URL)
+    
+    if (timeoutMs) {
+      timeoutHandle = setTimeout(() => {
+        resolve('timed_out')
+      }, timeoutMs)
+    }
+
+    subscriber.subscribe('discord_approvals', 'discord_fix_requests', () => {})
+    subscriber.on('message', (channel: string, message: string) => {
+      if (channel === 'discord_approvals') {
+        try {
+          const payload = JSON.parse(message)
+          if (payload.messageId === sourceMessage.id) {
+            resolve(payload.approved ? 'approved' : 'discarded')
+          }
+        } catch (e) {}
+      } else if (channel === 'discord_fix_requests') {
+        try {
+          const payload = JSON.parse(message)
+          if (payload.messageId === sourceMessage.id) {
+            resolve('superseded')
+          }
+        } catch (e) {}
+      }
+    })
+  })
+
+  const result = await Promise.race([discordPromise, redisPromise])
+  
+  // Cleanup
+  if (subscriber) {
+    subscriber.quit()
   }
+  if (timeoutHandle) {
+    clearTimeout(timeoutHandle)
+  }
+
+  return result
 }
 
 async function isReviewer(userId: string, sourceMessage: Message, config: ChannelConfig): Promise<boolean> {

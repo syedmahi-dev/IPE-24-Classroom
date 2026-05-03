@@ -60,6 +60,10 @@ async function main() {
   
   // Start dynamic config polling
   startConfigRefresh()
+
+  // Start fix requests listener
+  const { startFixListener } = await import('./handlers/fix')
+  startFixListener(client)
 }
 
 main().catch((err) => {

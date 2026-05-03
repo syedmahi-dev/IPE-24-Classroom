@@ -1,0 +1,466 @@
+// apps/web/prisma/schema.prisma
+// Merged PostgreSQL schema - String ID version for compatibility with CUID/UUID sessions
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [uuidOssp(map: "uuid-ossp"), vector]
+}
+
+enum Role {
+  student
+  admin
+  super_admin
+}
+
+enum AnnouncementType {
+  general
+  exam
+  file_update
+  routine_update
+  urgent
+  event
+  course_update
+}
+
+enum FileCategory {
+  lecture_notes
+  assignment
+  past_paper
+  syllabus
+  other
+  resource
+}
+
+// ==========================================
+// SECTION: Core Models (Auth & User)
+// ==========================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String
+  avatarUrl       String?
+  role            Role      @default(student)
+  studentId       String?   @unique
+  phone           String?
+  bio             String?
+  nickname        String?
+  bloodGroup      String?
+  gender          String?
+  dob             String?
+  lastLogin       DateTime?
+  passwordHash    String?
+  twoFactorSecret String?
+  twoFactorEnabled Boolean  @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  announcements  Announcement[]
+  fileUploads    FileUpload[]
+  votes          PollVote[]
+  chatLogs       ChatLog[]
+  auditActions   AuditLog[]
+  studyGroups    StudyGroupMember[]
+  notifications  Notification[]
+  pushTokens     PushToken[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+// ==========================================
+// SECTION: Content Models (Courses & Announcements)
+// ==========================================
+
+model Course {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  creditHours Float
+  teacherName String?
+  semester    Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  fileUploads   FileUpload[]
+  exams         Exam[]
+  announcements AnnouncementCourse[]
+
+  @@map("courses")
+}
+
+model Announcement {
+  id                 String           @id @default(cuid())
+  title              String
+  body               String           @db.Text
+  type               AnnouncementType @default(general)
+  source             String?          // 'telegram' | 'discord' | 'web' | null
+  isPublished        Boolean          @default(false)
+  publishedAt        DateTime?
+  publishedToWa      Boolean          @default(false)
+  publishedToDiscord Boolean          @default(false)
+  authorId           String
+  author             User             @relation(fields: [authorId], references: [id])
+  courses            AnnouncementCourse[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([authorId])
+  @@index([isPublished, publishedAt])
+  @@map("announcements")
+}
+
+model AnnouncementCourse {
+  announcementId String
+  courseId       String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  course         Course       @relation(fields: [courseId], references: [id])
+
+  @@id([announcementId, courseId])
+  @@map("announcement_courses")
+}
+
+model FileUpload {
+  id           String       @id @default(cuid())
+  name         String
+  driveId      String       @unique
+  driveUrl     String
+  downloadUrl  String?
+  mimeType     String
+  sizeBytes    Int
+  category     FileCategory @default(other)
+  courseId     String?
+  course       Course?      @relation(fields: [courseId], references: [id])
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  connectedDriveId String?
+  connectedDrive ConnectedDrive? @relation(fields: [connectedDriveId], references: [id])
+  createdAt    DateTime     @default(now())
+
+  @@index([courseId])
+  @@index([uploadedById])
+  @@map("file_uploads")
+}
+
+// ==========================================
+// SECTION: Academic Models (Exams & Polls)
+// ==========================================
+
+model Exam {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id])
+  examDate    DateTime
+  duration    Int?
+  room        String?
+  syllabus    String?  @db.Text
+  isActive    Boolean  @default(true)
+  archivedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([courseId])
+  @@index([examDate])
+  @@index([isActive, examDate])
+  @@map("exams")
+}
+
+model Poll {
+  id          String    @id @default(cuid())
+  question    String
+  options     Json
+  isAnonymous Boolean   @default(true)
+  isClosed    Boolean   @default(false)
+  closesAt    DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  votes PollVote[]
+
+  @@map("polls")
+}
+
+model PollVote {
+  id          String   @id @default(cuid())
+  pollId      String
+  poll        Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  optionIndex Int
+  createdAt   DateTime @default(now())
+
+  @@unique([pollId, userId])
+  @@index([pollId])
+  @@index([userId])
+  @@map("poll_votes")
+}
+
+// ==========================================
+// SECTION: RAG & System Models (Knowledge & Logs)
+// ==========================================
+
+model KnowledgeDocument {
+  id            String   @id @default(cuid())
+  title         String
+  sourceType    String
+  courseCode    String?
+  content       String   @db.Text
+  sourceId      String?  @map("source_id")
+  sourceChannel String?  @map("source_channel")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  chunks KnowledgeChunk[]
+
+  @@unique([sourceType, sourceId])
+  @@map("knowledge_documents")
+}
+
+model KnowledgeChunk {
+  id         String                      @id @default(cuid())
+  documentId String
+  document   KnowledgeDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex Int
+  content    String                      @db.Text
+  embedding  Unsupported("vector(768)")?
+  createdAt  DateTime                    @default(now())
+
+  @@index([documentId])
+  @@map("knowledge_chunks")
+}
+
+model ChatLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  question  String   @db.Text
+  answer    String   @db.Text
+  thumbsUp  Boolean?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("chat_logs")
+}
+
+// ==========================================
+// SECTION: Social & Notifications
+// ==========================================
+
+model StudyGroup {
+  id          String   @id @default(cuid())
+  title       String
+  courseCode  String?
+  description String?
+  maxMembers  Int      @default(5)
+  meetTime    String?
+  location    String?
+  isOpen      Boolean  @default(true)
+  targetGroup String   @default("ALL")
+  archivedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  members StudyGroupMember[]
+
+  @@map("study_groups")
+}
+
+model StudyGroupMember {
+  groupId  String
+  userId   String
+  group    StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id])
+  isLeader Boolean    @default(false)
+  joinedAt DateTime   @default(now())
+
+  @@id([groupId, userId])
+  @@map("study_group_members")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("push_tokens")
+}
+
+// ==========================================
+// SECTION: Admin & Infrastructure
+// ==========================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_configs")
+}
+
+// ==========================================
+// SECTION: Routine System (Working-Week A/B)
+// ==========================================
+
+model BaseRoutine {
+  id          String    @id @default(cuid())
+  courseCode  String
+  courseName  String?
+  dayOfWeek   String
+  startTime   String
+  endTime     String
+  room        String
+  teacher     String?
+  targetGroup String    @default("ALL")
+  weekParity  String    @default("ALL")
+  isLab       Boolean   @default(false)
+  semester    String?
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  overrides RoutineOverride[]
+
+  @@map("base_routines")
+}
+
+model RoutineOverride {
+  id             String       @id @default(cuid())
+  date           DateTime
+  type           String
+  baseRoutineId  String?
+  baseRoutine    BaseRoutine? @relation(fields: [baseRoutineId], references: [id], onDelete: SetNull)
+  courseCode     String?
+  courseName     String?
+  startTime      String?
+  endTime        String?
+  room           String?
+  teacher        String?
+  targetGroup    String       @default("ALL")
+  reason         String?
+  createdById    String
+  archivedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@map("routine_overrides")
+}
+
+model RoutineWeek {
+  id                String    @id @default(cuid())
+  calendarWeekStart DateTime  @unique
+  workingWeekNumber Int?
+  weekType          String?
+  isSkipped         Boolean   @default(false)
+  skippedReason     String?
+  markedById        String?
+  markedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([calendarWeekStart])
+  @@index([weekType])
+  @@map("routine_weeks")
+}
+
+// ==========================================
+// SECTION: Integration & Bot Configs
+// ==========================================
+
+model ConnectedDrive {
+  id           String       @id @default(cuid())
+  label        String
+  email        String
+  refreshToken String
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  fileUploads  FileUpload[]
+
+  @@map("connected_drives")
+}
+
+model BotChannelConfig {
+  id                      String   @id @default(cuid())
+  channelId               String   @unique
+  mode                    String
+  authorizedUserIds       String
+  authorizedRoleIds       String?
+  allowedCourseCodes      String?
+  defaultAnnouncementType String?
+  label                   String?
+  courseCode              String?
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("bot_channel_configs")
+}
