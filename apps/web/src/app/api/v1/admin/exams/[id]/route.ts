@@ -14,6 +14,10 @@ const updateSchema = z.object({
   room: z.string().max(100).optional(),
   syllabus: z.string().max(2000).optional(),
   isActive: z.boolean().optional(),
+  type: z.enum(['EXAM', 'ASSIGNMENT']).optional(),
+  submissionLink: z.string().max(2000).optional(),
+  submissionMethod: z.string().max(200).optional(),
+  instructions: z.string().max(5000).optional(),
 })
 
 /**

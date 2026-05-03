@@ -19,6 +19,10 @@ type ExamRecord = {
   duration: number | null
   room: string | null
   syllabus: string | null
+  type: string
+  submissionLink: string | null
+  submissionMethod: string | null
+  instructions: string | null
   isActive: boolean
   createdAt: string
 }
@@ -45,6 +49,10 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
   const [duration, setDuration] = useState('')
   const [room, setRoom] = useState('')
   const [syllabus, setSyllabus] = useState('')
+  const [type, setType] = useState('EXAM')
+  const [submissionLink, setSubmissionLink] = useState('')
+  const [submissionMethod, setSubmissionMethod] = useState('')
+  const [instructions, setInstructions] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -67,6 +75,7 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
     setEditItem(null)
     setTitle(''); setDescription(''); setCourseId(courses[0]?.id || '')
     setExamDate(''); setDuration(''); setRoom(''); setSyllabus('')
+    setType('EXAM'); setSubmissionLink(''); setSubmissionMethod(''); setInstructions('')
     setModalOpen(true)
   }
 
@@ -79,6 +88,10 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
     setDuration(item.duration?.toString() || '')
     setRoom(item.room || '')
     setSyllabus(item.syllabus || '')
+    setType(item.type || 'EXAM')
+    setSubmissionLink(item.submissionLink || '')
+    setSubmissionMethod(item.submissionMethod || '')
+    setInstructions(item.instructions || '')
     setModalOpen(true)
   }
 
@@ -96,11 +109,18 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
         title: title.trim(),
         courseId,
         examDate: new Date(examDate).toISOString(),
+        type,
       }
       if (description.trim()) payload.description = description.trim()
-      if (duration) payload.duration = parseInt(duration)
-      if (room.trim()) payload.room = room.trim()
-      if (syllabus.trim()) payload.syllabus = syllabus.trim()
+      if (type === 'EXAM') {
+        if (duration) payload.duration = parseInt(duration)
+        if (room.trim()) payload.room = room.trim()
+        if (syllabus.trim()) payload.syllabus = syllabus.trim()
+      } else {
+        if (submissionLink.trim()) payload.submissionLink = submissionLink.trim()
+        if (submissionMethod.trim()) payload.submissionMethod = submissionMethod.trim()
+        if (instructions.trim()) payload.instructions = instructions.trim()
+      }
 
       const res = await fetch(url, {
         method,
@@ -137,17 +157,20 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
   const columns: Column<ExamRecord>[] = [
     {
       key: 'title',
-      label: 'Exam',
+      label: 'Exam / Assignment',
       render: (item) => (
         <div className="max-w-xs">
-          <p className="font-bold text-slate-800 dark:text-slate-100">{item.title}</p>
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${item.type === 'ASSIGNMENT' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`}>{item.type}</span>
+            <p className="font-bold text-slate-800 dark:text-slate-100">{item.title}</p>
+          </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">{item.course.code} — {item.course.name}</p>
         </div>
       ),
     },
     {
       key: 'examDate',
-      label: 'Date & Time',
+      label: 'Date / Deadline',
       render: (item) => {
         const d = new Date(item.examDate)
         const isPast = d < new Date()
@@ -161,11 +184,14 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
     },
     {
       key: 'duration',
-      label: 'Duration',
+      label: 'Duration / Method',
       hideOnMobile: true,
-      render: (item) => item.duration
+      render: (item) => {
+        if (item.type === 'ASSIGNMENT') return item.submissionMethod ? <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{item.submissionMethod}</span> : <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+        return item.duration
         ? <span className="flex items-center gap-1 text-sm font-semibold text-slate-600 dark:text-slate-300"><Clock className="w-3.5 h-3.5" />{item.duration}m</span>
-        : <span className="text-xs text-slate-400 dark:text-slate-500">—</span>,
+        : <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+      },
     },
     {
       key: 'room',
@@ -244,6 +270,14 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
         submitLoading={submitting}
       >
         <div className="space-y-5">
+          <AdminFormField
+            type="select"
+            label="Type"
+            value={type}
+            onChange={setType}
+            options={[{ value: 'EXAM', label: 'Exam' }, { value: 'ASSIGNMENT', label: 'Assignment' }]}
+            required
+          />
           <AdminFormField type="text" label="Title" value={title} onChange={setTitle} placeholder="e.g. Mid-Term Exam" required />
           <AdminFormField
             type="select"
@@ -253,12 +287,26 @@ export function AdminExamsClient({ courses }: { courses: Course[] }) {
             options={courses.map((c) => ({ value: c.id, label: `${c.code} — ${c.name}` }))}
             required
           />
-          <AdminFormField type="datetime" label="Date & Time" value={examDate} onChange={setExamDate} required />
-          <div className="grid grid-cols-2 gap-4">
-            <AdminFormField type="number" label="Duration (min)" value={duration} onChange={setDuration} placeholder="90" />
-            <AdminFormField type="text" label="Room" value={room} onChange={setRoom} placeholder="Room 301" />
-          </div>
-          <AdminFormField type="textarea" label="Syllabus" value={syllabus} onChange={setSyllabus} placeholder="Topics covered..." rows={3} />
+          <AdminFormField type="datetime" label="Date & Time / Deadline" value={examDate} onChange={setExamDate} required />
+          
+          {type === 'EXAM' ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <AdminFormField type="number" label="Duration (min)" value={duration} onChange={setDuration} placeholder="90" />
+                <AdminFormField type="text" label="Room" value={room} onChange={setRoom} placeholder="Room 301" />
+              </div>
+              <AdminFormField type="textarea" label="Syllabus" value={syllabus} onChange={setSyllabus} placeholder="Topics covered..." rows={3} />
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <AdminFormField type="text" label="Submission Method" value={submissionMethod} onChange={setSubmissionMethod} placeholder="e.g. Online, Google Form" />
+                <AdminFormField type="text" label="Submission Link" value={submissionLink} onChange={setSubmissionLink} placeholder="https://..." />
+              </div>
+              <AdminFormField type="textarea" label="Instructions" value={instructions} onChange={setInstructions} placeholder="Assignment instructions..." rows={3} />
+            </>
+          )}
+
           <AdminFormField type="textarea" label="Description" value={description} onChange={setDescription} placeholder="Additional notes..." rows={2} />
         </div>
       </AdminModal>

@@ -61,6 +61,10 @@ const createSchema = z.object({
   duration: z.number().int().min(1).optional(),
   room: z.string().max(100).optional(),
   syllabus: z.string().max(2000).optional(),
+  type: z.enum(['EXAM', 'ASSIGNMENT']).default('EXAM'),
+  submissionLink: z.string().max(2000).optional(),
+  submissionMethod: z.string().max(200).optional(),
+  instructions: z.string().max(5000).optional(),
 })
 
 /**
@@ -77,7 +81,7 @@ export async function POST(req: Request) {
     const parsed = createSchema.safeParse(body)
     if (!parsed.success) return ERRORS.VALIDATION(parsed.error.errors[0]?.message || 'Invalid data')
 
-    const { title, description, courseId, examDate, duration, room, syllabus } = parsed.data
+    const { title, description, courseId, examDate, duration, room, syllabus, type, submissionLink, submissionMethod, instructions } = parsed.data
 
     // Verify course exists
     const course = await prisma.course.findUnique({ where: { id: courseId } })
@@ -92,6 +96,10 @@ export async function POST(req: Request) {
         duration: duration || null,
         room: room || null,
         syllabus: syllabus || null,
+        type,
+        submissionLink: submissionLink || null,
+        submissionMethod: submissionMethod || null,
+        instructions: instructions || null,
       },
       include: {
         course: { select: { id: true, code: true, name: true } },
@@ -102,7 +110,7 @@ export async function POST(req: Request) {
 
     // Persist notification records + push broadcast (non-blocking)
     notifyAll({
-      title: `New Exam: ${title}`,
+      title: `New ${type === 'ASSIGNMENT' ? 'Assignment' : 'Exam'}: ${title}`,
       body: `${course.code} — ${new Date(examDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
       link: '/exams',
     }).catch((err) => console.error('[Notify] Exam broadcast failed:', err))

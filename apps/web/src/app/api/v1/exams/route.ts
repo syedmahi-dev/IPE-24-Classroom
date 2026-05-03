@@ -34,6 +34,9 @@ export async function GET(req: NextRequest) {
         include: {
           course: {
             select: { code: true, name: true }
+          },
+          submissions: {
+            where: { studentId: session.user.id }
           }
         },
         orderBy: { examDate: 'asc' },

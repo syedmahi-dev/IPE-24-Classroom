@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Calendar, Clock, AlertTriangle, CheckCircle, Search, Loader2, AlertCircle } from 'lucide-react'
+import { Calendar, Clock, AlertTriangle, CheckCircle, Search, Loader2, AlertCircle, Link as LinkIcon, FileText } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
 
 export default function ExamsPage() {
@@ -32,6 +32,27 @@ export default function ExamsPage() {
     fetchExams()
   }, [fetchExams])
 
+  const toggleSubmission = async (examId: string, currentStatus: boolean) => {
+    // optimistic update
+    setExams(prev => prev.map(e => {
+      if (e.id === examId) {
+        return { ...e, submissions: [{ isSubmitted: !currentStatus }] }
+      }
+      return e
+    }))
+    try {
+      const res = await fetch(`/api/v1/exams/${examId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isSubmitted: !currentStatus })
+      })
+      if (!res.ok) throw new Error('Failed to update submission')
+    } catch (err) {
+      // revert on error
+      fetchExams()
+    }
+  }
+
   const upcomingIds = exams.filter((e: any) => new Date(e.examDate) > new Date()).map((e: any) => e.id)
   const nearestExam = exams.find((e: any) => upcomingIds.includes(e.id))
 
@@ -47,7 +68,7 @@ export default function ExamsPage() {
              </div>
              <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Exam Tracker</h1>
              <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg leading-relaxed">
-               {nearestExam ? `Next exam is ${nearestExam.title} for ${nearestExam.course?.code}` : 'No upcoming exams scheduled right now. Relax!'}
+               {nearestExam ? `Next assessment is ${nearestExam.title} for ${nearestExam.course?.code}` : 'No upcoming assessments scheduled right now. Relax!'}
              </p>
           </div>
 
@@ -83,11 +104,15 @@ export default function ExamsPage() {
             const isUpcoming = new Date(exam.examDate) > new Date()
             const daysLeft = differenceInDays(new Date(exam.examDate), new Date())
             const isNear = isUpcoming && daysLeft <= 3
+            const isAssignment = exam.type === 'ASSIGNMENT'
+            const isSubmitted = exam.submissions?.[0]?.isSubmitted || false
 
             return (
-              <div key={exam.id} className="glass rounded-[2rem] p-6 hover:-translate-y-1 transition-all duration-300 group hover:shadow-xl hover:shadow-rose-900/5 dark:hover:shadow-rose-900/20 cursor-default relative overflow-hidden">
-                 {isNear && <div className="absolute top-0 right-0 w-16 h-16 bg-rose-500 transform rotate-45 translate-x-8 -translate-y-8" />}
-                 {isNear && <AlertTriangle className="absolute top-2 right-2 w-4 h-4 text-white z-10" />}
+              <div key={exam.id} className={`glass rounded-[2rem] p-6 hover:-translate-y-1 transition-all duration-300 group hover:shadow-xl hover:shadow-rose-900/5 dark:hover:shadow-rose-900/20 relative overflow-hidden flex flex-col ${isSubmitted ? 'opacity-80' : ''}`}>
+                 {isNear && !isSubmitted && <div className="absolute top-0 right-0 w-16 h-16 bg-rose-500 transform rotate-45 translate-x-8 -translate-y-8" />}
+                 {isNear && !isSubmitted && <AlertTriangle className="absolute top-2 right-2 w-4 h-4 text-white z-10" />}
+                 {isSubmitted && <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500 transform rotate-45 translate-x-8 -translate-y-8" />}
+                 {isSubmitted && <CheckCircle className="absolute top-2 right-2 w-4 h-4 text-white z-10" />}
                  
                  <div className="flex items-center gap-2 mb-4">
                     <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
@@ -95,7 +120,7 @@ export default function ExamsPage() {
                     </span>
                     <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
                       isUpcoming 
-                        ? isNear ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
+                        ? isNear && !isSubmitted ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
                         : 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700'
                     }`}>
                       {exam.type}
@@ -104,15 +129,58 @@ export default function ExamsPage() {
                  
                  <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-2 leading-tight">{exam.title}</h3>
                  
-                 <div className="space-y-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                 <div className="space-y-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-400">
                       <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      {format(new Date(exam.examDate), 'MMMM d, yyyy')}
+                      {format(new Date(exam.examDate), 'MMMM d, yyyy')} {isAssignment ? '(Deadline)' : ''}
                     </div>
-                    <div className="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-400">
-                      <Clock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      {exam.duration} mins • {exam.syllabus}
-                    </div>
+                    {!isAssignment && (
+                      <div className="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                        <Clock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                        {exam.duration} mins • {exam.syllabus}
+                      </div>
+                    )}
+                    
+                    {isAssignment && (
+                      <div className="space-y-2 mt-2">
+                        {exam.submissionMethod && (
+                          <div className="flex items-start gap-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                            <FileText className="w-4 h-4 mt-0.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                            <span>Method: {exam.submissionMethod}</span>
+                          </div>
+                        )}
+                        {exam.submissionLink && (
+                          <div className="flex items-start gap-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                            <LinkIcon className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+                            <a href={exam.submissionLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+                              Submission Link
+                            </a>
+                          </div>
+                        )}
+                        {exam.instructions && (
+                          <div className="text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl">
+                            {exam.instructions}
+                          </div>
+                        )}
+                        
+                        <button
+                          onClick={() => toggleSubmission(exam.id, isSubmitted)}
+                          className={`w-full mt-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                            isSubmitted 
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800' 
+                              : 'bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600'
+                          }`}
+                        >
+                          {isSubmitted ? (
+                            <>
+                              <CheckCircle className="w-4 h-4" /> Submitted
+                            </>
+                          ) : (
+                            'Mark as Submitted'
+                          )}
+                        </button>
+                      </div>
+                    )}
                  </div>
               </div>
             )
