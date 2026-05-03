@@ -14,9 +14,10 @@ import {
   buildChatHistory,
   detectPromptInjection,
 } from '@/lib/prompt-builder'
+import { fetchLiveContext, formatLiveContext } from '@/lib/virtual-cr-context'
 import { z } from 'zod'
 
-export const maxDuration = 10
+export const maxDuration = 15
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -75,7 +76,12 @@ export async function POST(req: NextRequest) {
     // ── Step 1: Rate limit (20 questions per hour per user) ──
     const rl = await rateLimit(`chat:${session.user.id}`, 20, 3600)
     if (!rl.success) {
-      return ERRORS.RATE_LIMITED()
+      return NextResponse.json({
+        success: false,
+        data: null,
+        error: { code: 'RATE_LIMITED', message: 'Too many questions — try again later.' },
+        rateLimit: { remaining: 0, limit: 20 },
+      }, { status: 429 })
     }
 
     const body = await req.json()
@@ -116,33 +122,45 @@ export async function POST(req: NextRequest) {
       console.warn('[Chat] Guardrail check failed, proceeding:', err)
     }
 
-    // ── Step 5: Embed the user's question ──
-    let queryEmbedding: number[]
+    // ── Step 5: Fetch live context from DB (READ-ONLY) + embed question in parallel ──
+    const liveContextPromise = fetchLiveContext().catch((err) => {
+      console.warn('[Chat] Live context fetch failed:', err)
+      return null
+    })
+
+    let queryEmbedding: number[] | null = null
     try {
       queryEmbedding = await getEmbedding(question)
     } catch (err) {
-      console.error('[Chat] Embedding failed:', err)
-      // Fallback: answer without RAG context
+      console.error('[Chat] Embedding failed, will use live context only:', err)
+    }
+
+    // ── Step 6: Vector search — retrieve top-5 relevant chunks ──
+    const relevantChunks = queryEmbedding
+      ? await searchKnowledge(queryEmbedding, 5)
+      : []
+
+    // ── Step 7: Build grounded system prompt with live context ──
+    const liveCtx = await liveContextPromise
+    const liveContextStr = liveCtx ? formatLiveContext(liveCtx) : undefined
+    const systemPrompt = buildRAGSystemPrompt(relevantChunks, liveContextStr)
+
+    // If we have neither embeddings nor live context, return gracefully
+    if (relevantChunks.length === 0 && !liveCtx) {
       try {
         const fallbackModel = genAI.getGenerativeModel({
           model: 'gemini-flash-latest',
           generationConfig: { maxOutputTokens: 400, temperature: 0.3 },
-          systemInstruction: buildRAGSystemPrompt([]),
+          systemInstruction: systemPrompt,
         })
         const fallbackResult = await fallbackModel.generateContent(question)
         const text = fallbackResult.response.text()
         await prisma.chatLog.create({ data: { userId: session.user.id, question, answer: text } })
-        return ok({ text, filtered: false, sourcesUsed: 0 })
+        return ok({ text, filtered: false, sourcesUsed: 0, rateLimit: { remaining: rl.remaining, limit: 20 } })
       } catch {
         return ok({ text: "I'm having trouble processing your question right now. Please try again in a moment.", filtered: false })
       }
     }
-
-    // ── Step 6: Vector search — retrieve top-5 relevant chunks ──
-    const relevantChunks = await searchKnowledge(queryEmbedding, 5)
-
-    // ── Step 7: Build grounded system prompt ──
-    const systemPrompt = buildRAGSystemPrompt(relevantChunks)
 
     // ── Step 8: Generate response with Gemini ──
     const chatModel = genAI.getGenerativeModel({
@@ -169,7 +187,9 @@ export async function POST(req: NextRequest) {
       text,
       logId: logged.id,
       sourcesUsed: relevantChunks.length,
+      hasLiveContext: !!liveCtx,
       filtered: false,
+      rateLimit: { remaining: rl.remaining, limit: 20 },
     })
   } catch (error: any) {
     console.error('[Chat] POST error:', error)

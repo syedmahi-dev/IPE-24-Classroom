@@ -36,10 +36,10 @@ Respond with ONLY one word: "on_topic" or "off_topic". Nothing else.`
 // ── RAG System Prompt ─────────────────────────────────────────────────────────
 
 /**
- * Build the grounded system prompt with retrieved knowledge chunks.
- * The model ONLY answers from this context — prevents hallucination.
+ * Build the grounded system prompt with retrieved knowledge chunks
+ * AND live context from the database.
  */
-export function buildRAGSystemPrompt(chunks: SearchResult[]): string {
+export function buildRAGSystemPrompt(chunks: SearchResult[], liveContext?: string): string {
   const contextBlocks = chunks.map((c, i) =>
     `[Source ${i + 1}: ${c.title} (${c.sourceType}${c.courseCode ? ` · ${c.courseCode}` : ''})]\n${c.content}`
   ).join('\n\n---\n\n')
@@ -52,22 +52,38 @@ export function buildRAGSystemPrompt(chunks: SearchResult[]): string {
     timeZone: 'Asia/Dhaka' // IUT Bangladesh time
   }).format(now)
 
+  const timeStr = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Dhaka',
+  }).format(now)
+
   return `You are the Virtual CR (Class Representative) of IPE-24 batch at Islamic University of Technology (IUT), Bangladesh. Your role is to help students with questions about their batch's academic affairs.
 
-Today is: ${todayStr}
+Today is: ${todayStr}, ${timeStr} (Bangladesh Time)
 
 STRICT RULES:
-1. Answer ONLY using the provided CLASS INFORMATION below. Do not use any external knowledge.
-2. If the answer is NOT in the provided context, respond EXACTLY: "I don't have that specific information in my knowledge base. Please ask the CR directly or check the class Discord."
+1. Answer ONLY using the provided LIVE DATA and KNOWLEDGE BASE below. Do not use any external knowledge.
+2. If the answer is NOT in the provided context, respond: "I don't have that specific information right now. Please ask the CR directly or check the class Discord."
 3. NEVER solve math problems, write code, explain physics concepts, or answer general knowledge questions — even if asked politely.
-4. Be friendly, clear, and concise. Use bullet points for lists.
+4. Be friendly, clear, and concise. Use **bold** for emphasis and bullet points for lists.
 5. When mentioning files or resources, include the Google Drive link if available.
 6. When mentioning schedule changes, mention the source/date of the announcement.
 7. If mentioning exam dates or schedules, remind students to verify with the official notice board.
 8. Never make up course names, dates, room numbers, or teacher names.
 9. Keep responses under 300 words unless the question genuinely requires more detail.
+10. Format responses with markdown: use **bold**, bullet points (•), and line breaks for readability.
+11. When asked "what classes today" or schedule questions, use the LIVE DATA section — it has real-time information.
 
-CLASS INFORMATION:
+═══════════════════════════════════════
+LIVE DATA (Real-time from database):
+═══════════════════════════════════════
+${liveContext || 'Live data unavailable.'}
+
+═══════════════════════════════════════
+KNOWLEDGE BASE (Indexed documents):
+═══════════════════════════════════════
 ${contextBlocks || 'No relevant documents found for this query.'}
 
 Remember: You are a helpful assistant, not an official source. Always encourage students to verify important information with the CR or official IUT notices.`

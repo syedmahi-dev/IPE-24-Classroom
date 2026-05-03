@@ -41,6 +41,12 @@ Last updated: 2026-05-02
 6. Send one Discord test message and verify ingestion path.
 7. Configure public ingress (recommended: Cloudflare Tunnel) if VPS has no public IP.
 
+## Update 2026-05-03
+
+1. Added sandbox bootstrap SQL at [apps/web/scripts/virtual-cr-sandbox-init.sql](apps/web/scripts/virtual-cr-sandbox-init.sql).
+2. Added setup runbook at [docs/22_VIRTUAL_CR_DB_SETUP.md](docs/22_VIRTUAL_CR_DB_SETUP.md).
+3. The project now includes concrete DB initialization steps for separate Virtual CR storage.
+
 ## Smoke Checks To Run On VPS
 
 1. Health: GET /api/v1/health should return 200.

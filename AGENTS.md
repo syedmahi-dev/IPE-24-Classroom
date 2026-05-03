@@ -29,6 +29,17 @@ This document is the **single source of truth** for all AI agents, assistants, a
 - **Commit Messages**: Be specific (e.g., "feat: add exam countdown timer" instead of "update code").
 - **Ask for Clarification**: If unsure about architecture or requirements, ask the user.
 
+## 3a. New Feature Isolation Rule (MANDATORY)
+When the user says **"new feature"**, **"add-on feature"**, or describes work that is separate from the existing codebase, this rule applies automatically:
+
+- **DO NOT modify existing files in the main codebase.** No changes to existing routes, components, libs, models, or configs. If an existing file needs a one-line import to call your feature, that is the ONLY acceptable change — and you must ask the user first.
+- **Create new files only.** All feature code (API routes, libs, helpers, types) must live in NEW files. Use a clear naming convention (e.g., `virtual-cr-*`, `feature-name-*`).
+- **Database changes — feature-scoped only.** You MAY add new models to `schema.prisma` or create new migrations, but ONLY for the specific feature being built. Do NOT alter, rename, or remove existing models/fields that belong to other features. Follow Section 1 backup rules before any schema change.
+  - **Exception — Virtual CR**: The Virtual CR feature uses a completely separate database (`VIRTUAL_CR_SANDBOX_DATABASE_URL`). It must NEVER touch `schema.prisma` or the main `DATABASE_URL`. All its data goes via raw SQL into its own DB. A runtime guard must block if the sandbox URL matches `DATABASE_URL`.
+- **No package.json changes.** Only use dependencies already installed. If a new dependency is absolutely required, ask the user first.
+- **Non-fatal on failure.** Feature code must catch all errors and return gracefully (e.g., `return false`). A feature failure must NEVER break the main application flow.
+- **Feature files checklist** — before committing, run `git diff --name-only` and verify ONLY feature-related files appear. If any main codebase file shows up, revert it immediately.
+
 ## 4. Architecture & Key Patterns
 - **Stack**: Next.js 14, TypeScript, Tailwind CSS v4, PostgreSQL 16 + pgvector, Redis 7, Prisma ORM, NextAuth.js v5.
 - **API Routes Pattern**: Located in `src/app/api/v1/[resource]/route.ts`. Every route must have Auth Check (middleware), Role Check (handler), Input Validation (Zod), Error Handling (standardized JSON response), and Rate Limiting.

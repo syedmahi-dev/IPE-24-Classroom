@@ -4,6 +4,14 @@ import { prisma } from '@/lib/prisma'
 import { ok, ERRORS } from '@/lib/api-response'
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { 
+  getStudentGroup, 
+  getMonday, 
+  getDayName, 
+  getEffectiveWeekParity, 
+  matchesWeekParity, 
+  mergeRoutines 
+} from '@/lib/routine-logic'
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -11,35 +19,6 @@ const querySchema = z.object({
   date: z.string().optional(), // ISO date string — if provided, returns merged view for that date
   week: z.string().optional(), // ISO date string — if provided, returns merged view for the full week
 })
-
-/**
- * Determine student lab group from studentId last digit
- */
-function getStudentGroup(studentId: string | null | undefined): 'ODD' | 'EVEN' | null {
-  if (!studentId) return null
-  const lastDigit = parseInt(studentId.slice(-1), 10)
-  if (isNaN(lastDigit)) return null
-  return lastDigit % 2 === 0 ? 'EVEN' : 'ODD'
-}
-
-/**
- * Get the Monday of the week for a given date
- */
-function getMonday(d: Date): Date {
-  const date = new Date(d)
-  const day = date.getDay()
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1)
-  date.setDate(diff)
-  date.setUTCHours(0, 0, 0, 0)
-  return date
-}
-
-/**
- * Get the day name from a Date
- */
-function getDayName(d: Date): string {
-  return d.toLocaleDateString('en-US', { weekday: 'long' })
-}
 
 /**
  * Look up the current week type (A or B) from the RoutineWeek table.
@@ -78,60 +57,6 @@ async function getWeekType(monday: Date): Promise<{ weekType: 'A' | 'B'; working
   })
 
   return { weekType: weekType as 'A' | 'B', workingWeekNumber, isSkipped: false }
-}
-
-/**
- * Map weekType + studentGroup to weekParity for BaseRoutine filtering.
- * 
- * Working-week system:
- *   Type A (odd working weeks): EVEN group → Position A labs, ODD group → Position B labs
- *   Type B (even working weeks): EVEN group → Position B labs, ODD group → Position A labs
- * 
- * In the DB, BaseRoutine.weekParity stores the *position*:
- *   weekParity="ODD"  → shown when group is in Position B
- *   weekParity="EVEN" → shown when group is in Position A  
- *   weekParity="ALL"  → shown every week
- */
-function getEffectiveWeekParity(weekType: 'A' | 'B', studentGroup: 'ODD' | 'EVEN' | null): 'ODD' | 'EVEN' {
-  if (!studentGroup) return weekType === 'A' ? 'EVEN' : 'ODD'
-
-  // EVEN group (G1): Type A → Position A (EVEN parity), Type B → Position B (ODD parity)
-  // ODD group (G2):  Type A → Position B (ODD parity),  Type B → Position A (EVEN parity)
-  if (studentGroup === 'EVEN') {
-    return weekType === 'A' ? 'EVEN' : 'ODD'
-  } else {
-    return weekType === 'A' ? 'ODD' : 'EVEN'
-  }
-}
-
-/**
- * Auto-detect if a course is biweekly based on its code.
- */
-function isBiweeklyCourse(courseCode: string): boolean {
-  if (courseCode.toLowerCase().startsWith('hum')) return false
-  const match = courseCode.match(/(\d+)$/)
-  if (!match) return false
-  const lastDigit = parseInt(match[1].slice(-1), 10)
-  return lastDigit % 2 === 0
-}
-
-/**
- * Determine if a routine entry should be shown this week.
- */
-function matchesWeekParity(
-  routine: { weekParity: string; isLab: boolean; courseCode: string; targetGroup: string },
-  effectiveParity: 'ODD' | 'EVEN',
-): boolean {
-  // 1) Explicit weekParity takes priority
-  if (routine.weekParity !== 'ALL') {
-    return routine.weekParity === effectiveParity
-  }
-
-  // 2) weekParity="ALL" means show every week — skip auto-detect
-  //    Labs like IPE 4208 have weekParity="ALL" + targetGroup="ODD"/"EVEN"
-  //    which means they are already filtered by targetGroup in the DB query.
-  //    Do NOT re-interpret them as biweekly here.
-  return true
 }
 
 export async function GET(req: NextRequest) {
@@ -200,48 +125,7 @@ export async function GET(req: NextRequest) {
       })
 
       // Merge: build the final schedule
-      const merged = filteredRoutines.map((base) => {
-        const override = overrides.find(
-          (o) => o.baseRoutineId === base.id &&
-                 (o.type === 'CANCELLED' || o.type === 'ROOM_CHANGE' || o.type === 'TIME_CHANGE')
-        )
-
-        if (override?.type === 'CANCELLED') {
-          return {
-            ...base,
-            status: 'CANCELLED' as const,
-            reason: override.reason,
-            overrideId: override.id,
-          }
-        }
-
-        if (override?.type === 'ROOM_CHANGE') {
-          return {
-            ...base,
-            room: override.room || base.room,
-            status: 'ROOM_CHANGED' as const,
-            originalRoom: base.room,
-            reason: override.reason,
-            overrideId: override.id,
-          }
-        }
-
-        if (override?.type === 'TIME_CHANGE') {
-          return {
-            ...base,
-            startTime: override.startTime || base.startTime,
-            endTime: override.endTime || base.endTime,
-            room: override.room || base.room,
-            status: 'TIME_CHANGED' as const,
-            originalStartTime: base.startTime,
-            originalEndTime: base.endTime,
-            reason: override.reason,
-            overrideId: override.id,
-          }
-        }
-
-        return { ...base, status: 'NORMAL' as const }
-      })
+      const merged = mergeRoutines(filteredRoutines, overrides)
 
       // Add makeup classes
       const makeups = overrides
