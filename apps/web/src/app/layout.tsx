@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { SessionProvider } from 'next-auth/react'
 import { Toaster } from 'sonner'
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
+import IOSInstallPrompt from '@/components/IOSInstallPrompt'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
               <Toaster richColors position="top-right" />
               <ServiceWorkerRegistrar />
+              <IOSInstallPrompt />
             </React.Suspense>
           </SessionProvider>
         </ThemeProvider>
