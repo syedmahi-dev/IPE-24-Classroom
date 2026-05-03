@@ -113,6 +113,11 @@ export default function ChatPage() {
         }),
       })
 
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        throw new Error(res.status === 504 ? 'Request timed out. Try again.' : 'Server error. Please try again.')
+      }
+
       const data = await res.json()
 
       // Update rate limit from response

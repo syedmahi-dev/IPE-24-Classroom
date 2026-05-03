@@ -17,7 +17,7 @@ import {
 import { fetchLiveContext, formatLiveContext } from '@/lib/virtual-cr-context'
 import { z } from 'zod'
 
-export const maxDuration = 15
+export const maxDuration = 10
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -123,7 +123,11 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Step 5: Fetch live context from DB (READ-ONLY) + embed question in parallel ──
-    const liveContextPromise = fetchLiveContext().catch((err) => {
+    // Race with a 4s timeout so live context doesn't consume all function time
+    const liveContextPromise = Promise.race([
+      fetchLiveContext(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+    ]).catch((err) => {
       console.warn('[Chat] Live context fetch failed:', err)
       return null
     })
