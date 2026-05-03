@@ -53,8 +53,8 @@ export function buildPreviewEmbed(
   embed.addFields({
     name: 'Review',
     value: timeoutMs
-      ? `React ✅ to **publish** to website + Telegram\nReact ❌ to **discard**\nNo discard in ${Math.max(1, Math.floor(timeoutMs / (60 * 60 * 1000)))}h => auto-publish`
-      : 'React ✅ to **publish** to website + Telegram\nReact ❌ to **discard**\nRoutine override posts stay pending until explicit decision',
+      ? `React ✅ to **publish** to website\nReact ❌ to **discard**\nAuto-publishes in ${Math.max(1, Math.floor(timeoutMs / (60 * 60 * 1000)))}h if no response`
+      : 'React ✅ to **publish** to website\nReact ❌ to **discard**\nSchedule updates require explicit approval — no auto-publish',
   })
 
   return embed
@@ -62,14 +62,13 @@ export function buildPreviewEmbed(
 
 export function buildPublishedEmbed(
   classification: ClassificationResult,
-  result: { website: boolean; telegram: boolean; filesCreated: number }
+  result: { website: boolean; filesCreated: number }
 ): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle(`✅ Published — ${classification.title}`)
     .setColor(Colors.Green)
     .addFields(
       { name: 'Website', value: result.website ? '✅ Posted' : '❌ Failed', inline: true },
-      { name: 'Telegram', value: result.telegram ? '✅ Sent' : '⚠️ Skipped', inline: true },
       { name: 'Files', value: result.filesCreated > 0 ? `📁 ${result.filesCreated} saved` : '—', inline: true },
     )
     .setTimestamp()

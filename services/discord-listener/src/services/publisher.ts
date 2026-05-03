@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+
 import { getConfig } from '../config'
 import { ClassificationResult, RoutineOverrideExtract } from './classifier'
 import { DriveUploadResult } from './drive'
@@ -7,7 +7,6 @@ import { requestInternalApi } from '../lib/internal-api'
 
 export interface PublishResult {
   website: boolean
-  telegram: boolean
   filesCreated: number
   overridesCreated: number
   errors: string[]
@@ -30,7 +29,7 @@ export async function publishAnnouncement(
   courseCode?: string,
   folderLabel?: string
 ): Promise<PublishResult> {
-  const { INTERNAL_API_URL, INTERNAL_API_SECRET, TELEGRAM_BOT_URL } = getConfig()
+  const { INTERNAL_API_URL, INTERNAL_API_SECRET } = getConfig()
   const errors: string[] = []
 
   // --- 1. Website Internal API ---
@@ -139,37 +138,7 @@ export async function publishAnnouncement(
     }
   }
 
-  // --- 4. Telegram Bot (forward message to class group) ---
-  let telegramOk = false
-  const telegramUrl = TELEGRAM_BOT_URL
-  if (!telegramUrl || telegramUrl === 'disabled') {
-    logger.info('publisher', 'telegram disabled — skipping')
-  } else {
-    try {
-      const tgMessage = buildTelegramMessage(classification, files)
-      const res = await fetch(`${telegramUrl}/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-internal-secret': INTERNAL_API_SECRET,
-        },
-        body: JSON.stringify({ message: tgMessage }),
-      })
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`)
-      }
-      telegramOk = true
-      logger.info('publisher', 'telegram message sent')
-    } catch (err) {
-      // Telegram failures are non-fatal — website is more important
-      const msg = `Telegram publish failed: ${String(err)}`
-      errors.push(msg)
-      logger.warn('publisher', msg)
-    }
-  }
-
-  return { website: websiteOk, telegram: telegramOk, filesCreated, overridesCreated, errors }
+  return { website: websiteOk, filesCreated, overridesCreated, errors }
 }
 
 function buildHtmlBody(
@@ -189,23 +158,6 @@ function buildHtmlBody(
 
   html += `<p><small>Source: <a href="${sourceUrl}" target="_blank">Discord message</a></small></p>`
   return html
-}
-
-function buildTelegramMessage(
-  classification: ClassificationResult,
-  files: DriveUploadResult[]
-): string {
-  const emoji = TYPE_EMOJIS[classification.type] ?? '📢'
-  let msg = `${emoji} *${classification.title}*\n\n${classification.body}`
-
-  if (files.length > 0) {
-    msg += '\n\n*Files:*'
-    for (const f of files) {
-      msg += `\n• ${f.name}: ${f.driveUrl}`
-    }
-  }
-
-  return msg.slice(0, 4096)
 }
 
 function escapeHtml(str: string): string {

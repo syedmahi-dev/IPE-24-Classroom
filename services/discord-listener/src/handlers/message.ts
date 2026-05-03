@@ -352,38 +352,40 @@ async function handleReviewGate(
   courseCode?: string,
   folderLabel?: string
 ): Promise<void> {
-  const requiresRoutineConfirmation = classification.overrides.length > 0
-  const timeoutMs: number | undefined = requiresRoutineConfirmation ? undefined : getConfig().REACTION_TIMEOUT_MS
+  const isScheduleUpdate = channelConfig.defaultAnnouncementType === 'routine_update' || classification.overrides.length > 0
+  const timeoutMs: number | undefined = isScheduleUpdate ? undefined : getConfig().REACTION_TIMEOUT_MS
   logger.info('handler', 'review gate awaiting confirmation', {
     channel: sourceChannelName,
     title: classification.title,
-    mode: 'all_messages',
-    timeoutMs: timeoutMs ?? null,
-    requiresRoutineConfirmation,
+    isScheduleUpdate,
+    timeoutMs: timeoutMs ?? 'none (requires explicit approval)',
   })
 
+  // Send preview to Telegram for CR review (ALL channels)
+  try {
+    const { buildTelegramPreviewHtml } = await import('../services/preview')
+    const Redis = (await import('ioredis')).default
+    const { REDIS_URL } = getConfig()
+    const redis = new Redis(REDIS_URL)
+    const previewHtml = buildTelegramPreviewHtml(classification, files, message.url)
+    await redis.publish('telegram_send_preview', JSON.stringify({
+      messageId: message.id,
+      previewTextHtml: previewHtml
+    }))
+    redis.quit()
+    logger.info('handler', 'Sent preview to Telegram for approval')
+  } catch (e) {
+    logger.warn('handler', 'failed to send telegram preview', { error: String(e) })
+  }
+
+  // Also post Discord embed preview as a reply
+  const previewContent = isScheduleUpdate
+    ? '📅 Schedule update detected. Approval is required before publishing. React ✅ to publish or ❌ to discard.'
+    : '📋 New announcement detected. Sent to CR for review. Auto-publishes in 2hrs if no response.'
   const previewMessage = await message.reply({
-    content: 'Routine override detected. Approval is required before publishing. React ✅ to publish or ❌ to discard.',
+    content: previewContent,
     embeds: [buildPreviewEmbed(classification, files, sourceChannelName, timeoutMs).toJSON() as any],
   }).catch(() => null)
-
-  if (requiresRoutineConfirmation) {
-    try {
-      const { buildTelegramPreviewHtml } = await import('../services/preview')
-      const Redis = (await import('ioredis')).default
-      const { REDIS_URL } = getConfig()
-      const redis = new Redis(REDIS_URL)
-      const previewHtml = buildTelegramPreviewHtml(classification, files, message.url)
-      await redis.publish('telegram_send_preview', JSON.stringify({
-        messageId: message.id,
-        previewTextHtml: previewHtml
-      }))
-      redis.quit()
-      logger.info('handler', 'Sent preview to Telegram for approval')
-    } catch (e) {
-      logger.warn('handler', 'failed to send telegram preview', { error: String(e) })
-    }
-  }
 
   if (!previewMessage) {
     logger.warn('handler', 'failed to send preview message, publishing blocked', {
@@ -409,20 +411,20 @@ async function handleReviewGate(
   }
 
   if (decision === 'timed_out') {
-    logger.warn('handler', 'review decision: timed_out or collector_error', {
+    logger.warn('handler', 'review decision: timed_out', {
       messageId: message.id,
       title: classification.title,
-      requiresRoutineConfirmation,
+      isScheduleUpdate,
     })
 
-    if (requiresRoutineConfirmation) {
+    if (isScheduleUpdate) {
       await message.react('⏸️').catch(() => {})
-      await previewMessage.reply('⏸️ No valid approval captured. This routine override was discarded.').catch(() => {})
+      await previewMessage.reply('⏸️ No approval received. This schedule update was NOT published. Explicit approval is required.').catch(() => {})
       await releaseMessage(message.id)
       return
     }
 
-    await previewMessage.reply('⌛ No review action received within 2 hours. Auto-publishing this non-routine post.').catch(() => {})
+    await previewMessage.reply('⌛ No review action received within 2 hours. Auto-publishing.').catch(() => {})
     await handleAutoPublish(message, classification, files, courseCode, folderLabel)
     return
   }

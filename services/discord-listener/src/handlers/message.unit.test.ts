@@ -34,6 +34,7 @@ vi.mock('../lib/redis', () => ({
 vi.mock('../config', () => ({
   getConfig: vi.fn(() => ({
     REACTION_TIMEOUT_MS: 7_200_000,
+    REDIS_URL: 'redis://localhost:6379',
   })),
   getChannelConfig: vi.fn(() => ({
     channelId: 'channel-1',
@@ -99,7 +100,6 @@ describe('handleMessage review gate timeout behavior', () => {
     vi.clearAllMocks()
     vi.mocked(publishAnnouncement).mockResolvedValue({
       website: true,
-      telegram: true,
       filesCreated: 0,
       overridesCreated: 0,
       errors: [],
@@ -128,7 +128,7 @@ describe('handleMessage review gate timeout behavior', () => {
     await handleMessage(message as any)
 
     expect(previewMessage.reply).toHaveBeenCalledWith(
-      expect.stringContaining('Auto-publishing this non-routine post')
+      expect.stringContaining('Auto-publishing')
     )
     expect(publishAnnouncement).toHaveBeenCalledTimes(1)
     expect(releaseMessage).not.toHaveBeenCalled()
@@ -161,7 +161,7 @@ describe('handleMessage review gate timeout behavior', () => {
     await handleMessage(message as any)
 
     expect(previewMessage.reply).toHaveBeenCalledWith(
-      expect.stringContaining('routine override was discarded')
+      expect.stringContaining('schedule update was NOT published')
     )
     expect(publishAnnouncement).not.toHaveBeenCalled()
     expect(releaseMessage).toHaveBeenCalledWith('msg-1')
