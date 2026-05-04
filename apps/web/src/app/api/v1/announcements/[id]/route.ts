@@ -16,7 +16,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       where: { id: params.id, isPublished: true },
       include: {
         author: { select: { name: true, avatarUrl: true, role: true } },
-        courses: { include: { course: { select: { id: true, code: true, name: true } } } },
+        courses: { include: { course: { select: { id: true, code: true, name: true, courseType: true } } } },
       },
     })
 
