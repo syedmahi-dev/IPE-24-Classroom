@@ -10,12 +10,15 @@ export default function ExamsPage() {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [filter, setFilter] = useState<'ALL' | 'EXAM' | 'ASSIGNMENT'>('ALL')
 
   const fetchExams = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/v1/exams?page=${page}&limit=10`)
+      const params = new URLSearchParams({ page: page.toString(), limit: '10' })
+      if (filter !== 'ALL') params.set('type', filter)
+      const res = await fetch(`/api/v1/exams?${params}`)
       if (!res.ok) throw new Error('Network response was not ok')
       const result = await res.json()
       if (!result.success) throw new Error(result.error?.message || 'Failed')
@@ -26,7 +29,7 @@ export default function ExamsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page])
+  }, [page, filter])
 
   useEffect(() => {
     fetchExams()
@@ -66,7 +69,7 @@ export default function ExamsPage() {
              <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-3xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white shadow-xl shadow-rose-500/40 transform rotate-3 flex-shrink-0 mx-auto md:mx-0 mb-2 md:mb-6">
                 <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />
              </div>
-             <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Exam Tracker</h1>
+             <h1 className="text-2xl md:text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Exams & Assignments</h1>
              <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg leading-relaxed">
                {nearestExam ? `Next assessment is ${nearestExam.title} for ${nearestExam.course?.code}` : 'No upcoming assessments scheduled right now. Relax!'}
              </p>
@@ -82,6 +85,27 @@ export default function ExamsPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 glass p-2 rounded-2xl w-fit">
+        {([
+          { key: 'ALL', label: 'All' },
+          { key: 'EXAM', label: 'Exams' },
+          { key: 'ASSIGNMENT', label: 'Assignments' },
+        ] as const).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => { setFilter(tab.key); setPage(1) }}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              filter === tab.key
+                ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-lg shadow-rose-500/25'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {loading && (

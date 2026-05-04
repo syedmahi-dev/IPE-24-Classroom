@@ -8,6 +8,7 @@ import { z } from 'zod'
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
+  type: z.enum(['EXAM', 'ASSIGNMENT']).optional(),
 })
 
 /**
@@ -25,12 +26,14 @@ export async function GET(req: NextRequest) {
       return ERRORS.VALIDATION('Invalid query parameters')
     }
 
-    const { page, limit } = parsed.data
+    const { page, limit, type } = parsed.data
     const skip = (page - 1) * limit
+
+    const where = { isActive: true, ...(type ? { type } : {}) }
 
     const [items, total] = await prisma.$transaction([
       prisma.exam.findMany({
-        where: { isActive: true },
+        where,
         include: {
           course: {
             select: { code: true, name: true }
@@ -43,7 +46,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit,
       }),
-      prisma.exam.count({ where: { isActive: true } })
+      prisma.exam.count({ where })
     ])
 
     return ok(items, {

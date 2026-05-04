@@ -30,13 +30,9 @@ export function clearSessionMock() {
 /**
  * Mock API guard to bypass auth in integration tests if needed
  * or to simulate specific roles.
+ * Note: The project uses direct auth() calls, not a centralized apiGuard.
+ * This helper is kept for potential future use.
  */
 export function mockApiGuard(user: { id: string; role: Role }) {
-  vi.mock('@/lib/api-utils', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('@/lib/api-utils')>();
-    return {
-      ...actual,
-      apiGuard: vi.fn().mockResolvedValue(user),
-    };
-  });
+  mockSession({ id: user.id, email: 'test@iut-dhaka.edu', name: 'Test User', role: user.role });
 }
