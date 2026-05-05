@@ -14,7 +14,7 @@ import {
 } from '../services/drive'
 import { publishAnnouncement } from '../services/publisher'
 import { ingestToKnowledgeBase } from '../services/knowledge-ingestor'
-import { buildPreviewEmbed } from '../services/preview'
+import { buildPreviewEmbed, buildTelegramPreviewHtml } from '../services/preview'
 import { logger } from '../lib/logger'
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -238,7 +238,11 @@ export async function handleMessage(message: Message): Promise<void> {
     const courseCode = defaultCourseCode
     const folderLabel = channelConfig.label
 
-    await handleReviewGate(message, channelConfig, classification, files, channelName, courseCode, folderLabel)
+    if (channelConfig.mode === 'AUTO_PUBLISH') {
+      await handleAutoPublish(message, classification, files, courseCode, folderLabel)
+    } else {
+      await handleReviewGate(message, channelConfig, classification, files, channelName, courseCode, folderLabel)
+    }
   } catch (err) {
     logger.error('handler', 'unhandled error in message handler', { error: String(err) })
     await message.react('💥').catch(() => {})
@@ -437,7 +441,11 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
     const courseCode = defaultCourseCode
     const folderLabel = channelConfig.label
 
-    await handleReviewGate(anchor, channelConfig, classification, files, channelName, courseCode, folderLabel)
+    if (channelConfig.mode === 'AUTO_PUBLISH') {
+      await handleAutoPublish(anchor, classification, files, courseCode, folderLabel)
+    } else {
+      await handleReviewGate(anchor, channelConfig, classification, files, channelName, courseCode, folderLabel)
+    }
   } catch (err) {
     logger.error('handler', 'unhandled error in batched message handler', { error: String(err) })
     await anchor.react('💥').catch(() => {})
@@ -568,12 +576,14 @@ async function handleReviewGate(
   folderLabel?: string
 ): Promise<void> {
   const isScheduleUpdate = channelConfig.defaultAnnouncementType === 'routine_update' || classification.overrides.length > 0
-  const timeoutMs: number | undefined = isScheduleUpdate ? undefined : getConfig().REACTION_TIMEOUT_MS
+  // Schedule updates still need explicit approval but cap at 24h to prevent zombie handlers
+  const SCHEDULE_TIMEOUT_MS = 24 * 60 * 60 * 1000 // 24 hours
+  const timeoutMs: number = isScheduleUpdate ? SCHEDULE_TIMEOUT_MS : getConfig().REACTION_TIMEOUT_MS
   logger.info('handler', 'review gate awaiting confirmation', {
     channel: sourceChannelName,
     title: classification.title,
     isScheduleUpdate,
-    timeoutMs: timeoutMs ?? 'none (requires explicit approval)',
+    timeoutMs,
   })
 
   // ── 1. Post Discord embed preview as a reply ──────────────────────────────
@@ -606,17 +616,19 @@ async function handleReviewGate(
 
   // ── 3. NOW send preview to Telegram (safe — we're already listening) ──────
   try {
-    const { buildTelegramPreviewHtml } = await import('../services/preview')
+    const previewHtml = buildTelegramPreviewHtml(classification, files, message.url)
     const Redis = (await import('ioredis')).default
     const { REDIS_URL } = getConfig()
-    const redis = new Redis(REDIS_URL)
-    const previewHtml = buildTelegramPreviewHtml(classification, files, message.url)
-    await redis.publish('telegram_send_preview', JSON.stringify({
-      messageId: message.id,
-      previewTextHtml: previewHtml
-    }))
-    redis.quit()
-    logger.info('handler', 'Sent preview to Telegram for approval')
+    const pubRedis = new Redis(REDIS_URL)
+    try {
+      await pubRedis.publish('telegram_send_preview', JSON.stringify({
+        messageId: message.id,
+        previewTextHtml: previewHtml
+      }))
+      logger.info('handler', 'Sent preview to Telegram for approval')
+    } finally {
+      pubRedis.quit().catch(() => {})
+    }
   } catch (e) {
     logger.warn('handler', 'failed to send telegram preview', { error: String(e) })
   }
@@ -669,7 +681,7 @@ async function waitForReviewDecision(
   previewMessage: Message,
   sourceMessage: Message,
   channelConfig: ChannelConfig,
-  timeoutMs?: number
+  timeoutMs: number
 ): Promise<'approved' | 'discarded' | 'timed_out' | 'superseded'> {
   const { REDIS_URL } = getConfig()
   const Redis = (await import('ioredis')).default
@@ -703,11 +715,9 @@ async function waitForReviewDecision(
   }).catch(() => 'timed_out' as const)
 
   const redisPromise = new Promise<'approved' | 'discarded' | 'timed_out' | 'superseded'>((resolve) => {
-    if (timeoutMs) {
-      timeoutHandle = setTimeout(() => {
-        resolve('timed_out')
-      }, timeoutMs)
-    }
+    timeoutHandle = setTimeout(() => {
+      resolve('timed_out')
+    }, timeoutMs)
 
     subscriber.on('message', (channel: string, message: string) => {
       if (channel === 'discord_approvals') {

@@ -9,6 +9,7 @@ const TYPE_COLORS: Record<string, number> = {
   routine_update: Colors.Yellow,
   urgent:         0xdc2626, // deep red
   event:          Colors.Purple,
+  course_update:  Colors.DarkGold,
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -18,6 +19,7 @@ const TYPE_LABELS: Record<string, string> = {
   routine_update: 'Routine Update',
   urgent:         'URGENT',
   event:          'Event',
+  course_update:  'Course Update',
 }
 
 export function buildPreviewEmbed(

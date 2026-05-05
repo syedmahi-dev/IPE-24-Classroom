@@ -24,6 +24,7 @@ vi.mock('../services/preview', () => ({
   buildPreviewEmbed: vi.fn(() => ({
     toJSON: () => ({}),
   })),
+  buildTelegramPreviewHtml: vi.fn(() => '<b>Preview</b>'),
 }))
 
 vi.mock('../lib/redis', () => ({
@@ -44,6 +45,19 @@ vi.mock('../config', () => ({
     label: 'CSE-3100',
   })),
 }))
+
+// Mock ioredis to prevent real Redis connections during tests
+vi.mock('ioredis', () => {
+  const MockRedis = vi.fn().mockImplementation(() => ({
+    subscribe: vi.fn((_channel: string, _channel2: string, cb?: Function) => {
+      if (cb) cb()
+    }),
+    on: vi.fn(),
+    quit: vi.fn(() => Promise.resolve()),
+    publish: vi.fn(() => Promise.resolve(0)),
+  }))
+  return { default: MockRedis }
+})
 
 import { handleMessage } from './message'
 import { classifyMessage } from '../services/classifier'

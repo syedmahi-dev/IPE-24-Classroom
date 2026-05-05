@@ -129,7 +129,7 @@ export async function classifyMessage(
 ): Promise<ClassificationResult> {
   const genAI = new GoogleGenerativeAI(getConfig().GEMINI_API_KEY)
   const model = genAI.getGenerativeModel({
-    model: 'gemini-flash-latest',
+    model: 'gemini-2.5-flash',
     generationConfig: { temperature: 0.1, maxOutputTokens: 1200 },
   })
 
