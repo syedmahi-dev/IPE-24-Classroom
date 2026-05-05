@@ -44,6 +44,7 @@ vi.mock('../config', () => ({
     authorizedRoleIds: [],
     label: 'CSE-3100',
   })),
+  getActiveCourses: vi.fn(() => []),
 }))
 
 // Mock ioredis to prevent real Redis connections during tests
@@ -128,7 +129,9 @@ describe('handleMessage review gate timeout behavior', () => {
       urgency: 'medium',
       fileCategory: 'other',
       detectedCourseCode: null,
+      detectedCourseType: null,
       overrides: [],
+      confidence: 'high',
     })
 
     const previewMessage = {
@@ -141,6 +144,13 @@ describe('handleMessage review gate timeout behavior', () => {
 
     await handleMessage(message as any)
 
+    // The review gate should have triggered — the preview message should have been created
+    // (message.reply returns previewMessage) and reactions added
+    expect(message.reply).toHaveBeenCalled()
+    expect(previewMessage.react).toHaveBeenCalled()
+
+    // On timeout, the handler auto-publishes non-routine messages
+    // It replies to the preview with the auto-publish notice and calls publishAnnouncement
     expect(previewMessage.reply).toHaveBeenCalledWith(
       expect.stringContaining('Auto-publishing')
     )
@@ -155,14 +165,17 @@ describe('handleMessage review gate timeout behavior', () => {
       body: 'Body',
       urgency: 'high',
       fileCategory: 'other',
-      detectedCourseCode: null,
+      detectedCourseCode: 'IPE4208',
+      detectedCourseType: 'LAB',
       overrides: [
         {
-          action: 'cancel',
-          dayOfWeek: 'Sunday',
+          type: 'CANCELLED',
+          date: '2026-05-12',
+          courseCode: 'IPE4208',
         },
       ],
-    } as any)
+      confidence: 'high',
+    })
 
     const previewMessage = {
       react: vi.fn(() => Promise.resolve()),

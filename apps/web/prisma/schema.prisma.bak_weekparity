@@ -442,7 +442,6 @@ model RoutineOverride {
   room           String?
   teacher        String?
   targetGroup    String       @default("ALL")
-  weekParity     String       @default("ALL")
   reason         String?
   createdById    String
   archivedAt     DateTime?

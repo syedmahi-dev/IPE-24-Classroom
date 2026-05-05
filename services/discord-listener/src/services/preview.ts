@@ -44,9 +44,16 @@ export function buildPreviewEmbed(
 
   if (classification.overrides.length > 0) {
     embed.addFields({
-      name: 'Detected Routine Overrides',
+      name: '📅 Detected Routine Overrides',
       value: classification.overrides
-        .map((ov) => `${ov.type} ${ov.courseCode} on ${ov.date}`)
+        .map((ov) => {
+          let line = `**${ov.type}** ${ov.courseCode} (${ov.date})`
+          const meta = []
+          if (ov.targetGroup && ov.targetGroup !== 'ALL') meta.push(`G: ${ov.targetGroup}`)
+          if (ov.weekParity && ov.weekParity !== 'ALL') meta.push(ov.weekParity.replace('WEEK_', 'W: '))
+          if (meta.length > 0) line += ` [${meta.join(', ')}]`
+          return line
+        })
         .join('\n')
         .slice(0, 1024),
     })
@@ -151,11 +158,22 @@ function formatOverrideLine(ov: RoutineOverrideExtract): string {
     if (ov.startTime) line += ` at ${escapeHtml(ov.startTime)}${ov.endTime ? '-' + escapeHtml(ov.endTime) : ''}`
     if (ov.room) line += ` in ${escapeHtml(ov.room)}`
   }
+
+  // Group & Week Parity indicators
+  const indicators: string[] = []
   if (ov.targetGroup && ov.targetGroup !== 'ALL') {
-    line += ` (${ov.targetGroup} group)`
+    indicators.push(`Group ${ov.targetGroup}`)
   }
+  if (ov.weekParity && ov.weekParity !== 'ALL') {
+    indicators.push(ov.weekParity.replace('_', ' '))
+  }
+  
+  if (indicators.length > 0) {
+    line += ` [${indicators.join(' | ')}]`
+  }
+
   if (ov.reason) {
-    line += ` — ${escapeHtml(ov.reason)}`
+    line += ` — <i>${escapeHtml(ov.reason)}</i>`
   }
   line += '\n'
   return line

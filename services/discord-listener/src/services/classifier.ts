@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { getConfig, AnnouncementType } from '../config'
+import { getConfig, getGeminiKey, rotateGeminiKey, AnnouncementType } from '../config'
 import { logger } from '../lib/logger'
 
 export interface RoutineOverrideExtract {
@@ -12,6 +12,7 @@ export interface RoutineOverrideExtract {
   room?: string
   teacher?: string
   targetGroup?: 'ALL' | 'ODD' | 'EVEN'
+  weekParity?: 'ALL' | 'WEEK_A' | 'WEEK_B'
   reason?: string
 }
 
@@ -22,7 +23,9 @@ export interface ClassificationResult {
   urgency: 'low' | 'medium' | 'high'
   fileCategory: 'lecture_notes' | 'assignment' | 'past_paper' | 'syllabus' | 'other'
   detectedCourseCode: string | null
+  detectedCourseType: 'THEORY' | 'LAB' | null
   overrides: RoutineOverrideExtract[]
+  confidence: 'low' | 'high'
 }
 
 export interface ImageInput {
@@ -94,7 +97,8 @@ For EACH override:
 - "endTime": HH:mm format (optional)
 - "room": new room if it's a room change or makeup (optional)
 - "teacher": teacher name if mentioned (optional)
-- "targetGroup": ALL | ODD | EVEN — default "ALL" unless the message specifies a lab group
+- "targetGroup": ALL | ODD | EVEN — Look for "Group A", "Batch 1", "ODD" -> "ODD"; "Group B", "Batch 2", "EVEN" -> "EVEN"; Default "ALL".
+- "weekParity": ALL | WEEK_A | WEEK_B — Look for "Week A", "Odd Week" -> "WEEK_A"; "Week B", "Even Week" -> "WEEK_B"; Default "ALL".
 - "reason": short reason (optional)
 
 If there are NO schedule changes, set "overrides" to an empty array [].
@@ -107,13 +111,15 @@ Respond with this exact JSON structure:
   "urgency": "low|medium|high",
   "fileCategory": "lecture_notes|assignment|past_paper|syllabus|other",
   "detectedCourseCode": "IPE4208 or null",
+  "confidence": "low|high",
   "overrides": [
     {
       "type": "CANCELLED",
       "date": "2026-05-12",
       "courseCode": "CHEM4215",
       "reason": "Teacher unavailable",
-      "targetGroup": "ALL"
+      "targetGroup": "ALL",
+      "weekParity": "ALL"
     }
   ]
 }
@@ -125,42 +131,43 @@ export async function classifyMessage(
   text: string,
   attachmentNames: string[] = [],
   images: ImageInput[] = [],
-  fixText?: string
+  fixText?: string,
+  retryCount = 0
 ): Promise<ClassificationResult> {
-  const genAI = new GoogleGenerativeAI(getConfig().GEMINI_API_KEY)
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
-    generationConfig: { temperature: 0.1, maxOutputTokens: 1200 },
-  })
-
-  const fileContext = attachmentNames.length > 0
-    ? `Attached files: ${attachmentNames.join(', ')}`
-    : 'No files attached.'
-
-  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
-
-  let prompt = CLASSIFY_PROMPT
-    .replaceAll('{TODAY}', `${today} (${dayName})`)
-    .replace('{MESSAGE}', text.slice(0, 2000))
-    .replace('{FILE_CONTEXT}', fileContext)
-
-  if (fixText) {
-    prompt += `\n\n=== CR FIX REQUEST ===\nThe class representative reviewed your previous output and requested the following correction: "${fixText}". Please strictly apply this correction in your JSON output. Do NOT include anything else.`
-  }
-
-  const parts: Array<string | { inlineData: { data: string; mimeType: string } }> = [prompt]
-  
-  for (const img of images) {
-    parts.push({
-      inlineData: {
-        data: img.base64,
-        mimeType: img.mimeType
-      }
-    })
-  }
-
   try {
+    const genAI = new GoogleGenerativeAI(getGeminiKey())
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash-lite',
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1200 },
+    })
+
+    const fileContext = attachmentNames.length > 0
+      ? `Attached files: ${attachmentNames.join(', ')}`
+      : 'No files attached.'
+
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+
+    let prompt = CLASSIFY_PROMPT
+      .replaceAll('{TODAY}', `${today} (${dayName})`)
+      .replace('{MESSAGE}', text.slice(0, 2000))
+      .replace('{FILE_CONTEXT}', fileContext)
+
+    if (fixText) {
+      prompt += `\n\n=== CR FIX REQUEST ===\nThe class representative reviewed your previous output and requested the following correction: "${fixText}". Please strictly apply this correction in your JSON output. Do NOT include anything else.`
+    }
+
+    const parts: Array<string | { inlineData: { data: string; mimeType: string } }> = [prompt]
+    
+    for (const img of images) {
+      parts.push({
+        inlineData: {
+          data: img.base64,
+          mimeType: img.mimeType
+        }
+      })
+    }
+
     const result = await model.generateContent(parts as any)
     const raw = result.response.text().replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(raw)
@@ -178,8 +185,17 @@ export async function classifyMessage(
     // Validate and normalize course code
     let detectedCourseCode: string | null = null
     if (parsed.detectedCourseCode && typeof parsed.detectedCourseCode === 'string') {
-      // Normalize: remove spaces, uppercase (e.g. "IPE 4208" → "IPE4208")
       detectedCourseCode = parsed.detectedCourseCode.toUpperCase().replace(/\s+/g, '').trim()
+    }
+
+    // Determine Course Type (Odd = Theory, Even = Lab)
+    let detectedCourseType: 'THEORY' | 'LAB' | null = null
+    if (detectedCourseCode) {
+      const match = detectedCourseCode.match(/\d$/)
+      if (match) {
+        const lastDigit = parseInt(match[0], 10)
+        detectedCourseType = lastDigit % 2 === 0 ? 'LAB' : 'THEORY'
+      }
     }
 
     const VALID_TYPES = ['general', 'exam', 'file_update', 'routine_update', 'urgent', 'event', 'course_update']
@@ -188,16 +204,10 @@ export async function classifyMessage(
     const finalType = (VALID_TYPES.includes(parsed.type) ? parsed.type : 'general') as AnnouncementType
     const finalUrgency = (validUrgency.includes(parsed.urgency) ? parsed.urgency : 'medium') as 'low' | 'medium' | 'high'
 
-    logger.info('classifier', 'Gemini classification result', {
-      type: finalType,
-      urgency: finalUrgency,
-      detectedCourseCode,
-      title: String(parsed.title).slice(0, 60),
-    })
-
     // Parse and validate overrides
     const VALID_OVERRIDE_TYPES = ['CANCELLED', 'MAKEUP', 'ROOM_CHANGE', 'TIME_CHANGE']
     const VALID_GROUPS = ['ALL', 'ODD', 'EVEN']
+    const VALID_PARITY = ['ALL', 'WEEK_A', 'WEEK_B']
     const overrides: RoutineOverrideExtract[] = []
 
     if (Array.isArray(parsed.overrides)) {
@@ -218,17 +228,11 @@ export async function classifyMessage(
             room: ov.room || undefined,
             teacher: ov.teacher || undefined,
             targetGroup: VALID_GROUPS.includes(ov.targetGroup) ? ov.targetGroup : 'ALL',
+            weekParity: VALID_PARITY.includes(ov.weekParity) ? ov.weekParity : 'ALL',
             reason: ov.reason || undefined,
           })
         }
       }
-    }
-
-    if (overrides.length > 0) {
-      logger.info('classifier', 'Extracted routine overrides', {
-        count: overrides.length,
-        overrides: overrides.map(o => `${o.type} ${o.courseCode} ${o.date}`),
-      })
     }
 
     return {
@@ -238,27 +242,33 @@ export async function classifyMessage(
       urgency: finalUrgency,
       fileCategory,
       detectedCourseCode,
+      detectedCourseType,
       overrides,
+      confidence: parsed.confidence === 'low' ? 'low' : 'high',
     }
-  } catch (err) {
-    logger.warn('classifier', 'Gemini classification failed, using fallback', { error: String(err) })
-    const attachmentBasedTitle = attachmentNames.length > 0
-      ? attachmentNames[0].replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim()
-      : ''
-    const firstLine = text
-      .split(/[.\n]/)[0]
-      .replace('No text caption was provided', '')
-      .trim()
+  } catch (err: any) {
+    // Handle Rate Limit (429) or other API errors
+    if (err?.status === 429 || err?.message?.includes('429')) {
+      const canRotate = rotateGeminiKey()
+      if (canRotate && retryCount < 3) {
+        logger.warn('classifier', 'rate limit hit, rotating key and retrying', { retryCount })
+        return classifyMessage(text, attachmentNames, images, fixText, retryCount + 1)
+      }
+    }
 
+    logger.warn('classifier', 'Gemini classification failed, using fallback', { error: String(err) })
+    
     // Fallback: use raw message as body, general type
     return {
       type: 'general',
-      title: (firstLine || attachmentBasedTitle || 'Class Announcement').slice(0, 60),
+      title: 'Class Announcement',
       body: text.slice(0, 4000),
       urgency: 'medium',
       fileCategory: 'other',
       detectedCourseCode: null,
+      detectedCourseType: null,
       overrides: [],
+      confidence: 'low',
     }
   }
 }

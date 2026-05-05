@@ -40,6 +40,7 @@ const ConfigSchema = z.object({
   // The CR's Telegram chat ID for DM fallback on errors
   TELEGRAM_CR_CHAT_ID: z.string().optional(),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
+  // Comma-separated list of Gemini API keys for failover/rotation
   GEMINI_API_KEY: z.string().min(1),
   GOOGLE_SERVICE_ACCOUNT_KEY: z.string().min(1),
   GOOGLE_DRIVE_FOLDER_ID: z.string().min(1),
@@ -61,12 +62,55 @@ export type AppConfig = Omit<z.infer<typeof ConfigSchema>, 'DISCORD_CHANNEL_CONF
 }
 
 let _config: AppConfig | null = null
+let _geminiKeys: string[] = []
+let _currentKeyIndex = 0
+let _activeCourses: { code: string; name: string }[] = []
 
 export function getConfig(): AppConfig {
   if (_config) return _config
   const parsed = ConfigSchema.parse(process.env)
   _config = parsed as unknown as AppConfig
+  
+  // Parse multiple Gemini keys
+  _geminiKeys = _config.GEMINI_API_KEY.split(',').map(k => k.trim()).filter(Boolean)
+  
   return _config
+}
+
+/**
+ * Get the list of active course codes.
+ */
+export function getActiveCourses(): { code: string; name: string }[] {
+  return _activeCourses
+}
+
+/**
+ * Get the current Gemini API key.
+ */
+export function getGeminiKey(): string {
+  if (_geminiKeys.length === 0) {
+    getConfig() // Ensure keys are parsed
+  }
+  return _geminiKeys[_currentKeyIndex] || _geminiKeys[0] || ''
+}
+
+/**
+ * Rotates to the next Gemini API key (useful when hitting rate limits).
+ * Returns true if we successfully rotated to a NEW key, false if we only have one key.
+ */
+export function rotateGeminiKey(): boolean {
+  if (_geminiKeys.length <= 1) return false
+  
+  const oldIndex = _currentKeyIndex
+  _currentKeyIndex = (_currentKeyIndex + 1) % _geminiKeys.length
+  
+  logger.info('config', 'rotated Gemini API key', { 
+    fromIndex: oldIndex, 
+    toIndex: _currentKeyIndex,
+    totalKeys: _geminiKeys.length 
+  })
+  
+  return true
 }
 
 export function getChannelConfig(channelId: string): ChannelConfig | null {
@@ -74,32 +118,30 @@ export function getChannelConfig(channelId: string): ChannelConfig | null {
   return cfg.DISCORD_CHANNEL_CONFIGS.find((c) => c.channelId === channelId) ?? null
 }
 
-export async function refreshChannelConfigs(): Promise<void> {
+export async function refreshBotConfigs(): Promise<void> {
   const config = getConfig()
+  const headers = { 'x-internal-secret': config.INTERNAL_API_SECRET }
+  
   try {
-    const res = await fetch(`${config.INTERNAL_API_URL}/api/v1/internal/bot-config`, {
-      headers: {
-        'x-internal-secret': config.INTERNAL_API_SECRET,
-      },
-    })
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`)
+    // 1. Refresh Channel Configs
+    const channelRes = await fetch(`${config.INTERNAL_API_URL}/api/v1/internal/bot-config`, { headers })
+    if (channelRes.ok) {
+      const data = await channelRes.json()
+      const parsed = z.array(ChannelConfigSchema).safeParse(data)
+      if (parsed.success && parsed.data.length > 0) {
+        _config!.DISCORD_CHANNEL_CONFIGS = parsed.data
+        logger.info('config', 'refreshed channel configs from API', { count: parsed.data.length })
+      }
     }
 
-    const data = await res.json()
-    const parsed = z.array(ChannelConfigSchema).safeParse(data)
-    
-    if (parsed.success) {
-      // Safety: never overwrite with empty — likely means DB is empty/misconfigured
-      if (parsed.data.length === 0) {
-        logger.warn('config', 'API returned 0 channel configs — keeping existing .env configs')
-        return
+    // 2. Refresh Active Courses
+    const courseRes = await fetch(`${config.INTERNAL_API_URL}/api/v1/internal/courses`, { headers })
+    if (courseRes.ok) {
+      const json = await courseRes.json() as any
+      if (json.success && Array.isArray(json.data)) {
+        _activeCourses = json.data
+        logger.info('config', 'refreshed active course list', { count: json.data.length })
       }
-      _config!.DISCORD_CHANNEL_CONFIGS = parsed.data
-      logger.info('config', 'refreshed channel configs from API', { count: parsed.data.length })
-    } else {
-      logger.error('config', 'invalid config received from API', { error: parsed.error.message })
     }
   } catch (err) {
     logger.warn('config', 'failed to fetch configs from API, keeping existing', { error: String(err) })
@@ -109,8 +151,8 @@ export async function refreshChannelConfigs(): Promise<void> {
 export function startConfigRefresh() {
   const interval = getConfig().CONFIG_REFRESH_INTERVAL_MS
   setInterval(() => {
-    refreshChannelConfigs().catch(() => {})
+    refreshBotConfigs().catch(() => {})
   }, interval)
   // Run once immediately
-  refreshChannelConfigs().catch(() => {})
+  refreshBotConfigs().catch(() => {})
 }

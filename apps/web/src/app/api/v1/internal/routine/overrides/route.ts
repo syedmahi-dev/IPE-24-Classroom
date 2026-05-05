@@ -18,6 +18,7 @@ const overrideSchema = z.object({
   room: z.string().max(50).optional(),
   teacher: z.string().max(100).optional(),
   targetGroup: z.enum(['ALL', 'ODD', 'EVEN']).default('ALL'),
+  weekParity: z.enum(['ALL', 'WEEK_A', 'WEEK_B']).default('ALL'),
   reason: z.string().max(500).optional(),
 })
 
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
           room: ov.room || null,
           teacher: ov.teacher || null,
           targetGroup: ov.targetGroup,
+          weekParity: ov.weekParity,
           reason: ov.reason || null,
           createdById: systemUserId,
         },

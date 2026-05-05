@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits, Partials } from 'discord.js'
 import http from 'http'
 import { getConfig, getChannelConfig, startConfigRefresh } from './config'
-import { handleBatchedMessages, handleMessage } from './handlers/message'
+import { handleMessages } from './handlers/message'
 import { enqueueMessage, clearAllBatches } from './lib/batcher'
 import { logger } from './lib/logger'
 
@@ -35,19 +35,14 @@ async function main() {
       const channelConfig = getChannelConfig(message.channel.id)
       if (!channelConfig) return
 
+
       // Enqueue into the batcher — it will debounce rapid-fire messages
       // from the same user in the same channel and flush them as one batch.
       enqueueMessage(message, async (messages) => {
         try {
-          if (messages.length === 1) {
-            // Single message — use the original handler directly
-            await handleMessage(messages[0])
-          } else {
-            // Multiple messages batched — merge and process as one
-            await handleBatchedMessages(messages)
-          }
+          await handleMessages(messages)
         } catch (err) {
-          logger.error('bot', 'error processing batched messages', { error: String(err) })
+          logger.error('bot', 'error processing messages', { error: String(err) })
         }
       })
     } catch (err) {

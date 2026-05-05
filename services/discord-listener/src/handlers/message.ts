@@ -1,6 +1,6 @@
 import { Message, TextChannel, GuildMember, MessageReaction, User, Collection, Attachment } from 'discord.js'
 import fetch from 'node-fetch'
-import { ChannelConfig, getChannelConfig, getConfig } from '../config'
+import { ChannelConfig, getChannelConfig, getConfig, getActiveCourses } from '../config'
 import { claimMessage, releaseMessage } from '../lib/redis'
 import { mergeBatch, MergedBatch } from '../lib/batcher'
 import { classifyMessage, ClassificationResult, ImageInput } from '../services/classifier'
@@ -37,258 +37,51 @@ const MAX_IMAGE_AI_COUNT = 5
 const MAX_TEXT_ATTACHMENT_SIZE = 512 * 1024 // 512KB
 const MAX_TEXT_SNIPPETS = 3
 
-export async function handleMessage(message: Message): Promise<void> {
-  if (message.author.bot) return
-  if (!message.guild) return
-
-  const channelConfig = getChannelConfig(message.channel.id)
-  if (!channelConfig) return
-
-  if (!isAuthorized(message, channelConfig)) return
-
-  const claimed = await claimMessage(message.id)
-  if (!claimed) {
-    logger.warn('handler', 'duplicate message skipped', { messageId: message.id })
-    return
-  }
-
-  const channelName = (message.channel as TextChannel).name ?? message.channel.id
-  logger.info('handler', 'processing message', {
-    messageId: message.id,
-    channel: channelName,
-    mode: channelConfig.mode,
-    author: message.author.username,
-  })
-
-  try {
-    await message.react('⏳').catch(() => {})
-
-    const attachmentNames = [...message.attachments.values()].map((a) => a.name ?? 'file')
-    const attachmentSummaries = [...message.attachments.values()].map((a) => {
-      const type = a.contentType ?? 'unknown'
-      return `${a.name ?? 'file'} (${type})`
-    })
-
-    const textSnippets = await extractTextSnippetsFromAttachments(message)
-    const messageText = buildClassificationInput(message.content ?? '', attachmentSummaries, textSnippets)
-
-    const images: ImageInput[] = []
-    let imageCount = 0
-    for (const attachment of message.attachments.values()) {
-      if (!attachment.contentType?.startsWith('image/')) continue
-      if (attachment.size > MAX_IMAGE_AI_SIZE || imageCount >= MAX_IMAGE_AI_COUNT) continue
-
-      try {
-        const res = await fetch(attachment.url)
-        if (!res.ok) continue
-
-        const buffer = await res.buffer()
-        images.push({
-          base64: buffer.toString('base64'),
-          mimeType: attachment.contentType,
-        })
-        imageCount++
-      } catch (err) {
-        logger.warn('handler', 'failed to download image for AI', {
-          url: attachment.url,
-          error: String(err),
-        })
-      }
-    }
-
-    const classification: ClassificationResult = channelConfig.defaultAnnouncementType
-      ? {
-          type: channelConfig.defaultAnnouncementType,
-          title: messageText.split(/[.\n]/)[0].slice(0, 60) || 'Class Announcement',
-          body: messageText,
-          urgency: 'medium',
-          fileCategory: 'other',
-          detectedCourseCode: null,
-          overrides: [],
-        }
-      : await classifyMessage(messageText, attachmentNames, images)
-
-    // Channel-name based classification fallback
-    if (!classification.detectedCourseCode) {
-      const courseFromChannel = detectCourseCodeFromText(channelName)
-      if (courseFromChannel) {
-        classification.detectedCourseCode = courseFromChannel
-        logger.info('handler', 'classified course from channel name', { channelName, courseCode: courseFromChannel })
-      }
-    }
-
-    // Auto-promote 'general' to 'course_update' if course code is present
-    if (classification.type === 'general' && classification.detectedCourseCode) {
-      classification.type = 'course_update'
-      logger.info('handler', 'promoted general to course_update based on course code presence')
-    }
-
-    logger.info('handler', 'classified', {
-      type: classification.type,
-      title: classification.title,
-      urgency: classification.urgency,
-      fileCategory: classification.fileCategory,
-      detectedCourseCode: classification.detectedCourseCode,
-      overrideCount: classification.overrides.length,
-    })
-
-    const allowedCourseCodes = new Set(
-      (channelConfig.allowedCourseCodes ?? []).map((c) => normalizeCourseCode(c)).filter(Boolean)
-    )
-    const fallbackSubFolderName = resolveFallbackSubFolderName(channelConfig)
-    const defaultCourseCode = resolveAllowedCourseCode(
-      channelConfig.courseCode || classification.detectedCourseCode || undefined,
-      allowedCourseCodes
-    )
-    const defaultSubFolderName = defaultCourseCode || fallbackSubFolderName
-    logger.info('handler', 'resolved default subfolder', {
-      defaultSubFolderName,
-      defaultCourseCode: defaultCourseCode ?? null,
-      allowedCourseCodesCount: allowedCourseCodes.size,
-    })
-
-    const files: DriveUploadResult[] = []
-    for (const attachment of message.attachments.values()) {
-      if (!ALLOWED_MIME_TYPES.has(attachment.contentType ?? '')) {
-        logger.warn('handler', 'skipping disallowed file type', {
-          name: attachment.name,
-          type: attachment.contentType,
-        })
-        continue
-      }
-
-      if (attachment.size > MAX_FILE_SIZE) {
-        logger.warn('handler', 'skipping oversized file', {
-          name: attachment.name,
-          sizeBytes: attachment.size,
-        })
-        continue
-      }
-
-      try {
-        const fileCourseCode = resolveAllowedCourseCode(
-          detectCourseCodeFromText(`${attachment.name ?? ''} ${message.content ?? ''}`) || defaultCourseCode,
-          allowedCourseCodes
-        )
-        const targetFolder = fileCourseCode ?? defaultSubFolderName
-
-        const result = await uploadUrlToDrive(
-          attachment.url,
-          attachment.name ?? 'attachment',
-          attachment.contentType ?? 'application/octet-stream',
-          attachment.size,
-          targetFolder
-        )
-        files.push({ ...result, courseCode: fileCourseCode ?? null })
-
-        logger.info('handler', 'uploaded file with routing', {
-          name: attachment.name,
-          folder: targetFolder,
-          fileCourseCode: fileCourseCode ?? null,
-        })
-      } catch (err) {
-        logger.error('handler', 'file upload failed', {
-          name: attachment.name,
-          error: String(err),
-        })
-      }
-    }
-
-    const driveLinks = extractDriveLinks(message.content || '')
-    if (driveLinks.length > 0) {
-      logger.info('handler', 'found shared Drive links', { count: driveLinks.length })
-      for (const link of driveLinks) {
-        try {
-          if (isFolderUrl(link)) {
-            logger.info('handler', 'expanding Drive folder link', { link: link.slice(0, 80) })
-            const folderFiles = await listDriveFolderFiles(link)
-            for (const f of folderFiles) {
-              const linkCourseCode = resolveAllowedCourseCode(
-                detectCourseCodeFromText(f.name) || defaultCourseCode,
-                allowedCourseCodes
-              )
-              files.push({ ...f, courseCode: linkCourseCode ?? null })
-              logger.info('handler', 'added file from folder', { name: f.name, driveId: f.driveId })
-            }
-          } else {
-            const metadata = await getDriveFileMetadata(link)
-            if (metadata) {
-              const linkCourseCode = resolveAllowedCourseCode(
-                detectCourseCodeFromText(metadata.name) || defaultCourseCode,
-                allowedCourseCodes
-              )
-              files.push({ ...metadata, courseCode: linkCourseCode ?? null })
-              logger.info('handler', 'added shared Drive file', {
-                name: metadata.name,
-                driveId: metadata.driveId,
-              })
-            }
-          }
-        } catch (err) {
-          logger.warn('handler', 'failed to fetch shared Drive link', {
-            link: link.slice(0, 80),
-            error: String(err),
-          })
-        }
-      }
-    }
-
-    await message.reactions.cache.get('⏳')?.users.remove().catch(() => {})
-
-    const courseCode = defaultCourseCode
-    const folderLabel = channelConfig.label
-
-    if (channelConfig.mode === 'AUTO_PUBLISH') {
-      await handleAutoPublish(message, classification, files, courseCode, folderLabel)
-    } else {
-      await handleReviewGate(message, channelConfig, classification, files, channelName, courseCode, folderLabel)
-    }
-  } catch (err) {
-    logger.error('handler', 'unhandled error in message handler', { error: String(err) })
-    await message.react('💥').catch(() => {})
-  }
-}
 
 /**
- * Handle a batch of messages from the same user in the same channel.
- * Merges them into one combined announcement and processes it as a single unit.
+ * Primary entry point for processing one or more Discord messages as a single announcement.
  */
-export async function handleBatchedMessages(messages: Message[]): Promise<void> {
+export async function handleMessages(messages: Message[]): Promise<void> {
   if (messages.length === 0) return
-  if (messages.length === 1) {
-    await handleMessage(messages[0])
-    return
-  }
 
-  const batch = mergeBatch(messages)
-  const anchor = batch.anchor
+  const isBatch = messages.length > 1
+  const anchor = messages[0]
+  
+  if (anchor.author.bot || !anchor.guild) return
+
   const channelConfig = getChannelConfig(anchor.channel.id)
   if (!channelConfig) return
 
   if (!isAuthorized(anchor, channelConfig)) return
 
-  // Claim ALL message IDs for dedup
-  for (const msg of batch.messages) {
-    const claimed = await claimMessage(msg.id)
-    if (!claimed) {
-      logger.warn('handler', 'duplicate message in batch skipped', { messageId: msg.id })
-    }
+  // Deduplication: claim all message IDs in the batch
+  const messageIds = messages.map(m => m.id)
+  const results = await Promise.all(messageIds.map(id => claimMessage(id)))
+  
+  // If this was a single message and it's already claimed, stop
+  if (!isBatch && !results[0]) {
+    logger.warn('handler', 'duplicate message skipped', { messageId: anchor.id })
+    return
+  }
+  // For batches, we keep going even if some sub-messages were already claimed (rare),
+  // but we warn if the anchor itself is a duplicate.
+  if (isBatch && !results[0]) {
+    logger.warn('handler', 'batch anchor is duplicate, but processing rest of batch', { messageId: anchor.id })
   }
 
   const channelName = (anchor.channel as TextChannel).name ?? anchor.channel.id
-  logger.info('handler', 'processing BATCHED messages as one announcement', {
-    batchSize: batch.messages.length,
-    messageIds: batch.messages.map((m) => m.id),
+  logger.info('handler', `processing ${isBatch ? 'BATCHED' : 'single'} message(s)`, {
+    count: messages.length,
     channel: channelName,
     mode: channelConfig.mode,
     author: anchor.author.username,
   })
 
   try {
-    // React on the first message to indicate processing
     await anchor.react('⏳').catch(() => {})
 
-    // Combine all attachments from all messages
+    // Use the batcher utility to merge content even for single messages (for consistency)
+    const batch = mergeBatch(messages)
     const allAttachmentValues = [...batch.allAttachments.values()]
     const attachmentNames = allAttachmentValues.map((a) => a.name ?? 'file')
     const attachmentSummaries = allAttachmentValues.map((a) => {
@@ -298,14 +91,14 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
 
     // Extract text snippets from ALL messages' text-like attachments
     const textSnippets: string[] = []
-    for (const msg of batch.messages) {
+    for (const msg of messages) {
       const snippets = await extractTextSnippetsFromAttachments(msg)
       textSnippets.push(...snippets)
     }
 
     const messageText = buildClassificationInput(batch.mergedContent, attachmentSummaries, textSnippets)
 
-    // Collect images from ALL messages
+    // Collect images from ALL messages for Gemini vision
     const images: ImageInput[] = []
     let imageCount = 0
     for (const attachment of batch.allAttachments.values()) {
@@ -315,7 +108,6 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
       try {
         const res = await fetch(attachment.url)
         if (!res.ok) continue
-
         const buffer = await res.buffer()
         images.push({
           base64: buffer.toString('base64'),
@@ -323,47 +115,39 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
         })
         imageCount++
       } catch (err) {
-        logger.warn('handler', 'failed to download image for AI (batch)', {
-          url: attachment.url,
-          error: String(err),
-        })
+        logger.warn('handler', 'failed to download image for AI', { url: attachment.url, error: String(err) })
       }
     }
 
+    // 1. Classify with Gemini
     const classification: ClassificationResult = channelConfig.defaultAnnouncementType
-      ? {
-          type: channelConfig.defaultAnnouncementType,
-          title: messageText.split(/[.\n]/)[0].slice(0, 60) || 'Class Announcement',
-          body: messageText,
-          urgency: 'medium',
-          fileCategory: 'other',
-          detectedCourseCode: null,
-          overrides: [],
-        }
+        ? {
+            type: channelConfig.defaultAnnouncementType,
+            title: messageText.split(/[.\n]/)[0].slice(0, 60) || 'Class Announcement',
+            body: messageText,
+            urgency: 'medium',
+            fileCategory: 'other',
+            detectedCourseCode: null,
+            detectedCourseType: null,
+            overrides: [],
+            confidence: 'high',
+          }
       : await classifyMessage(messageText, attachmentNames, images)
 
-    // Channel-name based classification fallback
+    // Fallback classification from channel name
     if (!classification.detectedCourseCode) {
       const courseFromChannel = detectCourseCodeFromText(channelName)
       if (courseFromChannel) {
         classification.detectedCourseCode = courseFromChannel
-        logger.info('handler', 'classified course from channel name (batch)', { channelName, courseCode: courseFromChannel })
       }
     }
 
     // Auto-promote 'general' to 'course_update' if course code is present
     if (classification.type === 'general' && classification.detectedCourseCode) {
       classification.type = 'course_update'
-      logger.info('handler', 'promoted general to course_update based on course code presence (batch)')
     }
 
-    logger.info('handler', 'classified (batch)', {
-      type: classification.type,
-      title: classification.title,
-      urgency: classification.urgency,
-      batchSize: batch.messages.length,
-    })
-
+    // 2. Resolve Drive routing
     const allowedCourseCodes = new Set(
       (channelConfig.allowedCourseCodes ?? []).map((c) => normalizeCourseCode(c)).filter(Boolean)
     )
@@ -374,11 +158,10 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
     )
     const defaultSubFolderName = defaultCourseCode || fallbackSubFolderName
 
-    // Upload files from ALL messages
+    // 3. Upload Attachments
     const files: DriveUploadResult[] = []
     for (const attachment of batch.allAttachments.values()) {
-      if (!ALLOWED_MIME_TYPES.has(attachment.contentType ?? '')) continue
-      if (attachment.size > MAX_FILE_SIZE) continue
+      if (!ALLOWED_MIME_TYPES.has(attachment.contentType ?? '') || attachment.size > MAX_FILE_SIZE) continue
 
       try {
         const fileCourseCode = resolveAllowedCourseCode(
@@ -386,7 +169,6 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
           allowedCourseCodes
         )
         const targetFolder = fileCourseCode ?? defaultSubFolderName
-
         const result = await uploadUrlToDrive(
           attachment.url,
           attachment.name ?? 'attachment',
@@ -396,61 +178,53 @@ export async function handleBatchedMessages(messages: Message[]): Promise<void> 
         )
         files.push({ ...result, courseCode: fileCourseCode ?? null })
       } catch (err) {
-        logger.error('handler', 'file upload failed (batch)', {
-          name: attachment.name,
-          error: String(err),
-        })
+        logger.error('handler', 'file upload failed', { name: attachment.name, error: String(err) })
       }
     }
 
-    // Extract Drive links from ALL messages
-    for (const msg of batch.messages) {
+    // 4. Handle Shared Drive Links in text
+    for (const msg of messages) {
       const driveLinks = extractDriveLinks(msg.content || '')
       for (const link of driveLinks) {
         try {
           if (isFolderUrl(link)) {
             const folderFiles = await listDriveFolderFiles(link)
             for (const f of folderFiles) {
-              const linkCourseCode = resolveAllowedCourseCode(
-                detectCourseCodeFromText(f.name) || defaultCourseCode,
-                allowedCourseCodes
-              )
+              const linkCourseCode = resolveAllowedCourseCode(detectCourseCodeFromText(f.name) || defaultCourseCode, allowedCourseCodes)
               files.push({ ...f, courseCode: linkCourseCode ?? null })
             }
           } else {
             const metadata = await getDriveFileMetadata(link)
             if (metadata) {
-              const linkCourseCode = resolveAllowedCourseCode(
-                detectCourseCodeFromText(metadata.name) || defaultCourseCode,
-                allowedCourseCodes
-              )
+              const linkCourseCode = resolveAllowedCourseCode(detectCourseCodeFromText(metadata.name) || defaultCourseCode, allowedCourseCodes)
               files.push({ ...metadata, courseCode: linkCourseCode ?? null })
             }
           }
         } catch (err) {
-          logger.warn('handler', 'failed to fetch shared Drive link (batch)', {
-            link: link.slice(0, 80),
-            error: String(err),
-          })
+          logger.warn('handler', 'failed to expand Drive link', { error: String(err) })
         }
       }
     }
 
+    // Cleanup reaction
     await anchor.reactions.cache.get('⏳')?.users.remove().catch(() => {})
 
-    const courseCode = defaultCourseCode
-    const folderLabel = channelConfig.label
-
+    // 5. Final Step: Publish or Review Gate
     if (channelConfig.mode === 'AUTO_PUBLISH') {
-      await handleAutoPublish(anchor, classification, files, courseCode, folderLabel)
+      await handleAutoPublish(anchor, classification, files, defaultCourseCode, channelConfig.label)
     } else {
-      await handleReviewGate(anchor, channelConfig, classification, files, channelName, courseCode, folderLabel)
+      await handleReviewGate(anchor, channelConfig, classification, files, channelName, defaultCourseCode, channelConfig.label)
     }
   } catch (err) {
-    logger.error('handler', 'unhandled error in batched message handler', { error: String(err) })
+    logger.error('handler', 'fatal error in message processing', { error: String(err) })
     await anchor.react('💥').catch(() => {})
   }
 }
+
+// Legacy exports for compatibility
+export const handleMessage = (message: Message) => handleMessages([message])
+export const handleBatchedMessages = (messages: Message[]) => handleMessages(messages)
+
 
 function resolveFallbackSubFolderName(channelConfig: ChannelConfig): string {
   if (channelConfig.label) {
@@ -463,9 +237,30 @@ function resolveFallbackSubFolderName(channelConfig: ChannelConfig): string {
   return 'General'
 }
 
+/**
+ * Intelligent course code detection using the active course list from DB.
+ */
 function detectCourseCodeFromText(input: string): string | null {
-  const match = input.toUpperCase().match(/\b([A-Z]{2,6})\s*-?\s*(\d{4})\b/)
+  const activeCourses = getActiveCourses()
+  const upperInput = input.toUpperCase()
+  
+  // 1. Precise match against known codes (e.g. "IPE4208")
+  // We'll prioritize the codes we know are in the DB
+  if (activeCourses.length > 0) {
+    for (const course of activeCourses) {
+      const code = course.code.toUpperCase()
+      // Use word boundaries to avoid partial matches (e.g. "IPE4" matching "IPE4208")
+      const regex = new RegExp(`\\b${code.replace(/\s+/g, '\\s*')}\\b`, 'i')
+      if (regex.test(upperInput)) {
+        return code.replace(/\s+/g, '')
+      }
+    }
+  }
+
+  // 2. Fallback to generic regex extraction if no active course matches
+  const match = upperInput.match(/\b([A-Z]{2,6})\s*-?\s*(\d{4})\b/)
   if (!match) return null
+  
   return `${match[1]}${match[2]}`
 }
 
@@ -576,6 +371,8 @@ async function handleReviewGate(
   folderLabel?: string
 ): Promise<void> {
   const isScheduleUpdate = channelConfig.defaultAnnouncementType === 'routine_update' || classification.overrides.length > 0
+  const isConflict = classification.confidence === 'low' || (courseCode && classification.detectedCourseCode && normalizeCourseCode(courseCode) !== normalizeCourseCode(classification.detectedCourseCode))
+
   // Schedule updates still need explicit approval but cap at 24h to prevent zombie handlers
   const SCHEDULE_TIMEOUT_MS = 24 * 60 * 60 * 1000 // 24 hours
   const timeoutMs: number = isScheduleUpdate ? SCHEDULE_TIMEOUT_MS : getConfig().REACTION_TIMEOUT_MS
@@ -583,13 +380,19 @@ async function handleReviewGate(
     channel: sourceChannelName,
     title: classification.title,
     isScheduleUpdate,
+    isConflict,
     timeoutMs,
   })
 
   // ── 1. Post Discord embed preview as a reply ──────────────────────────────
-  const previewContent = isScheduleUpdate
+  let previewContent = isScheduleUpdate
     ? '📅 Schedule update detected. Approval is required before publishing. React ✅ to publish or ❌ to discard.'
     : '📋 New announcement detected. Sent to CR for review. Auto-publishes in 2hrs if no response.'
+
+  if (isConflict) {
+    previewContent = `⚠️ **COURSE CONFLICT DETECTED**: Gemini detected "${classification.detectedCourseCode}" but channel is linked to "${courseCode}". CR, please review carefully in Telegram!`
+  }
+
   const previewMessage = await message.reply({
     content: previewContent,
     embeds: [buildPreviewEmbed(classification, files, sourceChannelName, timeoutMs).toJSON() as any],
