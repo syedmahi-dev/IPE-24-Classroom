@@ -172,12 +172,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = (user as any).role
         token.studentId = (user as any).studentId
       }
+
+      // Safety net: if token.id is still missing (stale JWT from before this code),
+      // look up the user by email to populate it
+      if (!token.id && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: (token.email as string).toLowerCase() },
+          select: { id: true, role: true, studentId: true },
+        })
+        if (dbUser) {
+          token.id = dbUser.id
+          token.role = dbUser.role as any
+          token.studentId = dbUser.studentId
+        }
+      }
+
       return token
     },
 
     async session({ session, token }) {
       if (session.user && token) {
-        session.user.id = token.id as string
+        session.user.id = (token.id ?? token.sub) as string
         session.user.role = token.role as any
         session.user.studentId = token.studentId as string
       }
