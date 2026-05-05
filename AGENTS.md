@@ -6,6 +6,7 @@ This document is the **single source of truth** for all AI agents, assistants, a
 
 ## 1. AI Safety & Database Policy (MANDATORY)
 - **Mandatory Backups**: BEFORE modifying `schema.prisma`, `.env`, or any core configuration file, you MUST create a `.bak` backup (e.g., `copy apps/web/prisma/schema.prisma apps/web/prisma/schema.prisma.bak_[timestamp]`).
+- **Feature/Bugfix Restore Points**: BEFORE implementing ANY new feature or bug fix, you MUST run `npx tsx apps/web/scripts/total-db-backup.ts` to dump the database and commit the current state to git as a restore point. AFTER a successful implementation, you MUST create a new restore point. This ensures we can always safely rollback.
 - **Data Preservation**: NEVER run `db push --accept-data-loss` or `migrate dev` that involves data loss without exporting critical data first or confirming with the user.
 - **Feature Isolation**: Deal ONLY with the specific database models relevant to the current task. Do not modify unrelated models or global configs. If a global change is needed, document exactly why and create a backup.
 - **Work Verification**: Always run `npm run dev` after changes to verify the application still builds and runs. Check the console for Prisma or Next.js errors immediately after any schema sync.
