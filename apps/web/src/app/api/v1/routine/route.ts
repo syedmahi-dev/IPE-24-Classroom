@@ -78,9 +78,9 @@ export async function GET(req: NextRequest) {
       const monday = week ? getMonday(targetDate) : getMonday(targetDate)
 
       // Determine date range
-      const startDate = new Date(monday)
+      const startDate = week ? new Date(monday) : new Date(targetDate)
       startDate.setUTCHours(0, 0, 0, 0)
-      const endDate = new Date(monday)
+      const endDate = week ? new Date(monday) : new Date(targetDate)
       if (week) {
         endDate.setDate(endDate.getDate() + 4) // Monday to Friday
       }
