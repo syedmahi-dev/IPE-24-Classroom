@@ -156,26 +156,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     async jwt({ token, user, account, profile }) {
-      if (account?.provider === 'google' && profile?.email) {
-        // Fetch DB user to get the Real Prisma ID and Role on initial OAuth sign-in
+      // CRITICAL: Ensure token.id is the real database CUID, not a provider ID (like Google sub).
+      // We check if it's missing or if it doesn't look like our CUID format (starts with 'c').
+      const isInitialSignIn = !!account && !!profile
+      const needsIdResolution = !token.id || (typeof token.id === 'string' && !token.id.startsWith('c'))
+
+      if (isInitialSignIn && profile?.email) {
+        // Initial OAuth sign-in: fetch fresh from DB
         const dbUser = await prisma.user.findUnique({
-          where: { email: profile.email.toLowerCase() }
+          where: { email: profile.email.toLowerCase() },
+          select: { id: true, role: true, studentId: true },
         })
         if (dbUser) {
           token.id = dbUser.id
           token.role = dbUser.role as any
           token.studentId = dbUser.studentId
+          console.log(`[Auth] Initial sign-in: Resolved CUID ${dbUser.id} for ${profile.email}`)
         }
       } else if (user) {
-        // For Credentials Provider, user object is already fully populated by authorize()
+        // Credentials login or other provider where 'user' is already populated
         token.id = user.id
         token.role = (user as any).role
         token.studentId = (user as any).studentId
-      }
-
-      // Safety net: if token.id is still missing (stale JWT from before this code),
-      // look up the user by email to populate it
-      if (!token.id && token.email) {
+      } else if (needsIdResolution && token.email) {
+        // Fallback for subsequent requests if ID is missing or invalid
         const dbUser = await prisma.user.findUnique({
           where: { email: (token.email as string).toLowerCase() },
           select: { id: true, role: true, studentId: true },
@@ -184,6 +188,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.id = dbUser.id
           token.role = dbUser.role as any
           token.studentId = dbUser.studentId
+          console.log(`[Auth] Fallback: Resolved CUID ${dbUser.id} for ${token.email}`)
+        } else {
+          console.warn(`[Auth] Fallback: Could not find user in DB for ${token.email}`)
         }
       }
 

@@ -104,8 +104,8 @@ export async function POST(req: Request) {
 
     await logAudit(session.user.id, 'CREATE', 'poll', poll.id, { question })
 
-    // Persist notification records + push broadcast (non-blocking)
-    notifyAll({
+    // Persist notification records + push broadcast (non-blocking in theory, but awaited for reliability in serverless)
+    await notifyAll({
       title: 'New Poll — Vote Now!',
       body: question.length > 120 ? question.slice(0, 120) + '…' : question,
       link: '/polls',

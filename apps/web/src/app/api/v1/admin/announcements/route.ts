@@ -133,9 +133,9 @@ export async function POST(req: Request) {
 
     await logAudit(session.user.id, 'CREATE', 'announcement', announcement.id, { title, type: finalType })
 
-    // Persist notification records + push broadcast (non-blocking)
+    // Persist notification records + push broadcast (non-blocking in theory, but awaited for reliability in serverless)
     if (isPublished) {
-      notifyAll({
+      await notifyAll({
         title,
         body: content.length > 120 ? content.slice(0, 120) + '…' : content,
         link: '/announcements',

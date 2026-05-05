@@ -108,8 +108,8 @@ export async function POST(req: Request) {
 
     await logAudit(session.user.id, 'CREATE', 'exam', exam.id, { title, courseId })
 
-    // Persist notification records + push broadcast (non-blocking)
-    notifyAll({
+    // Persist notification records + push broadcast (non-blocking in theory, but awaited for reliability in serverless)
+    await notifyAll({
       title: `New ${type === 'ASSIGNMENT' ? 'Assignment' : 'Exam'}: ${title}`,
       body: `${course.code} — ${new Date(examDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
       link: '/exams',

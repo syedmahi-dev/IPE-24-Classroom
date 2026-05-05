@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       reason: parsed.data.reason,
     })
 
-    // Persist notification records + push broadcast (non-blocking)
+    // Persist notification records + push broadcast (non-blocking in theory, but awaited for reliability in serverless)
     const overrideDate = new Date(parsed.data.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
     const courseLabel = parsed.data.courseCode || parsed.data.courseName || 'a class'
     const notifyBodyMap: Record<string, string> = {
@@ -140,7 +140,7 @@ export async function POST(req: Request) {
       TIME_CHANGE: `${courseLabel} time changed on ${overrideDate}${parsed.data.startTime ? ' to ' + parsed.data.startTime : ''}.`,
       ROOM_CHANGE: `${courseLabel} room changed on ${overrideDate}${parsed.data.room ? ' to ' + parsed.data.room : ''}.`,
     }
-    notifyAll({
+    await notifyAll({
       title: 'Schedule Change',
       body: notifyBodyMap[parsed.data.type] ?? `Routine update for ${overrideDate}.`,
       link: '/routine',

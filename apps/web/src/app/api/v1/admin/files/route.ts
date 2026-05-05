@@ -199,7 +199,7 @@ export async function POST(req: Request) {
       driveId: driveResult.id,
     })
 
-    // Persist notification records + push broadcast (non-blocking)
+    // Persist notification records + push broadcast (non-blocking in theory, but awaited for reliability in serverless)
     const categoryLabel: Record<string, string> = {
       lecture_notes: 'Lecture Note',
       assignment: 'Assignment',
@@ -209,7 +209,7 @@ export async function POST(req: Request) {
     }
     const label = categoryLabel[category] ?? 'File'
     const courseInfo = fileRecord.course ? ` for ${fileRecord.course.code}` : ''
-    notifyAll({
+    await notifyAll({
       title: `New ${label} Uploaded`,
       body: `${name.trim()}${courseInfo}`,
       link: '/resources',

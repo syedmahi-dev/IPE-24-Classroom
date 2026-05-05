@@ -54,7 +54,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     // If this update is publishing a previously-unpublished announcement, notify all users
     const isFirstPublish = parsed.data.isPublished === true && !existing.isPublished
     if (isFirstPublish) {
-      notifyAll({
+      await notifyAll({
         title: updated.title,
         body: updated.body.length > 120 ? updated.body.slice(0, 120) + '…' : updated.body,
         link: '/announcements',
