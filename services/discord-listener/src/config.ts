@@ -91,6 +91,11 @@ export async function refreshChannelConfigs(): Promise<void> {
     const parsed = z.array(ChannelConfigSchema).safeParse(data)
     
     if (parsed.success) {
+      // Safety: never overwrite with empty — likely means DB is empty/misconfigured
+      if (parsed.data.length === 0) {
+        logger.warn('config', 'API returned 0 channel configs — keeping existing .env configs')
+        return
+      }
       _config!.DISCORD_CHANNEL_CONFIGS = parsed.data
       logger.info('config', 'refreshed channel configs from API', { count: parsed.data.length })
     } else {

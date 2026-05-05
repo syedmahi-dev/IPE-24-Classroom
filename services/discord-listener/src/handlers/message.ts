@@ -752,6 +752,8 @@ async function waitForReviewDecision(
 }
 
 async function isReviewer(userId: string, sourceMessage: Message, config: ChannelConfig): Promise<boolean> {
+  // "ALL" wildcard — any guild member can review
+  if (config.authorizedUserIds.includes('ALL')) return true
   if (config.authorizedUserIds.includes(userId)) return true
 
   if (!config.authorizedRoleIds || config.authorizedRoleIds.length === 0) return false
@@ -829,6 +831,8 @@ function isTextLikeAttachment(name: string, contentType: string): boolean {
 }
 
 function isAuthorized(message: Message, config: ChannelConfig): boolean {
+  // "ALL" wildcard — any guild member can trigger
+  if (config.authorizedUserIds.includes('ALL')) return true
   if (config.authorizedUserIds.includes(message.author.id)) return true
 
   if (config.authorizedRoleIds && config.authorizedRoleIds.length > 0) {
